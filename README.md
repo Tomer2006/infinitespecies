@@ -12,7 +12,7 @@ Interactive circle‑packing explorer for biological taxonomy powered by D3.
 - **Custom JSON loading** via modal (paste or file).
 - **Demo data** generator for instant play.
 - **Deep links**: URL hash tracks the current path; use Copy Link to share the exact view.
-- **PNG export**: Snapshot the current view.
+- **PNG export**: Snapshot the current view. (Planned)
  
 
 ### Quick start
@@ -79,23 +79,26 @@ Notes:
 - Camera supports smooth pan/zoom with easing.
 
 ### Project layout
-- `index.html`: UI skeleton and includes D3; loads `app-modular.js`
+- `index.html`: UI skeleton and includes D3; loads `app-modular.js` (ES modules)
 - `styles.css`: theme and layout
-- `app-modular.js`: entry that imports the modular app
+- `app-modular.js`: entry that wires modules and initializes the app
 - `modules/`: modular source files
-  - `main.js`: bootstraps event handlers and starts rendering
-  - `canvas.js`: canvas context and sizing
-  - `camera.js`: pan/zoom state and animations
   - `constants.js`: levels, palette, render thresholds
-  - `deeplink.js`: encode/decode and update URL hash for deep links
   - `dom.js`: references to DOM elements
-  - `events.js`: mouse, wheel, and keyboard handlers; buttons wiring
-  - `layout.js`: D3 pack layout and coordinate preparation
-  - `navigation.js`: breadcrumbs, go-to-node, fit-in-view
-  - `picking.js`: hit testing to find the node under the cursor
-  - `render.js`: draw circles and labels efficiently
-  - `search.js`: local search, pulse highlight, surprise me
   - `state.js`: shared app state and indexes
+  - `canvas.js`: canvas/context sizing, transforms, RAF
+  - `layout.js`: D3 pack layout and coordinate prep
+  - `camera.js`: pan/zoom animations
+  - `picking.js`: hit testing and visibility checks
+  - `render.js`: draw circles, labels, and highlight
+  - `deeplink.js`: encode/decode/update URL hash, find by path
+  - `navigation.js`: breadcrumbs, go-to-node, fit-in-view
+  - `providers.js`: external provider URLs, open search
+  - `preview.js`: Wikipedia thumbs, big preview show/hide
+  - `tooltip.js`: tooltip and hover preview trigger
+  - `search.js`: local search and pulse highlight
+  - `loading.js`: loading overlay and progress helpers
+  - `events.js`: mouse, wheel, keyboard, buttons, modals
 - `tree.json`: sample nested-key dataset
 
 ### Deep links and sharing
