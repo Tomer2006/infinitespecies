@@ -85,13 +85,21 @@ async function writeJSON(filePath, data, pretty){ await ensureDir(path.dirname(f
 
 function planFileName(node){ const slug=slugify(node.name)||'node'; return `${node._id}-${slug}.json`; }
 
+function getDepthFromLevel(levelStr){
+  const m = /^Level\s+(\d+)/i.exec(String(levelStr||''));
+  return m ? parseInt(m[1], 10) : undefined;
+}
+
+function shouldSplit(node, splitSet){
+  const levelName = String(node.level || '');
+  const d = getDepthFromLevel(levelName);
+  return splitSet.has(levelName) || (d != null && splitSet.has(String(d)));
+}
+
 function buildChunk(node, splitSet, baseUrl){
   const here = { name: node.name, level: node.level, children: [] };
   for(const child of node.children||[]){
-    // decide to split by depth if requested levels are numeric strings like "2","3", etc.
-    const childDepth = (typeof child.level==='string' && /^Level\s+(\d+)/i.test(child.level)) ? parseInt(child.level.match(/^Level\s+(\d+)/i)[1],10) : undefined;
-    const shouldSplit = splitSet.has(child.level) || (childDepth!=null && splitSet.has(String(childDepth)));
-    if(shouldSplit){
+    if(shouldSplit(child, splitSet)){
       const fileName = planFileName(child);
       const url = path.posix.join(baseUrl.replace(/\\/g,'/'), fileName);
       here.children.push({ name: child.name, level: child.level, childrenUrl: url.startsWith('/')?url:'/'+url });
@@ -123,7 +131,16 @@ async function main(){
 
   const rootDoc = buildChunk(root, splitSet, opts.baseUrl).doc;
   await writeJSON(path.join(opts.outDir, opts.topFile), rootDoc, pretty);
-  for(const child of root.children||[]) if(splitSet.has(child.level)) await writeSubtree(child, splitSet, opts.outDir, opts.baseUrl, pretty);
+  async function walkAndWrite(node){
+    for(const child of node.children||[]){
+      if(shouldSplit(child, splitSet)){
+        await writeSubtree(child, splitSet, opts.outDir, opts.baseUrl, pretty);
+      } else {
+        await walkAndWrite(child);
+      }
+    }
+  }
+  await walkAndWrite(root);
   console.log(`Done. Root: ${path.join(opts.outDir, opts.topFile)}  Base URL: ${opts.baseUrl}`);
 }
 
