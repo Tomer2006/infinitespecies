@@ -8,28 +8,34 @@ export function draw() {
   if (!ctx || !state.layout) return;
   ctx.clearRect(0, 0, W, H);
 
-  // Grid
-  ctx.save();
-  ctx.globalAlpha = 0.05;
-  ctx.translate(
-    Math.floor((W / 2 - state.camera.x * state.camera.k) % 40),
-    Math.floor((H / 2 - state.camera.y * state.camera.k) % 40)
-  );
-  ctx.beginPath();
-  for (let x = -40; x <= W + 40; x += 40) {
-    ctx.moveTo(x, -40);
-    ctx.lineTo(x, H + 40);
+  // Lightweight grid (only draw when zoomed out)
+  if (state.camera.k < 2) {
+    ctx.save();
+    ctx.globalAlpha = 0.05;
+    ctx.translate(
+      Math.floor((W / 2 - state.camera.x * state.camera.k) % 40),
+      Math.floor((H / 2 - state.camera.y * state.camera.k) % 40)
+    );
+    ctx.beginPath();
+    for (let x = -40; x <= W + 40; x += 40) {
+      ctx.moveTo(x, -40);
+      ctx.lineTo(x, H + 40);
+    }
+    for (let y = -40; y <= H + 40; y += 40) {
+      ctx.moveTo(-40, y);
+      ctx.lineTo(W + 40, y);
+    }
+    ctx.strokeStyle = '#8aa1ff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
   }
-  for (let y = -40; y <= H + 40; y += 40) {
-    ctx.moveTo(-40, y);
-    ctx.lineTo(W + 40, y);
-  }
-  ctx.strokeStyle = '#8aa1ff';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
 
-  const nodes = state.layout.root.descendants().sort((a, b) => a._vr - b._vr);
+  // Clamp total nodes rendered for performance
+  const nodes = state.layout.root
+    .descendants()
+    .sort((a, b) => a._vr - b._vr)
+    .slice(0, 20000);
   const MIN_PX_R = settings.minPxRadius;
   const LABEL_MIN = settings.labelMinPxRadius;
   const labelCandidates = [];
@@ -79,7 +85,11 @@ export function draw() {
     const placed = [];
     const overlaps = (a, b) => !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2);
     labelCandidates.sort((a, b) => b.fontSize - a.fontSize);
+    // Cap labels per frame
+    const MAX_LABELS = 600;
+    let drawn = 0;
     for (const cand of labelCandidates) {
+      if (drawn >= MAX_LABELS) break;
       let hit = false;
       for (const r of placed) {
         if (overlaps(cand.rect, r)) {
@@ -102,6 +112,7 @@ export function draw() {
       ctx.fillText(cand.text, cand.sx, cand.sy);
       ctx.restore();
       placed.push(cand.rect);
+      drawn++;
     }
   }
 

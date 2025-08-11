@@ -94,18 +94,27 @@ export function initEvents() {
     else goToNode(n, true);
   });
 
+  let wheelAccum = 0;
+  let wheelRAF = null;
   canvas.addEventListener(
     'wheel',
     ev => {
-      const scale = Math.exp(-ev.deltaY * 0.0015);
-      const rect = canvas.getBoundingClientRect();
-      const mx = ev.clientX - rect.left,
-        my = ev.clientY - rect.top;
-      const [wx, wy] = screenToWorld(mx, my);
-      state.camera.k *= scale;
-      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
-      state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
-      requestRender();
+      wheelAccum += ev.deltaY;
+      if (!wheelRAF) {
+        wheelRAF = requestAnimationFrame(() => {
+          const rect = canvas.getBoundingClientRect();
+          const mx = ev.clientX - rect.left,
+            my = ev.clientY - rect.top;
+          const [wx, wy] = screenToWorld(mx, my);
+          const scale = Math.exp(-wheelAccum * 0.0015);
+          wheelAccum = 0;
+          wheelRAF = null;
+          state.camera.k *= scale;
+          state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
+          state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
+          requestRender();
+        });
+      }
       ev.preventDefault();
     },
     { passive: false }

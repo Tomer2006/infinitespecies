@@ -32,7 +32,10 @@ export const settings = {
   minPxRadius: 4,
   labelMinPxRadius: 22,
   labelMinFontPx: 12,
-  verticalPadPx: 100
+  verticalPadPx: 100,
+  // Layout budget to keep FPS high on huge datasets
+  maxNodesPerLayout: 5000,
+  maxChildrenPerNode: 500
 };
 
 
