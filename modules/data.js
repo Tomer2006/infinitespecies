@@ -161,45 +161,45 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   
   // Sort by index to maintain order
   results.sort((a, b) => a.index - b.index);
-  
-  // Find root chunk and merge others
-  let mergedTree = null;
-  const childrenToMerge = [];
-  
-  for (const { chunk, fileInfo } of results) {
-    if (fileInfo.is_root || fileInfo.path === "") {
-      mergedTree = chunk;
-    } else {
-      childrenToMerge.push(chunk);
-    }
-  }
-  
-  if (!mergedTree) {
-    // If no explicit root, create one and merge all chunks as children
-    mergedTree = {
-      name: "Life",
-      level: "Life",
-      children: []
-    };
-    
+
+  // Determine schema type: structured nodes vs nested map
+  const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
+
+  const anyStructured = results.some(r => isStructuredNode(r.chunk));
+
+  let mergedTree;
+  if (anyStructured) {
+    // Structured nodes: collect children
+    mergedTree = { name: 'Life', level: 'Life', children: [] };
     for (const { chunk } of results) {
-      if (chunk.children && Array.isArray(chunk.children)) {
+      if (chunk && Array.isArray(chunk.children)) {
         mergedTree.children.push(...chunk.children);
-      } else if (chunk.name) {
+      } else if (isStructuredNode(chunk)) {
         mergedTree.children.push(chunk);
       }
     }
   } else {
-    // Merge children from other chunks into root
-    if (!mergedTree.children) mergedTree.children = [];
-    
-    for (const chunk of childrenToMerge) {
-      if (chunk.children && Array.isArray(chunk.children)) {
-        mergedTree.children.push(...chunk.children);
-      } else if (chunk.name) {
-        mergedTree.children.push(chunk);
+    // Nested key map: deep-merge all object chunks
+    const deepMerge = (target, source) => {
+      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+      for (const [k, v] of Object.entries(source)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
+          deepMerge(target[k], v);
+        } else {
+          target[k] = v;
+        }
       }
-    }
+      return target;
+    };
+    const mergedMap = {};
+    for (const { chunk } of results) deepMerge(mergedMap, chunk);
+    // Normalize will convert nested map to structured nodes
+    const normalizedTree = normalizeTree(mergedMap);
+    await indexTreeProgressive(normalizedTree);
+    setDataRoot(normalizedTree);
+    setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
+    return;
   }
   
   setProgress(0.98, 'Processing merged tree...');
