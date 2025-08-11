@@ -29,8 +29,11 @@ export const TABLEAU_COLORS = [
 
 // Function to get color based on node level
 export function getNodeColor(node) {
-  const level = node.level || 0;
-  return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
+  const level = node.level || 'Life';
+  // Find the index of the level in LEVELS array, default to 0 if not found
+  const levelIndex = LEVELS.indexOf(level);
+  const index = levelIndex >= 0 ? levelIndex : 0;
+  return TABLEAU_COLORS[index % TABLEAU_COLORS.length];
 }
 
 export const settings = {
