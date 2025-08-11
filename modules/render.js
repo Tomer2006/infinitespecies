@@ -1,6 +1,6 @@
 import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
 import { state } from './state.js';
-import { PALETTE, settings, getLevelColorByDepth } from './constants.js';
+import { getNodeColor, settings } from './constants.js';
 import { nodeInView } from './picking.js';
 
 export function draw() {
@@ -41,12 +41,9 @@ export function draw() {
     const sr = d._vr * state.camera.k;
     if (sr < MIN_PX_R) continue;
 
-    const level = d.data.level || 'Life';
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    // Fixed, non-gradient color by depth using Tableau 10 order
-    const fixedColor = getLevelColorByDepth(d.depth);
-    ctx.fillStyle = fixedColor || PALETTE(level) || '#4e79a7';
+    ctx.fillStyle = getNodeColor(d.data);
     ctx.globalAlpha = 0.24; // slightly higher fill for better differentiation
     ctx.fill();
     ctx.globalAlpha = 0.9;
