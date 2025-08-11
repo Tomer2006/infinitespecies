@@ -1,6 +1,6 @@
 import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
 import { state } from './state.js';
-import { PALETTE, settings } from './constants.js';
+import { getColorForLevel, settings } from './constants.js';
 import { nodeInView } from './picking.js';
 
 export function draw() {
@@ -41,10 +41,10 @@ export function draw() {
     const sr = d._vr * state.camera.k;
     if (sr < MIN_PX_R) continue;
 
-    const level = d.data.level || 'Life';
+    const level = d.data.level || 0;
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    ctx.fillStyle = PALETTE(level) || '#7aa2ff';
+    ctx.fillStyle = getColorForLevel(level);
     ctx.globalAlpha = 0.24; // slightly higher fill for better differentiation
     ctx.fill();
     ctx.globalAlpha = 0.9;
