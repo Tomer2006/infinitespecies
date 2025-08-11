@@ -12,27 +12,28 @@ export const LEVELS = [
   'Species'
 ];
 
-// Original Tableau 10 color palette - assigned by hierarchy level
-export const TABLEAU_10 = [
-  '#4e79a7', // Blue (level 0)
-  '#f28e2c', // Orange (level 1)
-  '#e15759', // Red (level 2)
-  '#76b7b2', // Teal (level 3)
-  '#59a14f', // Green (level 4)
-  '#edc949', // Yellow (level 5)
-  '#af7aa1', // Purple (level 6)
-  '#ff9d9a', // Pink (level 7)
-  '#9c755f', // Brown (level 8)
-  '#bab0ab'  // Gray (level 9, then loops back to Blue)
+// Original Tableau 10 palette in requested order:
+// Blue, Orange, Red, Teal, Green, Yellow, Purple, Pink, Brown, Gray
+export const TABLEAU10 = [
+  '#4e79a7', // Blue
+  '#f28e2b', // Orange
+  '#e15759', // Red
+  '#76b7b2', // Teal
+  '#59a14f', // Green
+  '#edc948', // Yellow
+  '#b07aa1', // Purple
+  '#ff9da7', // Pink
+  '#9c755f', // Brown
+  '#bab0ac'  // Gray
 ];
 
-// Function to get color based on node level (loops through palette)
-export function getColorForLevel(level) {
-  return TABLEAU_10[level % TABLEAU_10.length];
-}
+// Keep a name-based palette for any legacy usage
+export const PALETTE = d3.scaleOrdinal().domain(LEVELS).range(TABLEAU10);
 
-// Keep PALETTE for backward compatibility but use level-based coloring
-export const PALETTE = TABLEAU_10;
+export function getLevelColorByDepth(depth) {
+  const idx = Math.max(0, depth | 0) % TABLEAU10.length;
+  return TABLEAU10[idx];
+}
 
 export const settings = {
   renderDistance: 1.0,
