@@ -1,4 +1,4 @@
-import { LEVELS } from './constants.js';
+// Removed LEVELS import - now using numeric levels directly
 import { clearIndex, registerNode, state } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
 import { progressLabel } from './dom.js';
@@ -10,7 +10,7 @@ import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
 
 function inferLevelByDepth(depth) {
-  return LEVELS[depth] || `Level ${depth}`;
+  return depth;
 }
 
 export function mapToChildren(obj) {
@@ -29,7 +29,7 @@ export function mapToChildren(obj) {
 }
 
 export function normalizeTree(rootLike) {
-  if (Array.isArray(rootLike)) return { name: 'Life', level: 'Life', children: rootLike };
+  if (Array.isArray(rootLike)) return { name: 'Life', level: 0, children: rootLike };
   if (typeof rootLike !== 'object' || rootLike === null)
     throw new Error('Top-level JSON must be an object or an array.');
 
@@ -40,9 +40,9 @@ export function normalizeTree(rootLike) {
     const keys = Object.keys(rootLike);
     if (keys.length === 1) {
       const rootName = keys[0];
-      return { name: String(rootName), children: mapToChildren(rootLike[rootName]) };
+      return { name: String(rootName), level: 0, children: mapToChildren(rootLike[rootName]) };
     }
-    return { name: 'Life', level: 'Life', children: mapToChildren(rootLike) };
+    return { name: 'Life', level: 0, children: mapToChildren(rootLike) };
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
   return rootLike;
@@ -174,7 +174,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   let mergedTree;
   if (anyStructured) {
     // Structured nodes: collect children
-    mergedTree = { name: 'Life', level: 'Life', children: [] };
+    mergedTree = { name: 'Life', level: 0, children: [] };
     for (const { chunk } of results) {
       if (chunk && Array.isArray(chunk.children)) {
         mergedTree.children.push(...chunk.children);
@@ -356,18 +356,18 @@ const NAME_BANK = {
   ]
 };
 const PLAN_DEMO = [
-  { level: 'Kingdom', min: 4, max: 6 },
-  { level: 'Phylum', min: 4, max: 9 },
-  { level: 'Class', min: 4, max: 8 },
-  { level: 'Order', min: 3, max: 6 },
-  { level: 'Family', min: 3, max: 5 },
-  { level: 'Genus', min: 2, max: 4 },
-  { level: 'Species', min: 1, max: 3 }
+  { level: 1, levelName: 'Kingdom', min: 4, max: 6 },
+  { level: 2, levelName: 'Phylum', min: 4, max: 9 },
+  { level: 3, levelName: 'Class', min: 4, max: 8 },
+  { level: 4, levelName: 'Order', min: 3, max: 6 },
+  { level: 5, levelName: 'Family', min: 3, max: 5 },
+  { level: 6, levelName: 'Genus', min: 2, max: 4 },
+  { level: 7, levelName: 'Species', min: 1, max: 3 }
 ];
 let globalIdDemo = 1;
 
 export async function buildDemoData() {
-  const root = { name: 'Life', level: 'Life', children: [], parent: null, _id: 0 };
+  const root = { name: 'Life', level: 0, children: [], parent: null, _id: 0 };
   clearIndex();
   registerNode(root);
   let frontier = [root];
@@ -375,15 +375,15 @@ export async function buildDemoData() {
   for (let li = 0; li < PLAN_DEMO.length; li++) {
     const spec = PLAN_DEMO[li];
     const next = [];
-    progressLabel.textContent = `Generating ${spec.level}…`;
+    progressLabel.textContent = `Generating ${spec.levelName}…`;
     const total = frontier.length;
     let processed = 0;
     for (const p of frontier) {
       const count = spec.min + Math.floor(RNG() * (spec.max - spec.min + 1));
       const arr = [];
       for (let i = 0; i < count; i++) {
-        const bag = NAME_BANK[spec.level] || [];
-        const name = bag.length ? bag[i % bag.length] : `${spec.level}-${i + 1}`;
+        const bag = NAME_BANK[spec.levelName] || [];
+        const name = bag.length ? bag[i % bag.length] : `${spec.levelName}-${i + 1}`;
         const node = {
           name,
           level: spec.level,
