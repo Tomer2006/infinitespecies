@@ -32,7 +32,15 @@ function initDeepLinks() {
 async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
-  const candidates = [qUrl, 'tree.json', 'taxonomy.json', 'data.json'].filter(Boolean);
+  
+  // Priority order: URL param, split data/, then single files
+  const candidates = [
+    qUrl,
+    'data/manifest.json',  // Check for split files first
+    'tree.json', 
+    'taxonomy.json', 
+    'data.json'
+  ].filter(Boolean);
 
   for (const url of candidates) {
     try {
@@ -45,6 +53,8 @@ async function initData() {
       // try next
     }
   }
+  
+  // If all else fails, generate demo data
   await buildDemoData();
   tick();
 }

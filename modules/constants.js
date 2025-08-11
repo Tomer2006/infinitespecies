@@ -1,8 +1,20 @@
 // Constants and tunables
 
-// Dynamic palette by level name (domain grows as levels appear)
+export const LEVELS = [
+  'Life',
+  'Domain',
+  'Kingdom',
+  'Phylum',
+  'Class',
+  'Order',
+  'Family',
+  'Genus',
+  'Species'
+];
+
 export const PALETTE = d3
   .scaleOrdinal()
+  .domain(LEVELS)
   .range([
     '#7aa2ff',
     '#6df0c9',
@@ -13,8 +25,7 @@ export const PALETTE = d3
     '#ffd670',
     '#84fab0',
     '#b8f2e6'
-  ])
-  .unknown('#7aa2ff');
+  ]);
 
 export const settings = {
   renderDistance: 1.0,

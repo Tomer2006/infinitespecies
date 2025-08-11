@@ -27,7 +27,7 @@ import { pickNodeAt } from './picking.js';
 import { state } from './state.js';
 import { updateTooltip } from './tooltip.js';
 import { openProviderSearch } from './providers.js';
-import { fitNodeInView, goToNode, relayoutPreserveView } from './navigation.js';
+import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
@@ -105,16 +105,6 @@ export function initEvents() {
       state.camera.k *= scale;
       state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
       state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
-      // If we zoomed in meaningfully, opportunistically load children of hovered/current
-      if (scale > 1.01) {
-        const target = state.hoverNode || state.current;
-        if (target && target.childrenUrl && (!target.children || target.children.length === 0)) {
-          import('./lazy.js').then(async m => {
-            await m.loadChildrenIfNeeded(target);
-            relayoutPreserveView();
-          });
-        }
-      }
       requestRender();
       ev.preventDefault();
     },

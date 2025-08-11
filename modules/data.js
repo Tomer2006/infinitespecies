@@ -1,4 +1,4 @@
-// No hardcoded levels; infer by depth when missing
+import { LEVELS } from './constants.js';
 import { clearIndex, registerNode, state } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
 import { progressLabel } from './dom.js';
@@ -8,7 +8,7 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 
 function inferLevelByDepth(depth) {
-  return `Level ${depth}`;
+  return LEVELS[depth] || `Level ${depth}`;
 }
 
 export function mapToChildren(obj) {
@@ -42,7 +42,6 @@ export function normalizeTree(rootLike) {
     }
     return { name: 'Life', level: 'Life', children: mapToChildren(rootLike) };
   }
-  // Allow lazy children via childrenUrl
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
   return rootLike;
 }
@@ -113,10 +112,104 @@ export async function loadFromJSONText(text) {
 
 export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
+  
+  // Check if this is a split dataset by looking for manifest.json
+  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
+  
+  try {
+    const manifestRes = await fetch(manifestUrl, { cache: 'no-store' });
+    if (manifestRes.ok) {
+      const manifest = await manifestRes.json();
+      if (manifest.version && manifest.files) {
+        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+      }
+    }
+  } catch (e) {
+    // No manifest found, try loading as single file
+  }
+  
+  // Single file loading
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
   await loadFromJSONText(text);
+}
+
+async function loadFromSplitFiles(baseUrl, manifest) {
+  setProgress(0, `Loading ${manifest.total_files} split files...`);
+  
+  // Load all files in parallel with progress tracking
+  let completed = 0;
+  const chunks = [];
+  
+  const loadPromises = manifest.files.map(async (fileInfo, index) => {
+    const fileUrl = baseUrl + fileInfo.filename;
+    const res = await fetch(fileUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+    const chunk = await res.json();
+    
+    completed++;
+    setProgress(completed / manifest.total_files, 
+      `Loaded ${completed}/${manifest.total_files} files...`);
+    
+    return { index, chunk, fileInfo };
+  });
+  
+  const results = await Promise.all(loadPromises);
+  
+  setProgress(0.95, 'Merging tree data...');
+  
+  // Sort by index to maintain order
+  results.sort((a, b) => a.index - b.index);
+  
+  // Find root chunk and merge others
+  let mergedTree = null;
+  const childrenToMerge = [];
+  
+  for (const { chunk, fileInfo } of results) {
+    if (fileInfo.is_root || fileInfo.path === "") {
+      mergedTree = chunk;
+    } else {
+      childrenToMerge.push(chunk);
+    }
+  }
+  
+  if (!mergedTree) {
+    // If no explicit root, create one and merge all chunks as children
+    mergedTree = {
+      name: "Life",
+      level: "Life",
+      children: []
+    };
+    
+    for (const { chunk } of results) {
+      if (chunk.children && Array.isArray(chunk.children)) {
+        mergedTree.children.push(...chunk.children);
+      } else if (chunk.name) {
+        mergedTree.children.push(chunk);
+      }
+    }
+  } else {
+    // Merge children from other chunks into root
+    if (!mergedTree.children) mergedTree.children = [];
+    
+    for (const chunk of childrenToMerge) {
+      if (chunk.children && Array.isArray(chunk.children)) {
+        mergedTree.children.push(...chunk.children);
+      } else if (chunk.name) {
+        mergedTree.children.push(chunk);
+      }
+    }
+  }
+  
+  setProgress(0.98, 'Processing merged tree...');
+  
+  // Process the merged tree
+  const normalizedTree = normalizeTree(mergedTree);
+  await indexTreeProgressive(normalizedTree);
+  setDataRoot(normalizedTree);
+  
+  setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
 }
 
 export function setDataRoot(root) {
