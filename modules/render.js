@@ -45,11 +45,11 @@ export function draw() {
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
     ctx.fillStyle = PALETTE(level) || '#7aa2ff';
-    ctx.globalAlpha = 0.17;
+    ctx.globalAlpha = 0.24; // slightly higher fill for better differentiation
     ctx.fill();
     ctx.globalAlpha = 0.9;
     ctx.lineWidth = Math.max(1, Math.min(3, 1.5 * Math.sqrt(Math.max(sr / 40, 0.25))));
-    ctx.strokeStyle = d.children && d.children.length ? '#3a478e' : '#2b356f';
+    ctx.strokeStyle = d.children && d.children.length ? 'rgba(220,230,255,0.85)' : 'rgba(180,195,240,0.85)';
     ctx.stroke();
 
     if (sr > LABEL_MIN) {

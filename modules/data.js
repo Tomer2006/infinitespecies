@@ -6,6 +6,8 @@ import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
+import { findByQuery } from './search.js';
+import { goToNode } from './navigation.js';
 
 function inferLevelByDepth(depth) {
   return LEVELS[depth] || `Level ${depth}`;
@@ -108,6 +110,8 @@ export async function loadFromJSONText(text) {
   const nroot = normalizeTree(parsed);
   await indexTreeProgressive(nroot);
   setDataRoot(nroot);
+  // Try to move user to Homo sapiens for light initial view
+  jumpToPreferredStart();
 }
 
 export async function loadFromUrl(url) {
@@ -198,6 +202,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     const normalizedTree = normalizeTree(mergedMap);
     await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
+    jumpToPreferredStart();
     setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
     return;
   }
@@ -208,6 +213,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const normalizedTree = normalizeTree(mergedTree);
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
+  jumpToPreferredStart();
   
   setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
 }
@@ -223,6 +229,18 @@ export function setDataRoot(root) {
   state.camera.x = 0;
   state.camera.y = 0;
   requestRender();
+}
+
+function jumpToPreferredStart() {
+  // Respect deep links; only jump if no hash present
+  if (location.hash && location.hash.length > 1) return;
+  const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
+  if (preferred) {
+    // Jump without animation to avoid initial lag
+    goToNode(preferred, false);
+    state.highlightNode = preferred;
+    requestRender();
+  }
 }
 
 // Demo data

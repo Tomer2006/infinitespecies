@@ -70,6 +70,8 @@ async function initData() {
   // Load data and deep links
   initData();
   initDeepLinks();
+  // After data load completes, attempt a jump to a lightweight start node
+  // Note: jump is triggered inside setDataRoot after layout/indexing
 })();
 
 

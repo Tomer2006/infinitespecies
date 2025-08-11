@@ -12,19 +12,21 @@ export const LEVELS = [
   'Species'
 ];
 
+// High-contrast, colorblind-friendly palette (optimized for dark background)
+// Derived from ColorBrewer/Tableau tones
 export const PALETTE = d3
   .scaleOrdinal()
   .domain(LEVELS)
   .range([
-    '#7aa2ff',
-    '#6df0c9',
-    '#ffc857',
-    '#b892ff',
-    '#ff8777',
-    '#77d1ff',
-    '#ffd670',
-    '#84fab0',
-    '#b8f2e6'
+    '#e41a1c', // red
+    '#377eb8', // blue
+    '#4daf4a', // green
+    '#984ea3', // purple
+    '#ff7f00', // orange
+    '#ffff33', // yellow
+    '#a65628', // brown
+    '#f781bf', // pink
+    '#17becf'  // cyan
   ]);
 
 export const settings = {
