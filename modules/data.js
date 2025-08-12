@@ -91,7 +91,9 @@ export async function indexTreeProgressive(root, options = {}) {
   let lastYield = performance.now();
   while (stack.length) {
     const now = performance.now();
-    if (now - lastYield >= chunkMs) {
+    // Do not yield in background tabs (timers are heavily throttled there);
+    // continue processing to avoid stalling loading when switching tabs.
+    if (!document.hidden && now - lastYield >= chunkMs) {
       await new Promise(r => setTimeout(r, 0));
       lastYield = performance.now();
     }
@@ -110,9 +112,9 @@ export async function indexTreeProgressive(root, options = {}) {
       setProgress(processed / total, `Indexing… ${processed.toLocaleString()}/${total.toLocaleString()}`);
     }
   }
-  setProgress(0.95, 'Computing descendant counts…');
+  if (!document.hidden) setProgress(0.95, 'Computing descendant counts…');
   computeDescendantCountsIter(root);
-  setProgress(1, 'Done');
+  if (!document.hidden) setProgress(1, 'Done');
 }
 
 export async function loadFromJSONText(text) {
