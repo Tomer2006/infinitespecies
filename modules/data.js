@@ -59,25 +59,42 @@ function countNodes(root) {
   return c;
 }
 
-function computeDescendantCounts(node) {
-  if (!node.children || node.children.length === 0) {
-    node._leaves = 1;
-    return 1;
+function computeDescendantCountsIter(root) {
+  // Post-order traversal without recursion
+  const stack = [root];
+  const post = [];
+  while (stack.length) {
+    const n = stack.pop();
+    post.push(n);
+    const ch = Array.isArray(n.children) ? n.children : [];
+    for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
   }
-  let t = 0;
-  for (const c of node.children) {
-    t += computeDescendantCounts(c);
+  for (let i = post.length - 1; i >= 0; i--) {
+    const n = post[i];
+    const ch = Array.isArray(n.children) ? n.children : [];
+    if (ch.length === 0) n._leaves = 1;
+    else {
+      let sum = 0;
+      for (let j = 0; j < ch.length; j++) sum += ch[j]._leaves || 1;
+      n._leaves = sum;
+    }
   }
-  node._leaves = t;
-  return t;
 }
 
-export async function indexTreeProgressive(root) {
+export async function indexTreeProgressive(root, options = {}) {
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : 20;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : 2000;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
   const stack = [{ node: root, parent: null, depth: 0 }];
+  let lastYield = performance.now();
   while (stack.length) {
+    const now = performance.now();
+    if (now - lastYield >= chunkMs) {
+      await new Promise(r => setTimeout(r, 0));
+      lastYield = performance.now();
+    }
     const { node, parent, depth } = stack.pop();
     if (node == null || typeof node !== 'object') continue;
     node.name = String(node.name ?? 'Unnamed');
@@ -89,13 +106,12 @@ export async function indexTreeProgressive(root) {
     for (let i = node.children.length - 1; i >= 0; i--)
       stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
     processed++;
-    if (processed % 500 === 0) {
+    if (processed % progressEvery === 0) {
       setProgress(processed / total, `Indexing… ${processed.toLocaleString()}/${total.toLocaleString()}`);
-      await new Promise(r => setTimeout(r, 0));
     }
   }
-  setProgress(0.98, 'Computing descendant counts…');
-  computeDescendantCounts(root);
+  setProgress(0.95, 'Computing descendant counts…');
+  computeDescendantCountsIter(root);
   setProgress(1, 'Done');
 }
 
@@ -140,25 +156,41 @@ export async function loadFromUrl(url) {
 
 async function loadFromSplitFiles(baseUrl, manifest) {
   setProgress(0, `Loading ${manifest.total_files} split files...`);
-  
-  // Load all files in parallel with progress tracking
+  // Concurrency-limited loader (browser typically limits to ~6 per host)
+  const concurrency = Math.min(8, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6));
   let completed = 0;
-  const chunks = [];
-  
-  const loadPromises = manifest.files.map(async (fileInfo, index) => {
-    const fileUrl = baseUrl + fileInfo.filename;
-    const res = await fetch(fileUrl, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-    const chunk = await res.json();
-    
-    completed++;
-    setProgress(completed / manifest.total_files, 
-      `Loaded ${completed}/${manifest.total_files} files...`);
-    
-    return { index, chunk, fileInfo };
+  const results = new Array(manifest.files.length);
+  let inFlight = 0;
+  let nextIndex = 0;
+  await new Promise((resolve, reject) => {
+    const startNext = () => {
+      while (inFlight < concurrency && nextIndex < manifest.files.length) {
+        const i = nextIndex++;
+        inFlight++;
+        const fileInfo = manifest.files[i];
+        const fileUrl = baseUrl + fileInfo.filename;
+        fetch(fileUrl, { cache: 'no-store' })
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+            return res.json();
+          })
+          .then(chunk => {
+            results[i] = { index: i, chunk, fileInfo };
+            completed++;
+            if (completed % 2 === 0 || completed === manifest.total_files) {
+              setProgress(completed / manifest.total_files, `Loaded ${completed}/${manifest.total_files} files...`);
+            }
+          })
+          .then(() => {
+            inFlight--;
+            if (completed === manifest.files.length) resolve();
+            else startNext();
+          })
+          .catch(err => reject(err));
+      }
+    };
+    startNext();
   });
-  
-  const results = await Promise.all(loadPromises);
   
   setProgress(0.95, 'Merging tree data...');
   
