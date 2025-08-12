@@ -17,11 +17,11 @@ export const TABLEAU_COLORS = [
   '#7f7f7f'  // Gray
 ];
 
-// Function to get color based on node order (loops through palette)
-// First circle → Blue, second → Orange, third → Red, ... then wraps
+// Function to get color based on taxonomy level (depth)
+// One solid color per level; wraps after the palette length
 export function getNodeColor(node) {
-  const id = typeof node._id === 'number' ? node._id : 1;
-  return TABLEAU_COLORS[(id - 1) % TABLEAU_COLORS.length];
+  const level = typeof node.level === 'number' ? node.level : 0;
+  return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
 
 export const settings = {
