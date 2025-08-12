@@ -1,6 +1,6 @@
 import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
 import { state } from './state.js';
-import { getColorByDepth, settings } from './constants.js';
+import { getNodeColor, settings } from './constants.js';
 import { nodeInView } from './picking.js';
 
 // Simple LRU-ish cache for text measurement
@@ -54,10 +54,9 @@ export function draw() {
 
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    ctx.fillStyle = getColorByDepth(d.depth);
-    ctx.globalAlpha = 0.24; // slightly higher fill for better differentiation
+    ctx.fillStyle = getNodeColor(d.data);
+    ctx.globalAlpha = 1;
     ctx.fill();
-    ctx.globalAlpha = 0.9;
     ctx.lineWidth = Math.max(1, Math.min(3, 1.5 * Math.sqrt(Math.max(sr / 40, 0.25))));
     ctx.strokeStyle = d.children && d.children.length ? 'rgba(220,230,255,0.85)' : 'rgba(180,195,240,0.85)';
     ctx.stroke();

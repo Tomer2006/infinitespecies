@@ -17,17 +17,11 @@ export const TABLEAU_COLORS = [
   '#7f7f7f'  // Gray
 ];
 
-// Function to get color based on taxonomy level (depth)
-// One solid color per level; wraps after the palette length
+// Function to get color based on node level
 export function getNodeColor(node) {
+  // Use numeric level directly, default to 0 if not set
   const level = typeof node.level === 'number' ? node.level : 0;
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
-}
-
-// Prefer depth-based coloring to guarantee one color per visual level
-export function getColorByDepth(depth) {
-  const d = typeof depth === 'number' ? depth : 0;
-  return TABLEAU_COLORS[d % TABLEAU_COLORS.length];
 }
 
 export const settings = {
