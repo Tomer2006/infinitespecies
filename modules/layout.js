@@ -16,6 +16,15 @@ export function layoutFor(subtree) {
     d._vy = d.y - cy;
     d._vr = d.r;
   });
+  // Assign per-sibling indices for color cycling
+  h.each(d => {
+    if (d.children && d.children.length) {
+      for (let i = 0; i < d.children.length; i++) {
+        const child = d.children[i];
+        if (child && child.data) child.data._sibIndex = i;
+      }
+    }
+  });
   return { root: h, diameter };
 }
 

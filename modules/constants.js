@@ -19,7 +19,11 @@ export const TABLEAU_COLORS = [
 
 // Function to get color based on node level
 export function getNodeColor(node) {
-  // Use numeric level directly, default to 0 if not set
+  // Prefer per-sibling cycling if sibling index is available
+  if (typeof node._sibIndex === 'number') {
+    return TABLEAU_COLORS[node._sibIndex % TABLEAU_COLORS.length];
+  }
+  // Fallback to depth-based cycling
   const level = typeof node.level === 'number' ? node.level : 0;
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
