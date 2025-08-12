@@ -1,37 +1,47 @@
-/* Application State Management */
-export let DATA_ROOT = null;
-export let current = null;
-export let layout = null;
-export const allNodes = [];
-export const nameIndex = new Map();
-export let globalId = 1;
+// Shared state and indexes
 
-export let hoverNode = null;
-export let highlightNode = null;
-export const nodeLayoutMap = new Map();
+export const state = {
+  DATA_ROOT: null,
+  current: null,
+  layout: null,
+  allNodes: [],
+  nameIndex: new Map(),
+  globalId: 1,
 
-export function setDataRoot(root) { DATA_ROOT = root; }
-export function setCurrent(node) { current = node; }
-export function setLayout(l) { layout = l; }
-export function setHoverNode(node) { hoverNode = node; }
-export function setHighlightNode(node) { highlightNode = node; }
+  // camera
+  camera: { x: 0, y: 0, k: 1 },
+  targetCam: { x: 0, y: 0, k: 1 },
+  animating: false,
 
-export function clearIndex() { 
-  allNodes.length = 0; 
-  nameIndex.clear(); 
-  globalId = 1; 
+  // hover/highlight
+  hoverNode: null,
+  highlightNode: null,
+
+  // layout map
+  nodeLayoutMap: new Map(),
+
+  // preview pinning
+  isPreviewPinned: false,
+  pinnedNodeId: null
+};
+
+export function clearIndex() {
+  state.allNodes.length = 0;
+  state.nameIndex.clear();
+  state.globalId = 1;
 }
 
-export function registerNode(n) {
-  allNodes.push(n);
-  const key = String(n.name ?? "").toLowerCase();
-  if (!nameIndex.has(key)) nameIndex.set(key, []);
-  nameIndex.get(key).push(n);
+export function registerNode(node) {
+  state.allNodes.push(node);
+  const key = String(node.name ?? '').toLowerCase();
+  if (!state.nameIndex.has(key)) state.nameIndex.set(key, []);
+  state.nameIndex.get(key).push(node);
 }
 
-export function rebuildNodeMap() { 
-  nodeLayoutMap.clear(); 
-  if (layout) {
-    layout.root.descendants().forEach(d => nodeLayoutMap.set(d.data._id, d)); 
-  }
+export function rebuildNodeMap() {
+  state.nodeLayoutMap.clear();
+  if (!state.layout?.root) return;
+  state.layout.root.descendants().forEach(d => state.nodeLayoutMap.set(d.data._id, d));
 }
+
+

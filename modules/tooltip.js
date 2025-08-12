@@ -1,16 +1,43 @@
-/* Tooltip updates */
 import { ttip, tName, tMeta } from './dom.js';
+import { state } from './state.js';
+import { showBigFor, hideBigPreview } from './preview.js';
+import { requestRender, W, H } from './canvas.js';
 
-export function updateTooltip(node, x, y) {
+let lastThumbShownForId = 0;
+let thumbDelayTimer = null;
+
+export function updateTooltip(n, px, py) {
   if (!ttip) return;
-  if (!node) {
+  if (!n) {
     ttip.style.opacity = 0;
+    lastThumbShownForId = 0;
+    if (thumbDelayTimer) {
+      clearTimeout(thumbDelayTimer);
+      thumbDelayTimer = null;
+    }
+    hideBigPreview();
     return;
   }
-  if (tName) tName.textContent = node.name || '';
-  if (tMeta) tMeta.textContent = node.level ? String(node.level) : '';
+  const desc = n._leaves ?? 1;
+  if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
+  if (tMeta) tMeta.textContent = `${desc.toLocaleString()} descendant${desc === 1 ? '' : 's'}`;
+  const m = 10;
+  ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
+  ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
   ttip.style.opacity = 1;
-  ttip.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
+  if (state.isPreviewPinned) return;
+  if (n._id !== lastThumbShownForId) {
+    lastThumbShownForId = n._id;
+    if (thumbDelayTimer) {
+      clearTimeout(thumbDelayTimer);
+    }
+    thumbDelayTimer = setTimeout(() => {
+      if (state.hoverNode && state.hoverNode._id === n._id) {
+        showBigFor(n);
+      }
+    }, 60);
+  }
+  requestRender();
 }
 
 

@@ -1,22 +1,34 @@
-/* External provider search */
 import { providerSelect } from './dom.js';
 
-export function getSearchTarget() {
-  // Placeholder: callers often pass hover/current separately
-  return null;
+export function providerUrl(provider, name) {
+  const q = encodeURIComponent(name);
+  switch (provider) {
+    case 'google':
+      return `https://www.google.com/search?q=${q}`;
+    case 'wikipedia':
+      return `https://en.wikipedia.org/wiki/Special:Search?search=${q}`;
+    case 'gbif':
+      return `https://www.gbif.org/species/search?q=${q}`;
+    case 'ncbi':
+      return `https://www.ncbi.nlm.nih.gov/taxonomy/?term=${q}`;
+    case 'col':
+      return `https://www.catalogueoflife.org/data/search?q=${q}`;
+    case 'inat':
+      return `https://www.inaturalist.org/search?q=${q}`;
+    default:
+      return `https://www.google.com/search?q=${q}`;
+  }
 }
 
-export function openProviderSearch(node) {
-  if (!node) return;
-  const provider = providerSelect ? providerSelect.value : 'google';
-  const q = encodeURIComponent(node.name || '');
-  let url = `https://www.google.com/search?q=${q}`;
-  if (provider === 'wikipedia') url = `https://en.wikipedia.org/wiki/Special:Search?search=${q}`;
-  if (provider === 'gbif') url = `https://www.gbif.org/occurrence/search?taxon_name=${q}`;
-  if (provider === 'ncbi') url = `https://www.ncbi.nlm.nih.gov/taxonomy/?term=${q}`;
-  if (provider === 'col') url = `https://www.catalogueoflife.org/data/search?q=${q}`;
-  if (provider === 'inat') url = `https://www.inaturalist.org/search?q=${q}`;
-  window.open(url, '_blank', 'noopener');
+export function getSearchTargetName(forNode) {
+  return forNode?.name || '';
+}
+
+export function openProviderSearch(forNode) {
+  if (!forNode) return;
+  const provider = providerSelect?.value || 'google';
+  const url = providerUrl(provider, forNode.name);
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 
