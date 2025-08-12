@@ -1,5 +1,4 @@
-/* App initialization: load data and wire demo */
-import { demoBtn } from './dom.js';
+/* App initialization */
 import { setDataRoot, setCurrent, setLayout, rebuildNodeMap } from './state.js';
 import { layoutFor } from './layout.js';
 import { setBreadcrumbs } from './navigation.js';
@@ -17,20 +16,7 @@ function buildTreeFromNestedMap(map) {
   return toNode(rootName, rootVal);
 }
 
-function makeDemoData() {
-  return {
-    name: 'Life',
-    children: [
-      { name: 'Bacteria', children: [ { name: 'Proteobacteria' }, { name: 'Firmicutes' } ] },
-      { name: 'Archaea', children: [ { name: 'Euryarchaeota' }, { name: 'Crenarchaeota' } ] },
-      { name: 'Eukaryota', children: [
-        { name: 'Plants', children: [ { name: 'Bryophyta' }, { name: 'Tracheophyta' } ] },
-        { name: 'Fungi', children: [ { name: 'Ascomycota' }, { name: 'Basidiomycota' } ] },
-        { name: 'Animals', children: [ { name: 'Chordata' }, { name: 'Arthropoda' }, { name: 'Mollusca' } ] }
-      ]}
-    ]
-  };
-}
+// Demo data removed
 
 async function loadTreeJson() {
   try {
@@ -46,7 +32,7 @@ async function loadTreeJson() {
   } catch (_) {
     // fall through
   }
-  return makeDemoData();
+  return null;
 }
 
 function applyData(root) {
@@ -60,11 +46,16 @@ function applyData(root) {
 
 export async function initializeApp() {
   const root = await loadTreeJson();
-  applyData(root);
-  if (demoBtn) {
-    demoBtn.addEventListener('click', () => {
-      applyData(makeDemoData());
-    });
+  if (root) {
+    applyData(root);
+  } else {
+    const modal = document.getElementById('jsonModal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    const label = document.getElementById('progressLabel');
+    if (label) label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
   }
 }
 

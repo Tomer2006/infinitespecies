@@ -12,7 +12,6 @@ import {
   surpriseBtn,
   tooltipSearchBtn,
   loadBtn,
-  demoBtn,
   cancelLoadBtn,
   applyLoadBtn,
   insertSampleBtn,
@@ -315,10 +314,7 @@ export function initEvents() {
     }
   });
 
-  demoBtn?.addEventListener('click', async () => {
-    const { buildDemoData } = await import('./data.js');
-    await buildDemoData();
-  });
+  // Demo button removed
 
   // Help modal close button
   helpCloseBtn?.addEventListener('click', () => {

@@ -10,13 +10,13 @@ Interactive circle‑packing explorer for biological taxonomy powered by D3.
 - **Local search** with highlight pulses.
 - **Web search** integration (Google, Wikipedia, GBIF, NCBI, CoL, iNaturalist).
 - **Custom JSON loading** via modal (paste or file).
-- **Demo data** generator for instant play.
+ 
 - **Deep links**: URL hash tracks the current path; use Copy Link to share the exact view.
 - **PNG export**: Snapshot the current view. (Planned)
  
 
 ### Quick start
-- Fastest: open `index.html` directly (demo data loads if `fetch` is blocked on `file://`).
+- Fastest: open `index.html` directly, then click `Load JSON` to import your data.
 - Recommended: serve the folder to enable loading `tree.json` and external JSON.
   - Python 3: `python -m http.server 8080`
   - Node: `npx http-server -p 8080`
@@ -36,7 +36,7 @@ Interactive circle‑packing explorer for biological taxonomy powered by D3.
 ### UI overview
 - **Top bar**:
   - `Load JSON`: paste or upload a JSON file
-  - `Demo Data`: build a synthetic tree
+  
   - Provider select + `Web Search`: open selected provider for hovered/current node
   - Search field: find by name (supports partial matches)
   - `Surprise Me`: jump to a random deepest leaf
@@ -54,7 +54,7 @@ On startup, the app tries (in order):
 4) `taxonomy.json`
 5) `data.json`
 
-If none are loaded (e.g., `file://` CORS), it falls back to demo data.
+If none are loaded automatically, you will be prompted to load your own JSON.
 
 #### Supported JSON schemas
 1) Structured nodes (preferred):
@@ -137,7 +137,7 @@ python tools/split_tree.py tree.json --size 10       # Max 10MB for slower netwo
 - Use `Copy Link` to copy a URL you can share; opening it restores the same view.
 
 ### Troubleshooting
-- **CORS / fetch errors**: run a local server (see Quick start). Opening via `file://` will load demo data only.
+- **CORS / fetch errors**: run a local server (see Quick start). Opening via `file://` may block fetches; use `Load JSON` to import a local file.
 - **Large datasets feel slow**: zoom in; labels only render for sufficiently large circles.
 - **Invalid JSON**: the loader will show the parse error in the modal.
 

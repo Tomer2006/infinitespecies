@@ -5,7 +5,7 @@ import { resizeCanvas, registerDrawCallback, requestRender, tick } from './modul
 import { draw } from './modules/render.js';
 import { initEvents } from './modules/events.js';
 import { showLoading, hideLoading } from './modules/loading.js';
-import { loadFromUrl, buildDemoData } from './modules/data.js';
+import { loadFromUrl } from './modules/data.js';
 import { decodePath, findNodeByPath } from './modules/deeplink.js';
 import { goToNode } from './modules/navigation.js';
 import { state } from './modules/state.js';
@@ -54,9 +54,15 @@ async function initData() {
     }
   }
   
-  // If all else fails, generate demo data
-  await buildDemoData();
-  tick();
+  // If all else fails, prompt user to load their own JSON
+  hideLoading();
+  const modal = document.getElementById('jsonModal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  const label = document.getElementById('progressLabel');
+  if (label) label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
 }
 
 (function init() {

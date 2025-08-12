@@ -25,7 +25,6 @@ export const progressPct = document.getElementById('progressPct');
 
 export const jsonModal = document.getElementById('jsonModal');
 export const loadBtn = document.getElementById('loadBtn');
-export const demoBtn = document.getElementById('demoBtn');
 export const cancelLoadBtn = document.getElementById('cancelLoadBtn');
 export const applyLoadBtn = document.getElementById('applyLoadBtn');
 export const insertSampleBtn = document.getElementById('insertSampleBtn');
