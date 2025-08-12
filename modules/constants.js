@@ -17,15 +17,11 @@ export const TABLEAU_COLORS = [
   '#7f7f7f'  // Gray
 ];
 
-// Function to get color based on node level
+// Function to get color based on node order (loops through palette)
+// First circle → Blue, second → Orange, third → Red, ... then wraps
 export function getNodeColor(node) {
-  // Prefer per-sibling cycling if sibling index is available
-  if (typeof node._sibIndex === 'number') {
-    return TABLEAU_COLORS[node._sibIndex % TABLEAU_COLORS.length];
-  }
-  // Fallback to depth-based cycling
-  const level = typeof node.level === 'number' ? node.level : 0;
-  return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
+  const id = typeof node._id === 'number' ? node._id : 1;
+  return TABLEAU_COLORS[(id - 1) % TABLEAU_COLORS.length];
 }
 
 export const settings = {
