@@ -220,8 +220,12 @@ export function initEvents() {
   });
 
   surpriseBtn?.addEventListener('click', () => {
-    if (!state.allNodes.length) return;
-    const leaves = state.allNodes.filter(n => !n.children || n.children.length === 0);
+    // Pick a random visible leaf by walking the current layout subtree
+    if (!state.layout?.root) return;
+    const leaves = [];
+    for (const d of state.layout.root.descendants()) {
+      if (!d.children || d.children.length === 0) leaves.push(d.data);
+    }
     if (!leaves.length) return;
     const pick = leaves[Math.floor(Math.random() * leaves.length)];
     state.current = pick;

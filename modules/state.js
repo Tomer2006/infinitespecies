@@ -4,8 +4,6 @@ export const state = {
   DATA_ROOT: null,
   current: null,
   layout: null,
-  allNodes: [],
-  nameIndex: new Map(),
   globalId: 1,
 
   // camera
@@ -29,16 +27,11 @@ export const state = {
 };
 
 export function clearIndex() {
-  state.allNodes.length = 0;
-  state.nameIndex.clear();
   state.globalId = 1;
 }
 
 export function registerNode(node) {
-  state.allNodes.push(node);
-  const key = String(node.name ?? '').toLowerCase();
-  if (!state.nameIndex.has(key)) state.nameIndex.set(key, []);
-  state.nameIndex.get(key).push(node);
+  // Minimal registration retained for id assignment only
 }
 
 export function rebuildNodeMap() {

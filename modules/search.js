@@ -5,11 +5,15 @@ import { goToNode } from './navigation.js';
 export function findByQuery(q) {
   if (!q) return null;
   q = q.trim().toLowerCase();
-  if (!q) return null;
-  const exact = state.nameIndex.get(q);
-  if (exact && exact.length) return exact[0];
-  for (const [k, arr] of state.nameIndex) {
-    if (k.includes(q)) return arr[0];
+  if (!q || !state.layout?.root) return null;
+  // Simple on-demand scan of current hierarchy to reduce memory
+  const stack = [state.layout.root];
+  while (stack.length) {
+    const d = stack.pop();
+    const name = (d.data?.name || '').toLowerCase();
+    if (name.includes(q)) return d.data;
+    const ch = d.children || [];
+    for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
   }
   return null;
 }

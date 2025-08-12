@@ -99,11 +99,19 @@ export async function indexTreeProgressive(root, options = {}) {
     }
     const { node, parent, depth } = stack.pop();
     if (node == null || typeof node !== 'object') continue;
+    // Normalize and trim strings in-place to reduce memory
     node.name = String(node.name ?? 'Unnamed');
+    if (node.name.length > 200) node.name = node.name.slice(0, 200);
     node.level = node.level || inferLevelByDepth(depth);
     node.parent = parent;
     node._id = state.globalId++;
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
+    // Drop empty metadata to free memory
+    for (const k of Object.keys(node)) {
+      if (k === 'name' || k === 'children' || k === 'level' || k === 'parent') continue;
+      const v = node[k];
+      if (v == null || (typeof v === 'object' && Object.keys(v).length === 0)) delete node[k];
+    }
     registerNode(node);
     for (let i = node.children.length - 1; i >= 0; i--)
       stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
