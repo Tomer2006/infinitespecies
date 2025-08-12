@@ -19,6 +19,9 @@ export const state = {
 
   // layout map
   nodeLayoutMap: new Map(),
+  // cached orders for performance
+  drawOrder: [], // hierarchy nodes sorted by radius for drawing
+  pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
 
   // preview pinning
   isPreviewPinned: false,
@@ -41,7 +44,11 @@ export function registerNode(node) {
 export function rebuildNodeMap() {
   state.nodeLayoutMap.clear();
   if (!state.layout?.root) return;
-  state.layout.root.descendants().forEach(d => state.nodeLayoutMap.set(d.data._id, d));
+  const desc = state.layout.root.descendants();
+  desc.forEach(d => state.nodeLayoutMap.set(d.data._id, d));
+  // Precompute orders
+  state.drawOrder = desc.slice().sort((a, b) => a._vr - b._vr);
+  state.pickOrder = desc.slice().sort((a, b) => b.depth - a.depth);
 }
 
 

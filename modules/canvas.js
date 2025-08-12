@@ -47,8 +47,10 @@ function ensureRAF() {
 
 function loop() {
   rafId = null;
+  if (!needRender) return; // skip if nothing requested
+  needRender = false;
   if (drawCallback) drawCallback();
-  if (needRender) ensureRAF();
+  if (needRender) ensureRAF(); // draw requested during draw()
 }
 
 export function registerDrawCallback(cb) {

@@ -3,9 +3,13 @@ import { state } from './state.js';
 import { getNodeColor, settings } from './constants.js';
 import { nodeInView } from './picking.js';
 
+// Simple LRU-ish cache for text measurement
+const measureCache = new Map();
+
 export function draw() {
   const ctx = getContext();
   if (!ctx || !state.layout) return;
+  // Clear once per frame
   ctx.clearRect(0, 0, W, H);
 
   // Grid
@@ -29,14 +33,21 @@ export function draw() {
   ctx.stroke();
   ctx.restore();
 
-  const nodes = state.layout.root.descendants().sort((a, b) => a._vr - b._vr);
+  const nodes = state.drawOrder || state.layout.root.descendants();
   const MIN_PX_R = settings.minPxRadius;
   const LABEL_MIN = settings.labelMinPxRadius;
   const labelCandidates = [];
 
+  // Precompute view radius (in world units)
+  const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * settings.renderDistance;
+
   for (const d of nodes) {
     if (!nodeVertInView(d, settings.verticalPadPx)) continue;
-    if (!nodeInView(d)) continue;
+    // faster in-view test inline
+    const dx = d._vx - state.camera.x;
+    const dy = d._vy - state.camera.y;
+    const rr = viewR + d._vr;
+    if (dx * dx + dy * dy > rr * rr) continue;
     const [sx, sy] = worldToScreen(d._vx, d._vy);
     const sr = d._vr * state.camera.k;
     if (sr < MIN_PX_R) continue;
@@ -54,11 +65,18 @@ export function draw() {
     if (sr > LABEL_MIN) {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
       if (fontSize >= settings.labelMinFontPx) {
-        ctx.save();
-        ctx.font = `600 ${fontSize}px ui-sans-serif`;
         const text = d.data.name;
-        const metrics = ctx.measureText(text);
-        ctx.restore();
+        // Cache measurements by fontSize+text
+        const key = fontSize + '|' + text;
+        let metrics = measureCache.get(key);
+        if (!metrics) {
+          ctx.save();
+          ctx.font = `600 ${fontSize}px ui-sans-serif`;
+          metrics = { width: ctx.measureText(text).width };
+          ctx.restore();
+          if (measureCache.size > 2000) measureCache.clear();
+          measureCache.set(key, metrics);
+        }
         const textWidth = metrics.width,
           textHeight = fontSize,
           pad = 2;

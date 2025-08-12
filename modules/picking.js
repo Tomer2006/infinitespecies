@@ -11,7 +11,7 @@ export function nodeInView(d) {
 }
 
 export function pickNodeAt(px, py) {
-  const nodes = state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
+  const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
   const [wx, wy] = screenToWorld(px, py);
   for (const d of nodes) {
     if (!nodeInView(d)) continue;
