@@ -29,7 +29,11 @@ export const settings = {
   minPxRadius: 4,
   labelMinPxRadius: 22,
   labelMinFontPx: 12,
-  verticalPadPx: 100
+  verticalPadPx: 100,
+  // Performance knobs
+  strokeMinPxRadius: 12,      // skip stroking tiny circles
+  maxLabels: 300,             // cap labels per frame
+  labelGridCellPx: 24         // spatial bin for label overlap checks
 };
 
 

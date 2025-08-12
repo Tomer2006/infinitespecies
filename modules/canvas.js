@@ -9,6 +9,7 @@ let DPR = 1;
 let needRender = true;
 let rafId = null;
 let drawCallback = null;
+let frameCounter = 0; // incremented each frame
 
 export function getContext() {
   return ctx;
@@ -51,6 +52,7 @@ function loop() {
   needRender = false;
   if (drawCallback) drawCallback();
   if (needRender) ensureRAF(); // draw requested during draw()
+  frameCounter++;
 }
 
 export function registerDrawCallback(cb) {
@@ -88,5 +90,8 @@ export function viewportRadius(renderDistance) {
 }
 
 export { W, H, DPR };
+export function getFrameCounter() {
+  return frameCounter;
+}
 
 
