@@ -24,6 +24,12 @@ export function getNodeColor(node) {
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
 
+// Prefer depth-based coloring to guarantee one color per visual level
+export function getColorByDepth(depth) {
+  const d = typeof depth === 'number' ? depth : 0;
+  return TABLEAU_COLORS[d % TABLEAU_COLORS.length];
+}
+
 export const settings = {
   renderDistance: 1.0,
   minPxRadius: 4,
