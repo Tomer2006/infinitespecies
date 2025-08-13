@@ -81,9 +81,11 @@ function computeDescendantCountsIter(root) {
   }
 }
 
+import { PERFORMANCE_CONFIG } from './performance-config.js';
+
 export async function indexTreeProgressive(root, options = {}) {
-  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : 20;
-  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : 2000;
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : PERFORMANCE_CONFIG.indexingChunkMs;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : PERFORMANCE_CONFIG.progressUpdateEvery;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
@@ -93,7 +95,7 @@ export async function indexTreeProgressive(root, options = {}) {
     const now = performance.now();
     // Do not yield in background tabs (timers are heavily throttled there);
     // continue processing to avoid stalling loading when switching tabs.
-    if (!document.hidden && now - lastYield >= chunkMs) {
+    if ((!document.hidden || !PERFORMANCE_CONFIG.skipYieldInBackground) && now - lastYield >= chunkMs) {
       await new Promise(r => setTimeout(r, 0));
       lastYield = performance.now();
     }
@@ -167,7 +169,9 @@ export async function loadFromUrl(url) {
 async function loadFromSplitFiles(baseUrl, manifest) {
   setProgress(0, `Loading ${manifest.total_files} split files...`);
   // Concurrency-limited loader (browser typically limits to ~6 per host)
-  const concurrency = Math.min(8, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6));
+  const concurrency = PERFORMANCE_CONFIG.useConcurrencyLimit ? 
+    Math.min(PERFORMANCE_CONFIG.maxConcurrentFiles, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6)) :
+    PERFORMANCE_CONFIG.maxConcurrentFiles;
   let completed = 0;
   const results = new Array(manifest.files.length);
   let inFlight = 0;

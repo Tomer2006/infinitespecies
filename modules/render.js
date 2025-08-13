@@ -46,8 +46,8 @@ export function draw() {
   ctx.restore();
 
   const nodes = state.drawOrder || state.layout.root.descendants();
-  // Adaptive visibility threshold: as you zoom in (higher k), show smaller circles
-  const MIN_PX_R = Math.max(1, settings.minPxRadius / Math.sqrt(Math.max(1, state.camera.k)));
+  // Use configurable minimum radius
+  const MIN_PX_R = settings.useMinRadius ? settings.minPxRadius : 0;
   const LABEL_MIN = settings.labelMinPxRadius;
   const labelCandidates = [];
 
@@ -88,7 +88,7 @@ export function draw() {
           ctx.font = `600 ${fontSize}px ui-sans-serif`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
-          if (measureCache.size > 2000) measureCache.clear();
+          if (measureCache.size > settings.textCacheSize) measureCache.clear();
           measureCache.set(key, metrics);
         }
         const textWidth = metrics.width,
