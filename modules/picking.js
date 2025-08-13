@@ -1,9 +1,18 @@
-import { screenToWorld, viewportRadius } from './canvas.js';
+import { screenToWorld, viewportRadius, getFrameCounter } from './canvas.js';
 import { state } from './state.js';
 import { settings } from './constants.js';
 
+let _cachedViewR = 0;
+let _cachedFrame = -1;
+
 export function nodeInView(d) {
-  const viewR = viewportRadius(settings.renderDistance);
+  // Cache view radius once per frame
+  const frame = getFrameCounter();
+  if (frame !== _cachedFrame) {
+    _cachedViewR = viewportRadius(settings.renderDistance);
+    _cachedFrame = frame;
+  }
+  const viewR = _cachedViewR;
   const dx = d._vx - state.camera.x;
   const dy = d._vy - state.camera.y;
   const r = viewR + d._vr;
@@ -11,7 +20,7 @@ export function nodeInView(d) {
 }
 
 export function pickNodeAt(px, py) {
-  const nodes = state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
+  const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
   const [wx, wy] = screenToWorld(px, py);
   for (const d of nodes) {
     if (!nodeInView(d)) continue;

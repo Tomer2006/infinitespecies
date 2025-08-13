@@ -1,14 +1,15 @@
-import { LEVELS } from './constants.js';
+// Removed LEVELS import - now using numeric levels directly
 import { clearIndex, registerNode, state } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
-import { progressLabel } from './dom.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
+import { findByQuery } from './search.js';
+import { goToNode } from './navigation.js';
 
 function inferLevelByDepth(depth) {
-  return LEVELS[depth] || `Level ${depth}`;
+  return depth;
 }
 
 export function mapToChildren(obj) {
@@ -27,7 +28,7 @@ export function mapToChildren(obj) {
 }
 
 export function normalizeTree(rootLike) {
-  if (Array.isArray(rootLike)) return { name: 'Life', level: 'Life', children: rootLike };
+  if (Array.isArray(rootLike)) return { name: 'Life', level: 0, children: rootLike };
   if (typeof rootLike !== 'object' || rootLike === null)
     throw new Error('Top-level JSON must be an object or an array.');
 
@@ -38,9 +39,9 @@ export function normalizeTree(rootLike) {
     const keys = Object.keys(rootLike);
     if (keys.length === 1) {
       const rootName = keys[0];
-      return { name: String(rootName), children: mapToChildren(rootLike[rootName]) };
+      return { name: String(rootName), level: 0, children: mapToChildren(rootLike[rootName]) };
     }
-    return { name: 'Life', level: 'Life', children: mapToChildren(rootLike) };
+    return { name: 'Life', level: 0, children: mapToChildren(rootLike) };
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
   return rootLike;
@@ -58,44 +59,70 @@ function countNodes(root) {
   return c;
 }
 
-function computeDescendantCounts(node) {
-  if (!node.children || node.children.length === 0) {
-    node._leaves = 1;
-    return 1;
+function computeDescendantCountsIter(root) {
+  // Post-order traversal without recursion
+  const stack = [root];
+  const post = [];
+  while (stack.length) {
+    const n = stack.pop();
+    post.push(n);
+    const ch = Array.isArray(n.children) ? n.children : [];
+    for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
   }
-  let t = 0;
-  for (const c of node.children) {
-    t += computeDescendantCounts(c);
+  for (let i = post.length - 1; i >= 0; i--) {
+    const n = post[i];
+    const ch = Array.isArray(n.children) ? n.children : [];
+    if (ch.length === 0) n._leaves = 1;
+    else {
+      let sum = 0;
+      for (let j = 0; j < ch.length; j++) sum += ch[j]._leaves || 1;
+      n._leaves = sum;
+    }
   }
-  node._leaves = t;
-  return t;
 }
 
-export async function indexTreeProgressive(root) {
+export async function indexTreeProgressive(root, options = {}) {
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : 20;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : 2000;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
   const stack = [{ node: root, parent: null, depth: 0 }];
+  let lastYield = performance.now();
   while (stack.length) {
+    const now = performance.now();
+    // Do not yield in background tabs (timers are heavily throttled there);
+    // continue processing to avoid stalling loading when switching tabs.
+    if (!document.hidden && now - lastYield >= chunkMs) {
+      await new Promise(r => setTimeout(r, 0));
+      lastYield = performance.now();
+    }
     const { node, parent, depth } = stack.pop();
     if (node == null || typeof node !== 'object') continue;
+    // Normalize and trim strings in-place to reduce memory
     node.name = String(node.name ?? 'Unnamed');
+    if (node.name.length > 200) node.name = node.name.slice(0, 200);
     node.level = node.level || inferLevelByDepth(depth);
     node.parent = parent;
     node._id = state.globalId++;
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
+    // Drop empty metadata to free memory
+    for (const k of Object.keys(node)) {
+      if (k === 'name' || k === 'children' || k === 'level' || k === 'parent') continue;
+      const v = node[k];
+      if (v == null || (typeof v === 'object' && Object.keys(v).length === 0)) delete node[k];
+    }
     registerNode(node);
     for (let i = node.children.length - 1; i >= 0; i--)
       stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
     processed++;
-    if (processed % 500 === 0) {
+    if (processed % progressEvery === 0) {
       setProgress(processed / total, `Indexing… ${processed.toLocaleString()}/${total.toLocaleString()}`);
-      await new Promise(r => setTimeout(r, 0));
     }
   }
-  setProgress(0.98, 'Computing descendant counts…');
-  computeDescendantCounts(root);
-  setProgress(1, 'Done');
+  if (!document.hidden) setProgress(0.95, 'Computing descendant counts…');
+  computeDescendantCountsIter(root);
+  if (!document.hidden) setProgress(1, 'Done');
 }
 
 export async function loadFromJSONText(text) {
@@ -108,14 +135,128 @@ export async function loadFromJSONText(text) {
   const nroot = normalizeTree(parsed);
   await indexTreeProgressive(nroot);
   setDataRoot(nroot);
+  // Try to move user to Homo sapiens for light initial view
+  jumpToPreferredStart();
 }
 
 export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
+  
+  // Check if this is a split dataset by looking for manifest.json
+  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
+  
+  try {
+    const manifestRes = await fetch(manifestUrl, { cache: 'no-store' });
+    if (manifestRes.ok) {
+      const manifest = await manifestRes.json();
+      if (manifest.version && manifest.files) {
+        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+      }
+    }
+  } catch (e) {
+    // No manifest found, try loading as single file
+  }
+  
+  // Single file loading
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
   await loadFromJSONText(text);
+}
+
+async function loadFromSplitFiles(baseUrl, manifest) {
+  setProgress(0, `Loading ${manifest.total_files} split files...`);
+  // Concurrency-limited loader (browser typically limits to ~6 per host)
+  const concurrency = Math.min(8, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6));
+  let completed = 0;
+  const results = new Array(manifest.files.length);
+  let inFlight = 0;
+  let nextIndex = 0;
+  await new Promise((resolve, reject) => {
+    const startNext = () => {
+      while (inFlight < concurrency && nextIndex < manifest.files.length) {
+        const i = nextIndex++;
+        inFlight++;
+        const fileInfo = manifest.files[i];
+        const fileUrl = baseUrl + fileInfo.filename;
+        fetch(fileUrl, { cache: 'no-store' })
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+            return res.json();
+          })
+          .then(chunk => {
+            results[i] = { index: i, chunk, fileInfo };
+            completed++;
+            if (completed % 2 === 0 || completed === manifest.total_files) {
+              setProgress(completed / manifest.total_files, `Loaded ${completed}/${manifest.total_files} files...`);
+            }
+          })
+          .then(() => {
+            inFlight--;
+            if (completed === manifest.files.length) resolve();
+            else startNext();
+          })
+          .catch(err => reject(err));
+      }
+    };
+    startNext();
+  });
+  
+  setProgress(0.95, 'Merging tree data...');
+  
+  // Sort by index to maintain order
+  results.sort((a, b) => a.index - b.index);
+
+  // Determine schema type: structured nodes vs nested map
+  const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
+
+  const anyStructured = results.some(r => isStructuredNode(r.chunk));
+
+  let mergedTree;
+  if (anyStructured) {
+    // Structured nodes: collect children
+    mergedTree = { name: 'Life', level: 0, children: [] };
+    for (const { chunk } of results) {
+      if (chunk && Array.isArray(chunk.children)) {
+        mergedTree.children.push(...chunk.children);
+      } else if (isStructuredNode(chunk)) {
+        mergedTree.children.push(chunk);
+      }
+    }
+  } else {
+    // Nested key map: deep-merge all object chunks
+    const deepMerge = (target, source) => {
+      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+      for (const [k, v] of Object.entries(source)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
+          deepMerge(target[k], v);
+        } else {
+          target[k] = v;
+        }
+      }
+      return target;
+    };
+    const mergedMap = {};
+    for (const { chunk } of results) deepMerge(mergedMap, chunk);
+    // Normalize will convert nested map to structured nodes
+    const normalizedTree = normalizeTree(mergedMap);
+    await indexTreeProgressive(normalizedTree);
+    setDataRoot(normalizedTree);
+    jumpToPreferredStart();
+    setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
+    return;
+  }
+  
+  setProgress(0.98, 'Processing merged tree...');
+  
+  // Process the merged tree
+  const normalizedTree = normalizeTree(mergedTree);
+  await indexTreeProgressive(normalizedTree);
+  setDataRoot(normalizedTree);
+  jumpToPreferredStart();
+  
+  setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
 }
 
 export function setDataRoot(root) {
@@ -131,173 +272,16 @@ export function setDataRoot(root) {
   requestRender();
 }
 
-// Demo data
-function mulberry32(seed) {
-  return function () {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-const RNG = mulberry32(42);
-const NAME_BANK = {
-  Domain: ['Bacteria', 'Archaea', 'Eukarya'],
-  Kingdom: ['Animalia', 'Plantae', 'Fungi', 'Protista', 'Chromista'],
-  Phylum: [
-    'Chordata',
-    'Arthropoda',
-    'Mollusca',
-    'Nematoda',
-    'Echinodermata',
-    'Annelida',
-    'Bryophyta',
-    'Tracheophyta',
-    'Ascomycota',
-    'Basidiomycota',
-    'Ciliophora',
-    'Amoebozoa'
-  ],
-  Class: [
-    'Mammalia',
-    'Aves',
-    'Reptilia',
-    'Amphibia',
-    'Actinopterygii',
-    'Insecta',
-    'Arachnida',
-    'Gastropoda',
-    'Bivalvia',
-    'Pinopsida',
-    'Magnoliopsida',
-    'Liliopsida',
-    'Saccharomycetes',
-    'Agaricomycetes'
-  ],
-  Order: [
-    'Primates',
-    'Carnivora',
-    'Rodentia',
-    'Passeriformes',
-    'Coleoptera',
-    'Lepidoptera',
-    'Araneae',
-    'Anura',
-    'Squamata',
-    'Poales',
-    'Rosales',
-    'Fabales',
-    'Agaricales',
-    'Helotiales'
-  ],
-  Family: [
-    'Hominidae',
-    'Felidae',
-    'Canidae',
-    'Muridae',
-    'Corvidae',
-    'Fringillidae',
-    'Poaceae',
-    'Rosaceae',
-    'Fabaceae',
-    'Agaricaceae',
-    'Psathyrellaceae',
-    'Salticidae',
-    'Lycosidae'
-  ],
-  Genus: [
-    'Homo',
-    'Pan',
-    'Felis',
-    'Canis',
-    'Mus',
-    'Passer',
-    'Quercus',
-    'Rosa',
-    'Pisum',
-    'Agaricus',
-    'Coprinopsis',
-    'Salticus',
-    'Lupus',
-    'Helianthus',
-    'Apis',
-    'Drosophila',
-    'Formica',
-    'Carabus'
-  ],
-  Species: [
-    'sapiens',
-    'familiaris',
-    'catus',
-    'musculus',
-    'domestica',
-    'vulgaris',
-    'officinalis',
-    'alba',
-    'niger',
-    'rubra',
-    'lutea',
-    'grandis',
-    'minor',
-    'major',
-    'elegans'
-  ]
-};
-const PLAN_DEMO = [
-  { level: 'Kingdom', min: 4, max: 6 },
-  { level: 'Phylum', min: 4, max: 9 },
-  { level: 'Class', min: 4, max: 8 },
-  { level: 'Order', min: 3, max: 6 },
-  { level: 'Family', min: 3, max: 5 },
-  { level: 'Genus', min: 2, max: 4 },
-  { level: 'Species', min: 1, max: 3 }
-];
-let globalIdDemo = 1;
-
-export async function buildDemoData() {
-  const root = { name: 'Life', level: 'Life', children: [], parent: null, _id: 0 };
-  clearIndex();
-  registerNode(root);
-  let frontier = [root];
-  showLoading('Preparing demo taxonomy…');
-  for (let li = 0; li < PLAN_DEMO.length; li++) {
-    const spec = PLAN_DEMO[li];
-    const next = [];
-    progressLabel.textContent = `Generating ${spec.level}…`;
-    const total = frontier.length;
-    let processed = 0;
-    for (const p of frontier) {
-      const count = spec.min + Math.floor(RNG() * (spec.max - spec.min + 1));
-      const arr = [];
-      for (let i = 0; i < count; i++) {
-        const bag = NAME_BANK[spec.level] || [];
-        const name = bag.length ? bag[i % bag.length] : `${spec.level}-${i + 1}`;
-        const node = {
-          name,
-          level: spec.level,
-          children: [],
-          parent: p,
-          _id: ++globalIdDemo
-        };
-        arr.push(node);
-        registerNode(node);
-      }
-      p.children = arr;
-      next.push(...arr);
-      processed++;
-      if (processed % Math.max(1, Math.floor(total / 20)) === 0) {
-        setProgress((li + processed / total) / PLAN_DEMO.length);
-        await new Promise(r => setTimeout(r, 0));
-      }
-    }
-    frontier = next;
-    setProgress((li + 1) / PLAN_DEMO.length);
-    await new Promise(r => setTimeout(r, 0));
+function jumpToPreferredStart() {
+  // Respect deep links; only jump if no hash present
+  if (location.hash && location.hash.length > 1) return;
+  const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
+  if (preferred) {
+    // Jump without animation to avoid initial lag
+    goToNode(preferred, false);
+    state.highlightNode = preferred;
+    requestRender();
   }
-  computeDescendantCounts(root);
-  setProgress(1, 'Done');
-  setDataRoot(root);
-  hideLoading();
 }
 
 

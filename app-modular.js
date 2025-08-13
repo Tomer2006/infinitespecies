@@ -5,7 +5,7 @@ import { resizeCanvas, registerDrawCallback, requestRender, tick } from './modul
 import { draw } from './modules/render.js';
 import { initEvents } from './modules/events.js';
 import { showLoading, hideLoading } from './modules/loading.js';
-import { loadFromUrl, buildDemoData } from './modules/data.js';
+import { loadFromUrl } from './modules/data.js';
 import { decodePath, findNodeByPath } from './modules/deeplink.js';
 import { goToNode } from './modules/navigation.js';
 import { state } from './modules/state.js';
@@ -32,7 +32,15 @@ function initDeepLinks() {
 async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
-  const candidates = [qUrl, 'tree.json', 'taxonomy.json', 'data.json'].filter(Boolean);
+  
+  // Priority order: URL param, split data/, then single files
+  const candidates = [
+    qUrl,
+    'data/manifest.json',  // Check for split files first
+    'tree.json', 
+    'taxonomy.json', 
+    'data.json'
+  ].filter(Boolean);
 
   for (const url of candidates) {
     try {
@@ -45,8 +53,16 @@ async function initData() {
       // try next
     }
   }
-  await buildDemoData();
-  tick();
+  
+  // If all else fails, prompt user to load their own JSON
+  hideLoading();
+  const modal = document.getElementById('jsonModal');
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  const label = document.getElementById('progressLabel');
+  if (label) label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
 }
 
 (function init() {
@@ -60,6 +76,8 @@ async function initData() {
   // Load data and deep links
   initData();
   initDeepLinks();
+  // After data load completes, attempt a jump to a lightweight start node
+  // Note: jump is triggered inside setDataRoot after layout/indexing
 })();
 
 
