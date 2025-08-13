@@ -62,7 +62,16 @@ export function draw() {
     if (dx * dx + dy * dy > rr * rr) continue;
     const [sx, sy] = worldToScreen(d._vx, d._vy);
     const sr = d._vr * state.camera.k;
-    if (sr < MIN_PX_R) continue;
+    if (sr < MIN_PX_R) {
+      // Draw tiny nodes as 1px dots so last-ring children remain visible
+      const dotSize = 1;
+      ctx.beginPath();
+      ctx.arc(sx, sy, dotSize, 0, Math.PI * 2);
+      ctx.fillStyle = getNodeColor(d.data);
+      ctx.globalAlpha = 0.9;
+      ctx.fill();
+      continue;
+    }
 
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
