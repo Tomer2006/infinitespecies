@@ -33,9 +33,7 @@ export const settings = {
   // Performance knobs
   strokeMinPxRadius: 12,      // skip stroking tiny circles
   maxLabels: 300,             // cap labels per frame
-  labelGridCellPx: 24,        // spatial bin for label overlap checks
-  // Layout value damping (1.0 = original; 0.6–0.8 smooths size differences)
-  valueExponent: 0.7
+  labelGridCellPx: 24         // spatial bin for label overlap checks
 };
 
 
