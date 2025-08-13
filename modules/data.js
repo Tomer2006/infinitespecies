@@ -7,6 +7,7 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
+import { getDataLoadingConfig } from './optimization.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -82,8 +83,9 @@ function computeDescendantCountsIter(root) {
 }
 
 export async function indexTreeProgressive(root, options = {}) {
-  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : 20;
-  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : 2000;
+  const config = getDataLoadingConfig();
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : config.chunkTimeMs;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : config.yieldAfterNodes;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
@@ -166,8 +168,11 @@ export async function loadFromUrl(url) {
 
 async function loadFromSplitFiles(baseUrl, manifest) {
   setProgress(0, `Loading ${manifest.total_files} split files...`);
-  // Concurrency-limited loader (browser typically limits to ~6 per host)
-  const concurrency = Math.min(8, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6));
+  // Concurrency-limited loader using optimization config
+  const config = getDataLoadingConfig();
+  const concurrency = config.autoDetectConcurrency 
+    ? Math.min(config.maxConcurrentRequests, Math.max(config.minConcurrentRequests, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6))
+    : config.maxConcurrentRequests;
   let completed = 0;
   const results = new Array(manifest.files.length);
   let inFlight = 0;

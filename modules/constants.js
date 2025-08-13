@@ -1,4 +1,5 @@
 // Constants and tunables
+import { getRenderingConfig } from './optimization.js';
 
 // Removed hardcoded level names - now using numeric indices directly
 
@@ -24,16 +25,12 @@ export function getNodeColor(node) {
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
 
-export const settings = {
-  renderDistance: 1.0,
-  minPxRadius: 4,
-  labelMinPxRadius: 22,
-  labelMinFontPx: 12,
+// Legacy settings export - now uses centralized optimization config
+export const settings = getRenderingConfig();
+
+// Additional layout constants
+export const LAYOUT = {
   verticalPadPx: 100,
-  // Performance knobs
-  strokeMinPxRadius: 12,      // skip stroking tiny circles
-  maxLabels: 300,             // cap labels per frame
-  labelGridCellPx: 24         // spatial bin for label overlap checks
 };
 
 

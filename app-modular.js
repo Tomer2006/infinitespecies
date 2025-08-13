@@ -9,6 +9,7 @@ import { loadFromUrl } from './modules/data.js';
 import { decodePath, findNodeByPath } from './modules/deeplink.js';
 import { goToNode } from './modules/navigation.js';
 import { state } from './modules/state.js';
+import { getOptimalConfig, setConfig, performanceMonitor } from './modules/optimization.js';
 
 function initDeepLinks() {
   // Navigate when hash changes
@@ -66,12 +67,42 @@ async function initData() {
 }
 
 (function init() {
+  // Initialize optimization system first
+  console.log('🎛️ Initializing BioZoom with optimal performance configuration...');
+  const optimalConfig = getOptimalConfig();
+  setConfig(optimalConfig);
+  console.log('✅ Performance optimization applied:', {
+    device: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop',
+    cores: navigator.hardwareConcurrency || 'Unknown',
+    memory: navigator.deviceMemory ? `${navigator.deviceMemory}GB` : 'Unknown',
+    maxLabels: optimalConfig.rendering?.maxLabels || 'N/A',
+    concurrency: optimalConfig.dataLoading?.maxConcurrentRequests || 'N/A'
+  });
+
   // Canvas and render bootstrap
   resizeCanvas();
   registerDrawCallback(draw);
 
   // Wire UI and input events
   initEvents();
+
+  // Enable performance monitoring in development
+  if (location.hostname === 'localhost' || location.search.includes('debug=true')) {
+    console.log('🔬 Performance monitoring enabled (press Ctrl+P for stats)');
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'P' && e.ctrlKey) {
+        e.preventDefault();
+        performanceMonitor.logStats();
+      }
+    });
+    
+    // Auto-log stats every 30 seconds in debug mode
+    setInterval(() => {
+      if (state.DATA_ROOT) {
+        performanceMonitor.logStats();
+      }
+    }, 30000);
+  }
 
   // Load data and deep links
   initData();

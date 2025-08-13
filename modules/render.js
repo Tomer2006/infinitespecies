@@ -2,28 +2,31 @@ import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor, settings } from './constants.js';
 import { nodeInView } from './picking.js';
+import { getRenderingConfig } from './optimization.js';
 
 // Simple LRU-ish cache for text measurement
-const measureCache = new Map();
+let measureCache = new Map();
 
 // Cached grid pattern for the background
 let gridPattern = null;
 function getGridPattern(ctx) {
   if (gridPattern) return gridPattern;
+  const config = getRenderingConfig();
+  const tileSize = config.gridTileSize;
   const tile = document.createElement('canvas');
-  tile.width = 40;
-  tile.height = 40;
+  tile.width = tileSize;
+  tile.height = tileSize;
   const tctx = tile.getContext('2d');
   tctx.strokeStyle = '#8aa1ff';
-  tctx.globalAlpha = 0.05;
+  tctx.globalAlpha = config.gridOpacity;
   tctx.lineWidth = 1;
   tctx.beginPath();
   // vertical line at x=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(0, 40);
+  tctx.lineTo(0, tileSize);
   // horizontal line at y=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(40, 0);
+  tctx.lineTo(tileSize, 0);
   tctx.stroke();
   gridPattern = ctx.createPattern(tile, 'repeat');
   return gridPattern;
@@ -38,11 +41,13 @@ export function draw() {
   // Grid via cached pattern fill
   ctx.save();
   const pat = getGridPattern(ctx);
-  const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
-  const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % 40);
+  const config = getRenderingConfig();
+  const tileSize = config.gridTileSize;
+  const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % tileSize);
+  const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % tileSize);
   ctx.translate(offX, offY);
   ctx.fillStyle = pat;
-  ctx.fillRect(-offX, -offY, W + 40, H + 40);
+  ctx.fillRect(-offX, -offY, W + tileSize, H + tileSize);
   ctx.restore();
 
   const nodes = state.drawOrder || state.layout.root.descendants();
@@ -87,7 +92,8 @@ export function draw() {
           ctx.font = `600 ${fontSize}px ui-sans-serif`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
-          if (measureCache.size > 2000) measureCache.clear();
+          const config = getRenderingConfig();
+          if (measureCache.size > config.textMeasureCacheSize) measureCache.clear();
           measureCache.set(key, metrics);
         }
         const textWidth = metrics.width,
