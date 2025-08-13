@@ -46,7 +46,8 @@ export function draw() {
   ctx.restore();
 
   const nodes = state.drawOrder || state.layout.root.descendants();
-  const MIN_PX_R = settings.minPxRadius;
+  // Adaptive visibility threshold: as you zoom in (higher k), show smaller circles
+  const MIN_PX_R = Math.max(1, settings.minPxRadius / Math.sqrt(Math.max(1, state.camera.k)));
   const LABEL_MIN = settings.labelMinPxRadius;
   const labelCandidates = [];
 
