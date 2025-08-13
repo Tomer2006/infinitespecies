@@ -24,9 +24,16 @@ export function getNodeColor(node) {
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
 
-// Import centralized performance config
-import { PERFORMANCE_CONFIG } from './performance-config.js';
-
-export const settings = PERFORMANCE_CONFIG;
+export const settings = {
+  renderDistance: 1.0,
+  minPxRadius: 4,
+  labelMinPxRadius: 22,
+  labelMinFontPx: 12,
+  verticalPadPx: 100,
+  // Performance knobs
+  strokeMinPxRadius: 12,      // skip stroking tiny circles
+  maxLabels: 300,             // cap labels per frame
+  labelGridCellPx: 24         // spatial bin for label overlap checks
+};
 
 

@@ -46,8 +46,7 @@ export function draw() {
   ctx.restore();
 
   const nodes = state.drawOrder || state.layout.root.descendants();
-  // Use configurable minimum radius
-  const MIN_PX_R = settings.useMinRadius ? settings.minPxRadius : 0;
+  const MIN_PX_R = settings.minPxRadius;
   const LABEL_MIN = settings.labelMinPxRadius;
   const labelCandidates = [];
 
@@ -88,7 +87,7 @@ export function draw() {
           ctx.font = `600 ${fontSize}px ui-sans-serif`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
-          if (measureCache.size > settings.textCacheSize) measureCache.clear();
+          if (measureCache.size > 2000) measureCache.clear();
           measureCache.set(key, metrics);
         }
         const textWidth = metrics.width,

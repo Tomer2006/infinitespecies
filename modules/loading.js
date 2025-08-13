@@ -16,12 +16,7 @@ export function setProgress(ratio, label = '') {
   const pct = Math.max(0, Math.min(1, ratio));
   progressFill.style.width = (pct * 100).toFixed(1) + '%';
   progressPct.textContent = Math.round(pct * 100) + '%';
-  // Import performance config for background tab handling
-  import('./performance-config.js').then(({ PERFORMANCE_CONFIG }) => {
-    if (label && (!document.hidden || !PERFORMANCE_CONFIG.suppressProgressInBackground)) {
-      progressLabel.textContent = label;
-    }
-  });
+  if (label && !document.hidden) progressLabel.textContent = label;
 }
 
 
