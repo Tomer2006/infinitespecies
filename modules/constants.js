@@ -26,7 +26,7 @@ export function getNodeColor(node) {
 
 export const settings = {
   renderDistance: 1.0,
-  minPxRadius: 1.5,
+  minPxRadius: 4,
   labelMinPxRadius: 22,
   labelMinFontPx: 12,
   verticalPadPx: 100,
