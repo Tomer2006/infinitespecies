@@ -18,10 +18,7 @@ export const perf = {
     // Performance knobs
     strokeMinPxRadius: 12,        // only add outline stroke if circle radius ≥ this (px)
     maxLabels: 300,               // hard cap on number of labels placed/drawn per frame
-    labelGridCellPx: 24,          // size of spatial grid cell (px) for fast label overlap checks
-    // Micro-dot fallback for tiny circles (helps visibility during scroll-zoom)
-    microDotPx: 1,                // size of the fallback dot (px) for circles below minPxRadius
-    maxMicroDots: 2000            // cap tiny fallback dots per frame to protect performance
+    labelGridCellPx: 24           // size of spatial grid cell (px) for fast label overlap checks
   },
 
   // Canvas/device related caps

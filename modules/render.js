@@ -46,11 +46,39 @@ export function draw() {
   ctx.fillRect(-offX, -offY, W + 40, H + 40);
   ctx.restore();
 
-  const nodes = state.drawOrder || state.layout.root.descendants();
+  // Get nodes to render - use all descendants to handle deep scroll zoom
+  let nodes = state.drawOrder || state.layout.root.descendants();
+  
+  // For deep zoom levels, include all descendants of visible nodes to fix scroll zoom visibility
+  // Check if we're zoomed significantly deeper than the initial layout size
+  const initialZoom = Math.min((W - 20) / state.layout.diameter, (H - 20) / state.layout.diameter);
+  const zoomRatio = state.camera.k / initialZoom;
+  
+  if (zoomRatio > 10) { // If zoomed 10x deeper than initial view
+    const allNodes = [];
+    const processed = new Set();
+    
+    for (const node of nodes) {
+      if (!processed.has(node.data._id)) {
+        allNodes.push(node);
+        processed.add(node.data._id);
+        
+        // Add all descendants of this node
+        const descendants = node.descendants();
+        for (const desc of descendants) {
+          if (!processed.has(desc.data._id)) {
+            allNodes.push(desc);
+            processed.add(desc.data._id);
+          }
+        }
+      }
+    }
+    nodes = allNodes;
+  }
+  
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];
-  let microDotCount = 0;
 
   // Precompute view radius (in world units)
   const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * perf.rendering.renderDistance;
@@ -64,20 +92,7 @@ export function draw() {
     if (dx * dx + dy * dy > rr * rr) continue;
     const [sx, sy] = worldToScreen(d._vx, d._vy);
     const sr = d._vr * state.camera.k;
-    if (sr < MIN_PX_R) {
-      // Draw tiny fallback dot for deep, very small nodes to keep them visible while scroll-zooming
-      if (microDotCount < perf.rendering.maxMicroDots) {
-        const dot = Math.max(1, perf.rendering.microDotPx | 0);
-        const ix = Math.round(sx);
-        const iy = Math.round(sy);
-        ctx.fillStyle = getNodeColor(d.data);
-        ctx.globalAlpha = 0.9;
-        ctx.fillRect(ix, iy, dot, dot);
-        ctx.globalAlpha = 1;
-        microDotCount++;
-      }
-      continue;
-    }
+    if (sr < MIN_PX_R) continue;
 
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
