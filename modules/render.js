@@ -46,36 +46,7 @@ export function draw() {
   ctx.fillRect(-offX, -offY, W + 40, H + 40);
   ctx.restore();
 
-  // Get nodes to render - use all descendants to handle deep scroll zoom
-  let nodes = state.drawOrder || state.layout.root.descendants();
-  
-  // For deep zoom levels, include all descendants of visible nodes to fix scroll zoom visibility
-  // Check if we're zoomed significantly deeper than the initial layout size
-  const initialZoom = Math.min((W - 20) / state.layout.diameter, (H - 20) / state.layout.diameter);
-  const zoomRatio = state.camera.k / initialZoom;
-  
-  if (zoomRatio > 10) { // If zoomed 10x deeper than initial view
-    const allNodes = [];
-    const processed = new Set();
-    
-    for (const node of nodes) {
-      if (!processed.has(node.data._id)) {
-        allNodes.push(node);
-        processed.add(node.data._id);
-        
-        // Add all descendants of this node
-        const descendants = node.descendants();
-        for (const desc of descendants) {
-          if (!processed.has(desc.data._id)) {
-            allNodes.push(desc);
-            processed.add(desc.data._id);
-          }
-        }
-      }
-    }
-    nodes = allNodes;
-  }
-  
+  const nodes = state.drawOrder || state.layout.root.descendants();
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];

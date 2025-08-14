@@ -46,8 +46,8 @@ export function goToNode(node, animate = true) {
   rebuildNodeMap();
   setBreadcrumbs(state.current);
   if (animate) {
-    const pad = 20;
-    const targetK = Math.min((W - pad) / state.layout.diameter, (H - pad) / state.layout.diameter);
+    // Use full viewport for maximum fitting
+    const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
     animateToCam(0, 0, targetK);
   } else {
     state.camera.x = 0;

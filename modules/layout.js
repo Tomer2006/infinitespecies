@@ -7,7 +7,8 @@ export function layoutFor(subtree) {
     .hierarchy(subtree)
     .sum(d => (d.children && d.children.length ? 0 : 1))
     .sort((a, b) => b.value - a.value);
-  const diameter = Math.min(W, H) - 40;
+  // Use full available space for maximum circle packing
+  const diameter = Math.min(W, H);
   pack.size([diameter, diameter])(h);
   const cx = diameter / 2,
     cy = diameter / 2;
