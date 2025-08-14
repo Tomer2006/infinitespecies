@@ -1,5 +1,4 @@
-// Constants and tunables
-import { getRenderingConfig } from './optimization.js';
+// Constants (non-performance) and tunables
 
 // Removed hardcoded level names - now using numeric indices directly
 
@@ -24,13 +23,5 @@ export function getNodeColor(node) {
   const level = typeof node.level === 'number' ? node.level : 0;
   return TABLEAU_COLORS[level % TABLEAU_COLORS.length];
 }
-
-// Legacy settings export - now uses centralized optimization config
-export const settings = getRenderingConfig();
-
-// Additional layout constants
-export const LAYOUT = {
-  verticalPadPx: 100,
-};
 
 

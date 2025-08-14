@@ -1,13 +1,13 @@
 // Removed LEVELS import - now using numeric levels directly
 import { clearIndex, registerNode, state } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
+import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
-import { getDataLoadingConfig } from './optimization.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -83,9 +83,8 @@ function computeDescendantCountsIter(root) {
 }
 
 export async function indexTreeProgressive(root, options = {}) {
-  const config = getDataLoadingConfig();
-  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : config.chunkTimeMs;
-  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : config.yieldAfterNodes;
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : perf.indexing.chunkMs;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : perf.indexing.progressEvery;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
@@ -168,11 +167,8 @@ export async function loadFromUrl(url) {
 
 async function loadFromSplitFiles(baseUrl, manifest) {
   setProgress(0, `Loading ${manifest.total_files} split files...`);
-  // Concurrency-limited loader using optimization config
-  const config = getDataLoadingConfig();
-  const concurrency = config.autoDetectConcurrency 
-    ? Math.min(config.maxConcurrentRequests, Math.max(config.minConcurrentRequests, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6))
-    : config.maxConcurrentRequests;
+  // Concurrency-limited loader (browser typically limits to ~6 per host)
+  const concurrency = computeFetchConcurrency();
   let completed = 0;
   const results = new Array(manifest.files.length);
   let inFlight = 0;

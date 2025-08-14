@@ -1,32 +1,30 @@
 import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
 import { state } from './state.js';
-import { getNodeColor, settings } from './constants.js';
+import { getNodeColor } from './constants.js';
+import { perf } from './performance.js';
 import { nodeInView } from './picking.js';
-import { getRenderingConfig } from './optimization.js';
 
 // Simple LRU-ish cache for text measurement
-let measureCache = new Map();
+const measureCache = new Map();
 
 // Cached grid pattern for the background
 let gridPattern = null;
 function getGridPattern(ctx) {
   if (gridPattern) return gridPattern;
-  const config = getRenderingConfig();
-  const tileSize = config.gridTileSize;
   const tile = document.createElement('canvas');
-  tile.width = tileSize;
-  tile.height = tileSize;
+  tile.width = 40;
+  tile.height = 40;
   const tctx = tile.getContext('2d');
   tctx.strokeStyle = '#8aa1ff';
-  tctx.globalAlpha = config.gridOpacity;
+  tctx.globalAlpha = 0.05;
   tctx.lineWidth = 1;
   tctx.beginPath();
   // vertical line at x=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(0, tileSize);
+  tctx.lineTo(0, 40);
   // horizontal line at y=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(tileSize, 0);
+  tctx.lineTo(40, 0);
   tctx.stroke();
   gridPattern = ctx.createPattern(tile, 'repeat');
   return gridPattern;
@@ -41,25 +39,23 @@ export function draw() {
   // Grid via cached pattern fill
   ctx.save();
   const pat = getGridPattern(ctx);
-  const config = getRenderingConfig();
-  const tileSize = config.gridTileSize;
-  const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % tileSize);
-  const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % tileSize);
+  const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
+  const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % 40);
   ctx.translate(offX, offY);
   ctx.fillStyle = pat;
-  ctx.fillRect(-offX, -offY, W + tileSize, H + tileSize);
+  ctx.fillRect(-offX, -offY, W + 40, H + 40);
   ctx.restore();
 
   const nodes = state.drawOrder || state.layout.root.descendants();
-  const MIN_PX_R = settings.minPxRadius;
-  const LABEL_MIN = settings.labelMinPxRadius;
+  const MIN_PX_R = perf.rendering.minPxRadius;
+  const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];
 
   // Precompute view radius (in world units)
-  const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * settings.renderDistance;
+  const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * perf.rendering.renderDistance;
 
   for (const d of nodes) {
-    if (!nodeVertInView(d, settings.verticalPadPx)) continue;
+    if (!nodeVertInView(d, perf.rendering.verticalPadPx)) continue;
     // faster in-view test inline
     const dx = d._vx - state.camera.x;
     const dy = d._vy - state.camera.y;
@@ -74,7 +70,7 @@ export function draw() {
     ctx.fillStyle = getNodeColor(d.data);
     ctx.globalAlpha = 1;
     ctx.fill();
-    if (sr >= settings.strokeMinPxRadius) {
+    if (sr >= perf.rendering.strokeMinPxRadius) {
       ctx.lineWidth = Math.max(1, Math.min(3, 1.5 * Math.sqrt(Math.max(sr / 40, 0.25))));
       ctx.strokeStyle = d.children && d.children.length ? 'rgba(220,230,255,0.85)' : 'rgba(180,195,240,0.85)';
       ctx.stroke();
@@ -82,7 +78,7 @@ export function draw() {
 
     if (sr > LABEL_MIN) {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
-      if (fontSize >= settings.labelMinFontPx) {
+      if (fontSize >= perf.rendering.labelMinFontPx) {
         const text = d.data.name;
         // Cache measurements by fontSize+text
         const key = fontSize + '|' + text;
@@ -92,8 +88,7 @@ export function draw() {
           ctx.font = `600 ${fontSize}px ui-sans-serif`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
-          const config = getRenderingConfig();
-          if (measureCache.size > config.textMeasureCacheSize) measureCache.clear();
+          if (measureCache.size > 2000) measureCache.clear();
           measureCache.set(key, metrics);
         }
         const textWidth = metrics.width,
@@ -114,7 +109,7 @@ export function draw() {
   if (labelCandidates.length) {
     const placed = [];
     const grid = new Map();
-    const cell = settings.labelGridCellPx;
+    const cell = perf.rendering.labelGridCellPx;
     const keyFor = (x, y) => ((x / cell) | 0) + ',' + ((y / cell) | 0);
     const cellsForRect = r => {
       const cells = [];
@@ -127,7 +122,7 @@ export function draw() {
     };
     const overlaps = (a, b) => !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2);
     labelCandidates.sort((a, b) => b.fontSize - a.fontSize);
-    const capped = labelCandidates.slice(0, settings.maxLabels);
+    const capped = labelCandidates.slice(0, perf.rendering.maxLabels);
     for (const cand of capped) {
       const nearbyKeys = cellsForRect(cand.rect);
       let hit = false;
@@ -167,7 +162,7 @@ export function draw() {
   // Highlight ring
   if (state.highlightNode) {
     const d = state.nodeLayoutMap.get(state.highlightNode._id);
-    if (d && nodeVertInView(d, settings.verticalPadPx) && nodeInView(d)) {
+    if (d && nodeVertInView(d, perf.rendering.verticalPadPx) && nodeInView(d)) {
       const [sx, sy] = worldToScreen(d._vx, d._vy);
       const sr = d._vr * state.camera.k;
       if (sr > 4) {

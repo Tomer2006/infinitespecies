@@ -1,6 +1,6 @@
 import { screenToWorld, viewportRadius, getFrameCounter } from './canvas.js';
 import { state } from './state.js';
-import { settings } from './constants.js';
+import { perf } from './performance.js';
 
 let _cachedViewR = 0;
 let _cachedFrame = -1;
@@ -9,7 +9,7 @@ export function nodeInView(d) {
   // Cache view radius once per frame
   const frame = getFrameCounter();
   if (frame !== _cachedFrame) {
-    _cachedViewR = viewportRadius(settings.renderDistance);
+    _cachedViewR = viewportRadius(perf.rendering.renderDistance);
     _cachedFrame = frame;
   }
   const viewR = _cachedViewR;

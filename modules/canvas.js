@@ -1,6 +1,6 @@
 import { stage, canvas } from './dom.js';
 import { state } from './state.js';
-import { getRenderingConfig } from './optimization.js';
+import { perf } from './performance.js';
 
 let ctx;
 let W = 0;
@@ -22,8 +22,7 @@ export function getSize() {
 
 export function resizeCanvas() {
   const bb = stage.getBoundingClientRect();
-  const config = getRenderingConfig();
-  DPR = Math.max(1, Math.min(config.maxDevicePixelRatio, window.devicePixelRatio || 1));
+  DPR = Math.max(1, Math.min(perf.canvas.maxDevicePixelRatio, window.devicePixelRatio || 1));
   W = Math.floor(bb.width);
   H = Math.floor(bb.height);
   canvas.width = W * DPR;
