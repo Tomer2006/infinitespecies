@@ -1,11 +1,12 @@
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
+import { perf } from './performance.js';
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function animateToCam(nx, ny, nk, dur = 700) {
+export function animateToCam(nx, ny, nk, dur = perf.animation.cameraAnimationMs) {
   state.targetCam.x = nx;
   state.targetCam.y = ny;
   state.targetCam.k = nk;

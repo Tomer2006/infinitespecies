@@ -1,6 +1,7 @@
 // Removed LEVELS import - now using numeric levels directly
 import { clearIndex, registerNode, state } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
+import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
@@ -82,8 +83,8 @@ function computeDescendantCountsIter(root) {
 }
 
 export async function indexTreeProgressive(root, options = {}) {
-  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : 20;
-  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : 2000;
+  const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : perf.indexing.chunkMs;
+  const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : perf.indexing.progressEvery;
   clearIndex();
   let processed = 0;
   const total = Math.max(1, countNodes(root));
@@ -167,7 +168,7 @@ export async function loadFromUrl(url) {
 async function loadFromSplitFiles(baseUrl, manifest) {
   setProgress(0, `Loading ${manifest.total_files} split files...`);
   // Concurrency-limited loader (browser typically limits to ~6 per host)
-  const concurrency = Math.min(8, Math.max(2, navigator.hardwareConcurrency ? Math.ceil(navigator.hardwareConcurrency / 2) : 6));
+  const concurrency = computeFetchConcurrency();
   let completed = 0;
   const results = new Array(manifest.files.length);
   let inFlight = 0;
