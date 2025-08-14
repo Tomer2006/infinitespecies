@@ -50,6 +50,7 @@ export function draw() {
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];
+  let microDotCount = 0;
 
   // Precompute view radius (in world units)
   const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * perf.rendering.renderDistance;
@@ -63,7 +64,20 @@ export function draw() {
     if (dx * dx + dy * dy > rr * rr) continue;
     const [sx, sy] = worldToScreen(d._vx, d._vy);
     const sr = d._vr * state.camera.k;
-    if (sr < MIN_PX_R) continue;
+    if (sr < MIN_PX_R) {
+      // Draw tiny fallback dot for deep, very small nodes to keep them visible while scroll-zooming
+      if (microDotCount < perf.rendering.maxMicroDots) {
+        const dot = Math.max(1, perf.rendering.microDotPx | 0);
+        const ix = Math.round(sx);
+        const iy = Math.round(sy);
+        ctx.fillStyle = getNodeColor(d.data);
+        ctx.globalAlpha = 0.9;
+        ctx.fillRect(ix, iy, dot, dot);
+        ctx.globalAlpha = 1;
+        microDotCount++;
+      }
+      continue;
+    }
 
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
