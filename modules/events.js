@@ -96,28 +96,8 @@ export function initEvents() {
   canvas.addEventListener(
     'wheel',
     ev => {
-      const rect = canvas.getBoundingClientRect();
-
-      // If zooming in and hovering a node, optionally snap-focus to it
-      if (ev.deltaY < 0) {
-        const target = state.hoverNode;
-        if (target && !state.animating) {
-          const d = state.nodeLayoutMap.get(target._id);
-          if (d) {
-            const currentRadiusPx = d._vr * state.camera.k;
-            const targetRadiusPx = Math.min(rect.width, rect.height) * 0.4;
-            // Trigger focus when the hovered circle is still quite small
-            if (currentRadiusPx < targetRadiusPx * 0.8) {
-              fitNodeInView(target, 0.4);
-              ev.preventDefault();
-              return;
-            }
-          }
-        }
-      }
-
-      // Default smooth zoom anchored to cursor
       const scale = Math.exp(-ev.deltaY * 0.0015);
+      const rect = canvas.getBoundingClientRect();
       const mx = ev.clientX - rect.left,
         my = ev.clientY - rect.top;
       const [wx, wy] = screenToWorld(mx, my);
