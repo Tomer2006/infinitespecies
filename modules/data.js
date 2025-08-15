@@ -40,11 +40,12 @@ export function normalizeTree(rootLike) {
     const keys = Object.keys(rootLike);
     if (keys.length === 1) {
       const rootName = keys[0];
-      return { name: String(rootName), level: 0, children: mapToChildren(rootLike[rootName]) };
+      return { name: 'Life', level: 0, children: mapToChildren(rootLike[rootName]) };
     }
     return { name: 'Life', level: 0, children: mapToChildren(rootLike) };
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
+  rootLike.name = 'Life';
   return rootLike;
 }
 

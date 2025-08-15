@@ -1,4 +1,4 @@
-import { stage, canvas } from './dom.js';
+import { stage, canvas, fpsEl } from './dom.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
 
@@ -11,6 +11,8 @@ let needRender = true;
 let rafId = null;
 let drawCallback = null;
 let frameCounter = 0; // incremented each frame
+let lastFpsUpdate = 0;
+let framesSinceFps = 0;
 
 export function getContext() {
   return ctx;
@@ -54,6 +56,16 @@ function loop() {
   if (drawCallback) drawCallback();
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;
+  // Update FPS text ~8 times/sec to reduce layout cost
+  const now = performance.now();
+  framesSinceFps++;
+  if (fpsEl && now - lastFpsUpdate >= 125) {
+    const sec = (now - lastFpsUpdate) / 1000;
+    const fps = framesSinceFps / sec;
+    fpsEl.textContent = Math.round(fps) + ' fps';
+    lastFpsUpdate = now;
+    framesSinceFps = 0;
+  }
 }
 
 export function registerDrawCallback(cb) {

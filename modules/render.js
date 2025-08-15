@@ -54,16 +54,19 @@ export function draw() {
   // Precompute view radius (in world units)
   const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * perf.rendering.renderDistance;
 
+  let drawn = 0;
+  const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
   for (const d of nodes) {
+    if (drawn >= maxNodes) break;
     if (!nodeVertInView(d, perf.rendering.verticalPadPx)) continue;
     // faster in-view test inline
     const dx = d._vx - state.camera.x;
     const dy = d._vy - state.camera.y;
     const rr = viewR + d._vr;
     if (dx * dx + dy * dy > rr * rr) continue;
-    const [sx, sy] = worldToScreen(d._vx, d._vy);
     const sr = d._vr * state.camera.k;
     if (sr < MIN_PX_R) continue;
+    const [sx, sy] = worldToScreen(d._vx, d._vy);
 
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
@@ -75,6 +78,7 @@ export function draw() {
       ctx.strokeStyle = d.children && d.children.length ? 'rgba(220,230,255,0.85)' : 'rgba(180,195,240,0.85)';
       ctx.stroke();
     }
+    drawn++;
 
     if (sr > LABEL_MIN) {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
