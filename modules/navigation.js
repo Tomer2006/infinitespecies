@@ -32,10 +32,10 @@ export function setBreadcrumbs(node) {
   updateDeepLinkFromNode(node);
 }
 
-export function fitNodeInView(node, frac = 0.35) {
+export function fitNodeInView(node) {
   const d = state.nodeLayoutMap.get(node._id);
   if (!d) return;
-  const targetRadiusPx = Math.min(W, H) * frac;
+  const targetRadiusPx = Math.min(W, H) * 0.5;
   const k = targetRadiusPx / d._vr;
   animateToCam(d._vx, d._vy, k);
 }
@@ -46,7 +46,6 @@ export function goToNode(node, animate = true) {
   rebuildNodeMap();
   setBreadcrumbs(state.current);
   if (animate) {
-    // Use full viewport for maximum fitting
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
     animateToCam(0, 0, targetK);
   } else {

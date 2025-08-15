@@ -135,7 +135,7 @@ export function initEvents() {
       e.preventDefault();
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
-      if (target) fitNodeInView(target, 0.4);
+      if (target) fitNodeInView(target);
       e.preventDefault();
     } else if (e.code === 'KeyP') {
       const target = state.hoverNode || state.current;
@@ -216,7 +216,7 @@ export function initEvents() {
 
   fitBtn?.addEventListener('click', () => {
     const target = state.hoverNode || state.current;
-    if (target) fitNodeInView(target, 0.4);
+    if (target) fitNodeInView(target);
   });
 
   surpriseBtn?.addEventListener('click', () => {

@@ -266,8 +266,7 @@ export function setDataRoot(root) {
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
-  const pad = 20;
-  state.camera.k = Math.min((W - pad) / state.layout.diameter, (H - pad) / state.layout.diameter);
+  state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
   state.camera.x = 0;
   state.camera.y = 0;
   requestRender();
