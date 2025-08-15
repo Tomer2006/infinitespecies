@@ -10,16 +10,16 @@
 export const perf = {
   // Rendering and label/layout tunables
   rendering: {
-    renderDistance: 0.9,          // multiplier for view radius used for culling; slightly tighter than 1.0
-    minPxRadius: 7,               // do not draw circles smaller than this screen-space radius (px)
-    labelMinPxRadius: 26,         // minimum node radius (px) to consider it for labeling
+    renderDistance: 1.0,          // multiplier for view radius used for culling; 1.0 ≈ screen diagonal/2
+    minPxRadius: 6,               // do not draw circles smaller than this screen-space radius (px)
+    labelMinPxRadius: 22,         // minimum node radius (px) to consider it for labeling
     labelMinFontPx: 12,           // minimum font size (px) for labels; smaller are skipped
-    verticalPadPx: 80,            // extra vertical padding (px) when culling
+    verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
-    strokeMinPxRadius: 14,        // only add outline stroke if circle radius ≥ this (px)
-    maxLabels: 200,               // hard cap on number of labels placed/drawn per frame
-    labelGridCellPx: 26,          // size of spatial grid cell (px) for fast label overlap checks
-    maxNodesPerFrame: 10000       // cap number of circles drawn per frame to keep FPS stable at root
+    strokeMinPxRadius: 12,        // only add outline stroke if circle radius ≥ this (px)
+    maxLabels: 300,               // hard cap on number of labels placed/drawn per frame
+    labelGridCellPx: 24,          // size of spatial grid cell (px) for fast label overlap checks
+    maxNodesPerFrame: 15000       // cap number of circles drawn per frame to keep FPS stable at root
   },
 
   // Canvas/device related caps
@@ -29,7 +29,7 @@ export const perf = {
 
   // Animation timing
   animation: {
-    cameraAnimationMs: 650        // duration (ms) for camera pan/zoom transitions
+    cameraAnimationMs: 700        // duration (ms) for camera pan/zoom transitions
   },
 
   // Network loading behavior
@@ -42,7 +42,7 @@ export const perf = {
 
   // Background indexing of tree data
   indexing: {
-    chunkMs: 24,                  // time budget (ms) before yielding control back to the event loop
+    chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
     progressEvery: 2000           // update the progress UI every N nodes processed
   }
 };
