@@ -1,4 +1,4 @@
-import { getContext, W, H, worldToScreen, nodeVertInView } from './canvas.js';
+import { getContext, W, H, worldToScreen, nodeVertInView, circleInViewportWorld } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor } from './constants.js';
 import { perf } from './performance.js';
@@ -58,12 +58,8 @@ export function draw() {
   const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
   for (const d of nodes) {
     if (drawn >= maxNodes) break;
-    if (!nodeVertInView(d, perf.rendering.verticalPadPx)) continue;
-    // faster in-view test inline
-    const dx = d._vx - state.camera.x;
-    const dy = d._vy - state.camera.y;
-    const rr = viewR + d._vr;
-    if (dx * dx + dy * dy > rr * rr) continue;
+    // cheap rectangle-circle check in world units (strict screen culling)
+    if (!circleInViewportWorld(d._vx, d._vy, d._vr, perf.rendering.verticalPadPx)) continue;
     const sr = d._vr * state.camera.k;
     if (sr < MIN_PX_R) continue;
     const [sx, sy] = worldToScreen(d._vx, d._vy);
