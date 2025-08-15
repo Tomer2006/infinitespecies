@@ -5,7 +5,24 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Taxonomy Explorer</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://en.wikipedia.org" crossorigin>
+  <link rel="modulepreload" href="app-modular.js">
+  <link rel="modulepreload" href="modules/canvas.js">
+  <link rel="modulepreload" href="modules/render.js">
+  <link rel="modulepreload" href="modules/events.js">
+  <link rel="modulepreload" href="modules/data.js">
+  <link rel="modulepreload" href="modules/layout.js">
+  <link rel="modulepreload" href="modules/performance.js">
+  <link rel="modulepreload" href="modules/state.js">
+  <script type="importmap">
+  {
+    "imports": {
+      "d3-hierarchy": "https://cdn.jsdelivr.net/npm/d3-hierarchy@3/+esm",
+      "d3-ease": "https://cdn.jsdelivr.net/npm/d3-ease@3/+esm"
+    }
+  }
+  </script>
 </head>
 <body>
 <div class="app">
@@ -49,7 +66,7 @@
     <canvas id="view"></canvas>
     <div class="fps" id="fps" aria-live="polite">— fps</div>
     <div class="big-preview" id="bigPreview" aria-hidden="true">
-      <img id="bigPreviewImg" alt="" />
+      <img id="bigPreviewImg" alt="" decoding="async" />
       <div class="cap" id="bigPreviewCap"></div>
     </div>
     <div class="tooltip" id="tooltip">

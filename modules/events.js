@@ -37,10 +37,15 @@ export function initEvents() {
   let isMiddlePanning = false;
   let lastPan = null;
 
+  // Throttle picking to once per animation frame
+  let pickingScheduled = false;
+  let lastMouse = { x: 0, y: 0 };
+
   canvas.addEventListener('mousemove', ev => {
     const rect = canvas.getBoundingClientRect();
     const x = ev.clientX - rect.left,
       y = ev.clientY - rect.top;
+    lastMouse = { x, y };
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,
         dy = y - lastPan.y;
@@ -54,10 +59,17 @@ export function initEvents() {
       if (!state.isPreviewPinned) hideBigPreview();
       return;
     }
-    const n = pickNodeAt(x, y);
-    state.hoverNode = n;
-    updateTooltip(n, x, y);
-    requestRender();
+
+    if (!pickingScheduled) {
+      pickingScheduled = true;
+      requestAnimationFrame(() => {
+        pickingScheduled = false;
+        const n = pickNodeAt(lastMouse.x, lastMouse.y);
+        state.hoverNode = n;
+        updateTooltip(n, lastMouse.x, lastMouse.y);
+        requestRender();
+      });
+    }
   });
 
   canvas.addEventListener('mouseleave', () => {

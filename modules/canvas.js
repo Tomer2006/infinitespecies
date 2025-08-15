@@ -31,7 +31,7 @@ export function resizeCanvas() {
   canvas.height = H * DPR;
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
-  ctx = canvas.getContext('2d');
+  ctx = canvas.getContext('2d', { desynchronized: true });
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 

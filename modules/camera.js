@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
 import { perf } from './performance.js';
+import { easeCubicInOut } from 'd3-ease';
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
@@ -17,7 +18,7 @@ export function animateToCam(nx, ny, nk, dur = perf.animation.cameraAnimationMs)
   state.animating = true;
   function step(now) {
     const t = Math.min(1, (now - start) / dur);
-    const e = d3.easeCubicInOut(t);
+    const e = easeCubicInOut(t);
     state.camera.x = lerp(sx, state.targetCam.x, e);
     state.camera.y = lerp(sy, state.targetCam.y, e);
     state.camera.k = lerp(sk, state.targetCam.k, e);

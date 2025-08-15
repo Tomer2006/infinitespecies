@@ -1,10 +1,10 @@
 import { W, H } from './canvas.js';
+import { pack as d3pack, hierarchy as d3hierarchy } from 'd3-hierarchy';
 
-const pack = d3.pack().padding(0);
+const pack = d3pack().padding(0);
 
 export function layoutFor(subtree) {
-  const h = d3
-    .hierarchy(subtree)
+  const h = d3hierarchy(subtree)
     .sum(d => (d.children && d.children.length ? 0 : 1))
     .sort((a, b) => b.value - a.value);
   const diameter = Math.min(W, H);
