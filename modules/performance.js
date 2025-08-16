@@ -10,21 +10,22 @@
 export const perf = {
   // Rendering and label/layout tunables
   rendering: {
-    renderDistance: 1.0,          // multiplier for view radius used for culling; 1.0 ≈ screen diagonal/2
-    minPxRadius: 6,               // do not draw circles smaller than this screen-space radius (px)
+    renderDistance: 0.9,          // tighter culling for better FPS
+    minPxRadius: 10,              // prune tiny nodes & their subtrees early
     labelMinPxRadius: 22,         // minimum node radius (px) to consider it for labeling
     labelMinFontPx: 12,           // minimum font size (px) for labels; smaller are skipped
     verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
-    strokeMinPxRadius: 12,        // only add outline stroke if circle radius ≥ this (px)
-    maxLabels: 300,               // hard cap on number of labels placed/drawn per frame
-    labelGridCellPx: 24,          // size of spatial grid cell (px) for fast label overlap checks
-    maxNodesPerFrame: 15000       // cap number of circles drawn per frame to keep FPS stable at root
+    strokeMinPxRadius: 24,
+    maxLabels: 180,
+    labelGridCellPx: 30,
+    maxNodesPerFrame: 9000,
+    showGrid: false
   },
 
   // Canvas/device related caps
   canvas: {
-    maxDevicePixelRatio: 2        // clamp devicePixelRatio to avoid excessive canvas sizes on HiDPI screens
+    maxDevicePixelRatio: 1.5
   },
 
   // Animation timing
