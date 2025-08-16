@@ -167,7 +167,8 @@ export async function loadFromUrl(url) {
 }
 
 async function loadFromSplitFiles(baseUrl, manifest) {
-  setProgress(0, `Loading ${manifest.total_files} split files...`);
+  const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
+  setProgress(0, `Loading ${totalFiles} split files...`);
   // Concurrency-limited loader (browser typically limits to ~6 per host)
   const concurrency = computeFetchConcurrency();
   let completed = 0;
@@ -189,13 +190,13 @@ async function loadFromSplitFiles(baseUrl, manifest) {
           .then(chunk => {
             results[i] = { index: i, chunk, fileInfo };
             completed++;
-            if (completed % 2 === 0 || completed === manifest.total_files) {
-              setProgress(completed / manifest.total_files, `Loaded ${completed}/${manifest.total_files} files...`);
+            if (completed % 2 === 0 || completed === totalFiles) {
+              setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
             }
           })
           .then(() => {
             inFlight--;
-            if (completed === manifest.files.length) resolve();
+            if (completed === totalFiles) resolve();
             else startNext();
           })
           .catch(err => reject(err));
@@ -257,8 +258,8 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
   jumpToPreferredStart();
-  
-  setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
+  const nodeCount = countNodes(normalizedTree);
+  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
 }
 
 export function setDataRoot(root) {
