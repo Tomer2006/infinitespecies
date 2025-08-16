@@ -36,34 +36,34 @@ export function draw() {
   // Clear once per frame
   ctx.clearRect(0, 0, W, H);
 
-  // Grid via cached pattern fill
-  ctx.save();
-  const pat = getGridPattern(ctx);
-  const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
-  const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % 40);
-  ctx.translate(offX, offY);
-  ctx.fillStyle = pat;
-  ctx.fillRect(-offX, -offY, W + 40, H + 40);
-  ctx.restore();
+  // Grid via cached pattern fill (toggleable)
+  if (perf.rendering.showGrid) {
+    ctx.save();
+    const pat = getGridPattern(ctx);
+    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
+    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % 40);
+    ctx.translate(offX, offY);
+    ctx.fillStyle = pat;
+    ctx.fillRect(-offX, -offY, W + 40, H + 40);
+    ctx.restore();
+  }
 
-  const nodes = state.drawOrder || state.layout.root.descendants();
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];
 
-  // Precompute view radius (in world units)
-  const viewR = (Math.hypot(W, H) * 0.5) / state.camera.k * perf.rendering.renderDistance;
-
   let drawn = 0;
   const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
-  for (const d of nodes) {
-    if (drawn >= maxNodes) break;
-    // cheap rectangle-circle check in world units (strict screen culling)
-    if (!circleInViewportWorld(d._vx, d._vy, d._vr, perf.rendering.verticalPadPx)) continue;
-    const sr = d._vr * state.camera.k;
-    if (sr < MIN_PX_R) continue;
-    const [sx, sy] = worldToScreen(d._vx, d._vy);
 
+  function visit(d) {
+    if (drawn >= maxNodes) return;
+    // Cull entire subtree if parent circle is out of view
+    if (!circleInViewportWorld(d._vx, d._vy, d._vr, perf.rendering.verticalPadPx)) return;
+    const sr = d._vr * state.camera.k;
+    // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
+    if (sr < MIN_PX_R) return;
+
+    const [sx, sy] = worldToScreen(d._vx, d._vy);
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
     ctx.fillStyle = getNodeColor(d.data);
@@ -75,12 +75,12 @@ export function draw() {
       ctx.stroke();
     }
     drawn++;
+    if (drawn >= maxNodes) return;
 
     if (sr > LABEL_MIN) {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
       if (fontSize >= perf.rendering.labelMinFontPx) {
         const text = d.data.name;
-        // Cache measurements by fontSize+text
         const key = fontSize + '|' + text;
         let metrics = measureCache.get(key);
         if (!metrics) {
@@ -91,9 +91,9 @@ export function draw() {
           if (measureCache.size > 2000) measureCache.clear();
           measureCache.set(key, metrics);
         }
-        const textWidth = metrics.width,
-          textHeight = fontSize,
-          pad = 2;
+        const textWidth = metrics.width;
+        const textHeight = fontSize;
+        const pad = 2;
         const rect = {
           x1: sx - textWidth / 2 - pad,
           y1: sy - textHeight / 2 - pad,
@@ -103,7 +103,15 @@ export function draw() {
         labelCandidates.push({ sx, sy, fontSize, text, rect });
       }
     }
+
+    const ch = d.children || [];
+    for (let i = 0; i < ch.length; i++) {
+      if (drawn >= maxNodes) break;
+      visit(ch[i]);
+    }
   }
+
+  visit(state.layout.root);
 
   // Label placement pass with spatial grid and cap
   if (labelCandidates.length) {
@@ -142,8 +150,9 @@ export function draw() {
       ctx.font = `600 ${cand.fontSize}px ui-sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.lineWidth = Math.max(2, Math.min(6, cand.fontSize / 3));
-      ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+      // Cheaper outline stroke
+      ctx.lineWidth = Math.max(2, Math.min(5, cand.fontSize / 3));
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
       ctx.lineJoin = 'round';
       ctx.miterLimit = 2;
       ctx.strokeText(cand.text, cand.sx, cand.sy);
@@ -167,12 +176,10 @@ export function draw() {
       const sr = d._vr * state.camera.k;
       if (sr > 4) {
         ctx.beginPath();
-        ctx.arc(sx, sy, sr + 4, 0, Math.PI * 2);
+        ctx.arc(sx, sy, sr + 3, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(255,255,255,.35)';
         ctx.lineWidth = 2;
-        ctx.setLineDash([6, 6]);
         ctx.stroke();
-        ctx.setLineDash([]);
       }
     }
   }
