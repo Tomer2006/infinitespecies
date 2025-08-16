@@ -218,6 +218,8 @@ export function initEvents() {
     document.getElementById('searchInput').value = '';
     state.highlightNode = null;
     requestRender();
+    const r = document.getElementById('searchResults');
+    if (r) { r.style.display = 'none'; r.innerHTML = ''; }
   });
 
   resetBtn?.addEventListener('click', () => {

@@ -1,6 +1,8 @@
 import { state } from './state.js';
 import { requestRender, worldToScreen } from './canvas.js';
 import { goToNode } from './navigation.js';
+import { searchResultsEl } from './dom.js';
+import { getNodePath } from './deeplink.js';
 
 export function findByQuery(q) {
   if (!q) return null;
@@ -16,6 +18,25 @@ export function findByQuery(q) {
     for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
   }
   return null;
+}
+
+export function findAllByQuery(q, limit = 50) {
+  if (!q) return [];
+  q = q.trim().toLowerCase();
+  if (!q || !state.layout?.root) return [];
+  const results = [];
+  const stack = [state.layout.root];
+  while (stack.length) {
+    const d = stack.pop();
+    const name = (d.data?.name || '').toLowerCase();
+    if (name.includes(q)) {
+      results.push(d.data);
+      if (results.length >= limit) break;
+    }
+    const ch = d.children || [];
+    for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
+  }
+  return results;
 }
 
 export function pulseAtNode(node) {
@@ -46,10 +67,71 @@ export function pulseAtNode(node) {
   };
 }
 
+let resultsEventsBound = false;
+
+function hideResults() {
+  if (!searchResultsEl) return;
+  searchResultsEl.style.display = 'none';
+  searchResultsEl.innerHTML = '';
+}
+
+function renderResults(nodes, q) {
+  if (!searchResultsEl) return;
+  searchResultsEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  nodes.forEach(n => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.setAttribute('role', 'option');
+    item.dataset.id = String(n._id);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'name';
+    nameEl.textContent = n.name || '';
+    const pathEl = document.createElement('div');
+    pathEl.className = 'path';
+    try {
+      const path = getNodePath(n).join(' / ');
+      pathEl.textContent = path;
+    } catch (_e) {
+      pathEl.textContent = '';
+    }
+    item.appendChild(nameEl);
+    item.appendChild(pathEl);
+    frag.appendChild(item);
+  });
+  searchResultsEl.appendChild(frag);
+  searchResultsEl.style.display = 'block';
+
+  if (!resultsEventsBound) {
+    resultsEventsBound = true;
+    searchResultsEl.addEventListener('click', e => {
+      const target = e.target.closest('.item');
+      if (!target) return;
+      const id = Number(target.dataset.id || '');
+      const d = state.nodeLayoutMap.get(id);
+      const node = d?.data;
+      if (!node) return;
+      state.current = node;
+      goToNode(state.current, false);
+      state.highlightNode = state.current;
+      pulseAtNode(state.current);
+      requestRender();
+      hideResults();
+    });
+
+    document.addEventListener('click', e => {
+      const searchbar = document.querySelector('.searchbar');
+      if (!searchbar) return;
+      if (searchbar.contains(e.target)) return;
+      hideResults();
+    });
+  }
+}
+
 export function handleSearch(progressLabelEl) {
   const q = document.getElementById('searchInput').value;
-  const node = findByQuery(q);
-  if (!node) {
+  const matches = findAllByQuery(q, 50);
+  if (!matches.length) {
     if (progressLabelEl) {
       progressLabelEl.textContent = `No match for “${q}”`;
       progressLabelEl.style.color = 'var(--warn)';
@@ -58,13 +140,20 @@ export function handleSearch(progressLabelEl) {
         progressLabelEl.style.color = '';
       }, 900);
     }
+    hideResults();
     return;
   }
-  state.current = node;
-  goToNode(state.current, false);
-  state.highlightNode = state.current;
-  pulseAtNode(state.current);
-  requestRender();
+  if (matches.length === 1) {
+    const node = matches[0];
+    state.current = node;
+    goToNode(state.current, false);
+    state.highlightNode = state.current;
+    pulseAtNode(state.current);
+    requestRender();
+    hideResults();
+  } else {
+    renderResults(matches, q);
+  }
 }
 
 

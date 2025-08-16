@@ -34,6 +34,7 @@ export const jsonText = document.getElementById('jsonText');
 export const loadError = document.getElementById('loadError');
 
 export const searchInputEl = document.getElementById('searchInput');
+export const searchResultsEl = document.getElementById('searchResults');
 export const copyLinkBtn = document.getElementById('copyLinkBtn');
 export const fitBtn = document.getElementById('fitBtn');
 export const tooltipSearchBtn = document.getElementById('tooltipSearchBtn');
