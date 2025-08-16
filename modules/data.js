@@ -40,11 +40,12 @@ export function normalizeTree(rootLike) {
     const keys = Object.keys(rootLike);
     if (keys.length === 1) {
       const rootName = keys[0];
-      return { name: String(rootName), level: 0, children: mapToChildren(rootLike[rootName]) };
+      return { name: 'Life', level: 0, children: mapToChildren(rootLike[rootName]) };
     }
     return { name: 'Life', level: 0, children: mapToChildren(rootLike) };
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
+  rootLike.name = 'Life';
   return rootLike;
 }
 
@@ -147,7 +148,7 @@ export async function loadFromUrl(url) {
   const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
   
   try {
-    const manifestRes = await fetch(manifestUrl, { cache: 'no-store' });
+    const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
       if (manifest.version && manifest.files) {
@@ -159,7 +160,7 @@ export async function loadFromUrl(url) {
   }
   
   // Single file loading
-  const res = await fetch(url, { cache: 'no-store' });
+  const res = await fetch(url, { cache: 'force-cache' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
   await loadFromJSONText(text);
@@ -180,7 +181,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
         inFlight++;
         const fileInfo = manifest.files[i];
         const fileUrl = baseUrl + fileInfo.filename;
-        fetch(fileUrl, { cache: 'no-store' })
+        fetch(fileUrl, { cache: 'force-cache' })
           .then(res => {
             if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
             return res.json();
@@ -266,8 +267,7 @@ export function setDataRoot(root) {
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
-  const pad = 20;
-  state.camera.k = Math.min((W - pad) / state.layout.diameter, (H - pad) / state.layout.diameter);
+  state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
   state.camera.x = 0;
   state.camera.y = 0;
   requestRender();

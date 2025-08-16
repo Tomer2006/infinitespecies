@@ -59,12 +59,20 @@ export function showBigPreview(src, caption) {
   const myToken = ++previewReqToken;
   bigPreviewCap.textContent = caption || '';
   bigPreviewImg.alt = caption || '';
+  bigPreviewImg.setAttribute('loading', 'lazy');
   bigPreviewImg.removeAttribute('src');
   bigPreview.style.display = 'block';
   bigPreview.style.opacity = '0';
   bigPreview.setAttribute('aria-hidden', 'false');
   const loader = new Image();
-  loader.onload = () => {
+  loader.decoding = 'async';
+  loader.onload = async () => {
+    if (myToken !== previewReqToken) return;
+    try {
+      if (loader.decode) await loader.decode();
+    } catch (_) {
+      // ignore decode errors, fallback to immediate swap
+    }
     if (myToken !== previewReqToken) return;
     bigPreviewImg.src = src;
     // Force reflow then fade in

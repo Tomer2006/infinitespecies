@@ -1,4 +1,4 @@
-import { stage, canvas } from './dom.js';
+import { stage, canvas, fpsEl } from './dom.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
 
@@ -11,6 +11,8 @@ let needRender = true;
 let rafId = null;
 let drawCallback = null;
 let frameCounter = 0; // incremented each frame
+let lastFpsUpdate = 0;
+let framesSinceFps = 0;
 
 export function getContext() {
   return ctx;
@@ -29,7 +31,7 @@ export function resizeCanvas() {
   canvas.height = H * DPR;
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
-  ctx = canvas.getContext('2d');
+  ctx = canvas.getContext('2d', { desynchronized: true });
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 
@@ -54,6 +56,16 @@ function loop() {
   if (drawCallback) drawCallback();
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;
+  // Update FPS text ~8 times/sec to reduce layout cost
+  const now = performance.now();
+  framesSinceFps++;
+  if (fpsEl && now - lastFpsUpdate >= 125) {
+    const sec = (now - lastFpsUpdate) / 1000;
+    const fps = framesSinceFps / sec;
+    fpsEl.textContent = Math.round(fps) + ' fps';
+    lastFpsUpdate = now;
+    framesSinceFps = 0;
+  }
 }
 
 export function registerDrawCallback(cb) {
@@ -93,6 +105,22 @@ export function viewportRadius(renderDistance) {
 export { W, H, DPR };
 export function getFrameCounter() {
   return frameCounter;
+}
+
+// Checks whether a circle in world coordinates intersects the current viewport rectangle
+export function circleInViewportWorld(cx, cy, r, padPx = 0) {
+  const padWorld = (padPx || 0) / state.camera.k;
+  const halfW = W / (2 * state.camera.k);
+  const halfH = H / (2 * state.camera.k);
+  const minX = state.camera.x - halfW - padWorld;
+  const maxX = state.camera.x + halfW + padWorld;
+  const minY = state.camera.y - halfH - padWorld;
+  const maxY = state.camera.y + halfH + padWorld;
+  const closestX = Math.max(minX, Math.min(cx, maxX));
+  const closestY = Math.max(minY, Math.min(cy, maxY));
+  const dx = cx - closestX;
+  const dy = cy - closestY;
+  return dx * dx + dy * dy <= r * r;
 }
 
 

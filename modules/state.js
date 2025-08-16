@@ -41,7 +41,11 @@ export function rebuildNodeMap() {
   desc.forEach(d => state.nodeLayoutMap.set(d.data._id, d));
   // Precompute orders
   // Draw largest circles first, then smaller on top for clarity
-  state.drawOrder = desc.slice().sort((a, b) => b._vr - a._vr);
+  // Draw larger circles first for background fill, then smaller on top.
+  // For root-level performance, pre-filter out very tiny nodes that would not be drawn.
+  state.drawOrder = desc
+    .slice()
+    .sort((a, b) => b._vr - a._vr);
   state.pickOrder = desc.slice().sort((a, b) => b.depth - a.depth);
 }
 

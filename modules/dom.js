@@ -17,6 +17,7 @@ export const providerSelect = document.getElementById('providerSelect');
 export const providerSearchBtn = document.getElementById('providerSearchBtn');
 
 export const breadcrumbsEl = document.getElementById('breadcrumbs');
+export const fpsEl = document.getElementById('fps');
 
 export const loadingEl = document.getElementById('loading');
 export const progressFill = document.getElementById('progressFill');
