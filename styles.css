@@ -82,3 +82,12 @@ canvas{display:block;width:100%;height:100%}
 .filebox{display:flex;gap:.5rem;align-items:center;margin:.3rem 0 .6rem 0}
 .error{color:var(--danger);font-size:12px;min-height:1.2em}
 
+/* Search results dropdown */
+.searchbar{position:relative}
+.search-results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#0f1330;border:1px solid #2a3472;border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:20;max-height:50vh;overflow:auto;display:none}
+.search-results .item{padding:.4rem .6rem;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:.5rem}
+.search-results .item:hover{background:#162151}
+.search-results .name{color:#fff}
+.search-results .path{color:#9aa3c7;opacity:.9;font-size:12px}
+
