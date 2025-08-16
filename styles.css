@@ -70,7 +70,8 @@ canvas{display:block;width:100%;height:100%}
 .splash-hint{margin-top:.5rem;color:#9aa3c7;font-size:12px;opacity:.9}
 .progress-bar{height:12px;background:#0e1331;border:1px solid #273070;border-radius:8px;overflow:hidden}
 .progress-fill{height:100%;width:0%;background:linear-gradient(90deg, var(--accent), var(--accent-2))}
-.progress-meta{display:flex;justify-content:space-between;color:#c6cff7;font-size:12px;margin-top:.4rem}
+.progress-meta{display:flex;justify-content:flex-end;color:#c6cff7;font-size:12px;margin-top:.4rem}
+.progress-meta #progressLabel{display:none}
 /* removed spinner for single progress bar */
 .pulse{position:absolute;border-radius:50%;pointer-events:none;z-index:1;opacity:.6;mix-blend-mode:screen;display:none}
 .modal{position:fixed;inset:0;background:rgba(6,8,20,.72);display:none;align-items:center;justify-content:center;z-index:10}
