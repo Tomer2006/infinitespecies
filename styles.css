@@ -61,11 +61,17 @@ canvas{display:block;width:100%;height:100%}
 .loader{width:min(520px, 88vw);background:#0f1330;border:1px solid #2a3472;border-radius:14px;padding:1rem;
   box-shadow:0 20px 50px rgba(0,0,0,.35)}
 .loader h3{margin:.2rem 0 .6rem 0;font-size:16px;color:#f4f7ff}
+.splash-brand{display:flex;align-items:center;gap:.6rem;margin:.1rem 0 .6rem 0}
+.splash-brand .logo{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0b0e24;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.splash-brand .brand-title{font-weight:800;font-size:18px;background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.splash-brand .brand-sub{color:#c6cff7;font-size:12px}
+.splash-hint{margin-top:.5rem;color:#9aa3c7;font-size:12px;opacity:.9}
 .progress-bar{height:12px;background:#0e1331;border:1px solid #273070;border-radius:8px;overflow:hidden}
 .progress-fill{height:100%;width:0%;background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 .progress-meta{display:flex;justify-content:space-between;color:#c6cff7;font-size:12px;margin-top:.4rem}
-.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin 1s linear infinite;display:inline-block;margin-right:.4rem}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* removed spinner for single progress bar */
 .pulse{position:absolute;border-radius:50%;pointer-events:none;z-index:1;opacity:.6;mix-blend-mode:screen;display:none}
 .modal{position:fixed;inset:0;background:rgba(6,8,20,.72);display:none;align-items:center;justify-content:center;z-index:10}
 .modal.open{display:flex}

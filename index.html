@@ -50,7 +50,7 @@
           <path fill="#9aa3c7" d="M15.5 14h-.79l-.28-.27a6.471 6.471 0 0 0 1.57-4.23A6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 5 1.5-1.5-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
         </svg>
         <input id="searchInput" type="search" aria-label="Search organisms" placeholder="Search organism or group… (Enter)" />
-        <button class="btn" id="searchBtn" title="Find">Find</button>
+        <button class="btn" id="searchBtn" title="Search">Search</button>
         <button class="btn secondary" id="clearBtn" title="Clear search">Clear</button>
         <div class="search-results" id="searchResults" role="listbox" aria-label="Search results" aria-live="polite"></div>
       </div>
@@ -94,9 +94,15 @@
 
     <div class="loading" id="loading">
       <div class="loader">
-        <h3><span class="spinner"></span><span id="loadingTitle">Loading…</span></h3>
+        <div class="splash-brand" aria-hidden="true">
+          <div class="logo">🧬</div>
+          <div class="brand-title">Taxonomy Explorer</div>
+          <div class="brand-sub">Zoom through the tree of life while we get things ready…</div>
+        </div>
+        <h3><span id="loadingTitle">Loading…</span></h3>
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="progress-meta"><span id="progressLabel" role="status" aria-live="polite" aria-atomic="true">Starting…</span><span id="progressPct">0%</span></div>
+        <div class="splash-hint" aria-hidden="true">Tip: Press <b>?</b> for help, <b>F</b> to fit, <b>S</b> for web search</div>
       </div>
     </div>
 
