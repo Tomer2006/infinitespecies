@@ -1,7 +1,6 @@
 /* Main Application Entry Point */
 import { resizeCanvas } from './canvas.js';
 import { setupMouseEvents, setupKeyboardEvents, setupButtonEvents } from './events.js';
-import { setupExportPNG } from './export.js';
 import { initializeApp } from './init.js';
 import { tick } from './render.js';
 
@@ -13,7 +12,7 @@ import { tick } from './render.js';
   setupMouseEvents();
   setupKeyboardEvents();
   setupButtonEvents();
-  setupExportPNG();
+  // PNG export removed
   
   // Load initial data
   initializeApp().then(() => {
