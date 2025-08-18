@@ -87,6 +87,11 @@ export function showBigPreview(src, caption) {
       // ignore decode errors, fallback to immediate swap
     }
     if (myToken !== previewReqToken) return;
+    if (bigPreviewPlaceholder) {
+      bigPreviewPlaceholder.style.display = 'none';
+      bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
+    }
+    if (bigPreviewImg) bigPreviewImg.style.display = 'block';
     bigPreviewImg.src = src;
     // Force reflow then fade in
     // eslint-disable-next-line no-unused-expressions
@@ -95,7 +100,19 @@ export function showBigPreview(src, caption) {
   };
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;
-    if (!state.isPreviewPinned) hideBigPreview();
+    if (!state.isPreviewPinned) {
+      hideBigPreview();
+    } else {
+      if (bigPreviewImg) bigPreviewImg.style.display = 'none';
+      if (bigPreviewPlaceholder) {
+        bigPreviewPlaceholder.textContent = 'No image';
+        bigPreviewPlaceholder.style.display = 'grid';
+        bigPreviewPlaceholder.setAttribute('aria-hidden', 'false');
+      }
+      bigPreview.style.display = 'block';
+      bigPreview.style.opacity = '1';
+      bigPreview.setAttribute('aria-hidden', 'false');
+    }
   };
   loader.referrerPolicy = 'no-referrer';
   loader.src = src;
