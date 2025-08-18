@@ -25,7 +25,6 @@ export function updateTooltip(n, px, py) {
   ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
   ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
   ttip.style.opacity = 1;
-  if (state.isPreviewPinned) return;
   if (n._id !== lastThumbShownForId) {
     lastThumbShownForId = n._id;
     if (thumbDelayTimer) {

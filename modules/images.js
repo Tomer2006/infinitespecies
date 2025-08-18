@@ -3,7 +3,6 @@ import { bigPreview, bigPreviewImg, bigPreviewCap } from './dom.js';
 
 export let thumbDelayTimer = null;
 export let lastThumbShownForId = 0;
-export let isPreviewPinned = false;
 
 export function hideBigPreview() {
   if (bigPreview) bigPreview.style.display = 'none';
@@ -16,14 +15,6 @@ export function showBigFor(node) {
   if (bigPreviewCap) bigPreviewCap.textContent = node && node.name ? node.name : '';
 }
 
-export function pinPreviewFor(node) {
-  isPreviewPinned = true;
-  showBigFor(node);
-}
-
-export function unpinPreview() {
-  isPreviewPinned = false;
-  hideBigPreview();
-}
+// pin/unpin removed
 
 

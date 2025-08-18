@@ -56,7 +56,7 @@ export function initEvents() {
       // Hide tooltip and big preview while panning
       const tooltipEl = document.getElementById('tooltip');
       if (tooltipEl) tooltipEl.style.opacity = 0;
-      if (!state.isPreviewPinned) hideBigPreview();
+      hideBigPreview();
       return;
     }
 
@@ -75,6 +75,7 @@ export function initEvents() {
   canvas.addEventListener('mouseleave', () => {
     state.hoverNode = null;
     if (document.getElementById('tooltip')) document.getElementById('tooltip').style.opacity = 0;
+    hideBigPreview();
     requestRender();
   });
 
@@ -135,7 +136,7 @@ export function initEvents() {
     }
   });
 
-  // R / F / P / ?
+  // R / F / ?
   window.addEventListener('keydown', e => {
     const active = document.activeElement;
     const tag = (active && active.tagName) || '';
@@ -148,18 +149,6 @@ export function initEvents() {
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
       if (target) fitNodeInView(target);
-      e.preventDefault();
-    } else if (e.code === 'KeyP') {
-      const target = state.hoverNode || state.current;
-      if (!state.isPreviewPinned) {
-        if (target) {
-          state.isPreviewPinned = true;
-          state.pinnedNodeId = target?._id ?? null;
-        }
-      } else {
-        state.isPreviewPinned = false;
-        state.pinnedNodeId = null;
-      }
       e.preventDefault();
     } else if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
       if (!helpModal) return;

@@ -20,10 +20,6 @@ export const state = {
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
-
-  // preview pinning
-  isPreviewPinned: false,
-  pinnedNodeId: null
 };
 
 export function clearIndex() {

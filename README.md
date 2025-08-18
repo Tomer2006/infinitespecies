@@ -30,7 +30,6 @@ Interactive circle‑packing explorer for biological taxonomy powered by D3.
 - **Keyboard S**: Web search hovered/current node
 - **Keyboard R**: Reset to root
 - **Keyboard F**: Fit hovered/current node in view
-- **Keyboard P**: Pin/unpin image preview
 - **Keyboard ? / F1**: Toggle help
 
 ### UI overview

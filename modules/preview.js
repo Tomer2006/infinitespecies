@@ -38,7 +38,7 @@ export async function showBigFor(node) {
   const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
   const query = node.name;
   const src = await fetchWikipediaThumb(query);
-  if (!state.isPreviewPinned && lastThumbNodeId !== node._id) return;
+  if (lastThumbNodeId !== node._id) return;
   if (src && isProbablyImageAllowed(src)) {
     // ensure placeholder hidden when we do have an image
     if (bigPreviewEmpty) {
@@ -111,16 +111,12 @@ export function showBigPreview(src, caption) {
   };
   loader.referrerPolicy = 'no-referrer';
   loader.src = src;
-  if (state.isPreviewPinned && (state.hoverNode || state.current)) {
-    const n = state.hoverNode || state.current;
-    state.pinnedNodeId = n._id;
-  }
+  // no pin behavior
 }
 
 export function hideBigPreview() {
   if (!bigPreview) return;
   previewReqToken++; // cancel in-flight load
-  if (state.isPreviewPinned) return; // do not hide if pinned
   bigPreview.style.opacity = '0';
   setTimeout(() => {
     if (bigPreview.style.opacity === '0') bigPreview.style.display = 'none';
