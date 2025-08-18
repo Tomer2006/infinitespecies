@@ -20,6 +20,7 @@ export const perf = {
     maxLabels: 180,
     labelGridCellPx: 30,
     maxNodesPerFrame: 9000,
+    labelOutline: true,
     showGrid: false
   },
 
@@ -67,6 +68,55 @@ export function computeFetchConcurrency() {
     return Math.min(ceil, Math.max(floor, suggested));
   }
   return fallback;
+}
+
+// Simple adaptive quality scaler based on current FPS
+export let perfTier = 'high';
+let lastTuneMs = 0;
+
+export function tuneForFps(fps) {
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  if (now - lastTuneMs < 1500) return false; // throttle adjustments to ~1.5s
+
+  let needsResize = false;
+
+  if (fps > 0 && fps < 24 && perfTier !== 'low') {
+    // Drop quality to keep interaction smooth
+    perfTier = 'low';
+    perf.rendering.maxNodesPerFrame = 3500;
+    perf.rendering.maxLabels = 120;
+    perf.rendering.minPxRadius = 14;
+    perf.rendering.labelMinPxRadius = 26;
+    perf.rendering.strokeMinPxRadius = 30;
+    perf.rendering.labelGridCellPx = 36;
+    perf.rendering.labelOutline = false;
+    if (perf.canvas.maxDevicePixelRatio !== 1) {
+      perf.canvas.maxDevicePixelRatio = 1;
+      needsResize = true;
+    }
+    lastTuneMs = now;
+    return needsResize;
+  }
+
+  if (fps > 45 && perfTier !== 'high') {
+    // Restore higher quality when we have headroom
+    perfTier = 'high';
+    perf.rendering.maxNodesPerFrame = 9000;
+    perf.rendering.maxLabels = 180;
+    perf.rendering.minPxRadius = 10;
+    perf.rendering.labelMinPxRadius = 22;
+    perf.rendering.strokeMinPxRadius = 24;
+    perf.rendering.labelGridCellPx = 30;
+    perf.rendering.labelOutline = true;
+    if (perf.canvas.maxDevicePixelRatio !== 1.5) {
+      perf.canvas.maxDevicePixelRatio = 1.5;
+      needsResize = true;
+    }
+    lastTuneMs = now;
+    return needsResize;
+  }
+
+  return false;
 }
 
 
