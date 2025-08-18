@@ -30,9 +30,9 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
   radial-gradient(1000px 700px at 80% 30%, rgba(113,247,197,.06), transparent 60%),
   var(--bg)}
 canvas{display:block;width:100%;height:100%}
-.fps{position:absolute;left:10px;bottom:10px;z-index:4;background:rgba(18,22,51,.75);
-  border:1px solid rgba(44,53,120,.9);border-radius:8px;padding:.2rem .4rem;color:#cfe0ff;font-size:12px;
-  font-variant-numeric:tabular-nums}
+.fps{position:absolute;left:10px;bottom:10px;z-index:4;background:rgba(18,22,51,.78);
+  border:1px solid rgba(44,53,120,.9);border-radius:8px;padding:.3rem .45rem;color:#cfe0ff;font-size:12px;
+  font-variant-numeric:tabular-nums;white-space:pre;line-height:1.2}
 .puff-link{position:absolute;display:none;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
 .puff-link a{display:inline-block;background:#0f1330;border:1px solid #2a3472;color:#eaf0ff;padding:.35rem .6rem;border-radius:8px;text-decoration:none;font-size:12px}
 .big-preview{position:absolute;top:10px;left:10px;z-index:3;display:none;pointer-events:none;

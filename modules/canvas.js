@@ -1,4 +1,5 @@
 import { stage, canvas, fpsEl } from './dom.js';
+import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
 
@@ -62,7 +63,7 @@ function loop() {
   if (fpsEl && now - lastFpsUpdate >= 125) {
     const sec = (now - lastFpsUpdate) / 1000;
     const fps = framesSinceFps / sec;
-    fpsEl.textContent = Math.round(fps) + ' fps';
+    fpsEl.textContent = buildOverlayText(fps);
     lastFpsUpdate = now;
     framesSinceFps = 0;
   }
@@ -76,6 +77,9 @@ window.addEventListener('resize', () => {
   resizeCanvas();
   requestRender();
 });
+
+// Initialize runtime metrics sampling
+try { initRuntimeMetrics(); } catch (_) {}
 
 export function worldToScreen(x, y) {
   return [
