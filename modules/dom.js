@@ -9,6 +9,7 @@ export const tMeta = ttip?.querySelector('.meta');
 export const bigPreview = document.getElementById('bigPreview');
 export const bigPreviewImg = document.getElementById('bigPreviewImg');
 export const bigPreviewCap = document.getElementById('bigPreviewCap');
+export const bigPreviewPlaceholder = document.getElementById('bigPreviewPlaceholder');
 
 export const helpModal = document.getElementById('helpModal');
 export const helpCloseBtn = document.getElementById('helpCloseBtn');

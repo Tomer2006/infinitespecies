@@ -1,4 +1,4 @@
-import { bigPreview, bigPreviewCap, bigPreviewImg } from './dom.js';
+import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewPlaceholder } from './dom.js';
 import { state } from './state.js';
 
 const thumbCache = new Map();
@@ -44,7 +44,15 @@ export async function showBigFor(node) {
   } else {
     if (state.isPreviewPinned) {
       bigPreviewCap.textContent = node.name;
-      bigPreviewImg.removeAttribute('src');
+      if (bigPreviewImg) {
+        bigPreviewImg.removeAttribute('src');
+        bigPreviewImg.style.display = 'none';
+      }
+      if (bigPreviewPlaceholder) {
+        bigPreviewPlaceholder.textContent = 'No image';
+        bigPreviewPlaceholder.style.display = 'grid';
+        bigPreviewPlaceholder.setAttribute('aria-hidden', 'false');
+      }
       bigPreview.style.display = 'block';
       bigPreview.style.opacity = '1';
       bigPreview.setAttribute('aria-hidden', 'false');
@@ -61,6 +69,11 @@ export function showBigPreview(src, caption) {
   bigPreviewImg.alt = caption || '';
   bigPreviewImg.setAttribute('loading', 'lazy');
   bigPreviewImg.removeAttribute('src');
+  if (bigPreviewPlaceholder) {
+    bigPreviewPlaceholder.style.display = 'none';
+    bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
+  }
+  if (bigPreviewImg) bigPreviewImg.style.display = 'block';
   bigPreview.style.display = 'block';
   bigPreview.style.opacity = '0';
   bigPreview.setAttribute('aria-hidden', 'false');
@@ -104,6 +117,11 @@ export function hideBigPreview() {
   bigPreviewImg.src = '';
   bigPreviewImg.alt = '';
   bigPreviewCap.textContent = '';
+  if (bigPreviewPlaceholder) {
+    bigPreviewPlaceholder.style.display = 'none';
+    bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
+  }
+  if (bigPreviewImg) bigPreviewImg.style.display = 'block';
 }
 
 
