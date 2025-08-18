@@ -1,6 +1,6 @@
 import { stage, canvas, fpsEl } from './dom.js';
 import { state } from './state.js';
-import { perf, tuneForFps } from './performance.js';
+import { perf } from './performance.js';
 
 let ctx;
 let W = 0;
@@ -63,11 +63,6 @@ function loop() {
     const sec = (now - lastFpsUpdate) / 1000;
     const fps = framesSinceFps / sec;
     fpsEl.textContent = Math.round(fps) + ' fps';
-    // Adaptive tuning
-    const resized = tuneForFps(fps);
-    if (resized) {
-      resizeCanvas();
-    }
     lastFpsUpdate = now;
     framesSinceFps = 0;
   }

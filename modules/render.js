@@ -150,13 +150,12 @@ export function draw() {
       ctx.font = `600 ${cand.fontSize}px ui-sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      if (perf.rendering.labelOutline) {
-        ctx.lineWidth = Math.max(2, Math.min(5, cand.fontSize / 3));
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.lineJoin = 'round';
-        ctx.miterLimit = 2;
-        ctx.strokeText(cand.text, cand.sx, cand.sy);
-      }
+      // Cheaper outline stroke
+      ctx.lineWidth = Math.max(2, Math.min(5, cand.fontSize / 3));
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeText(cand.text, cand.sx, cand.sy);
       ctx.fillStyle = '#e9eeff';
       ctx.globalAlpha = 0.95;
       ctx.fillText(cand.text, cand.sx, cand.sy);
