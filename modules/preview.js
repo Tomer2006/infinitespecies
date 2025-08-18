@@ -1,4 +1,4 @@
-import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewPlaceholder } from './dom.js';
+import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom.js';
 import { state } from './state.js';
 
 const thumbCache = new Map();
@@ -40,25 +40,27 @@ export async function showBigFor(node) {
   const src = await fetchWikipediaThumb(query);
   if (!state.isPreviewPinned && lastThumbNodeId !== node._id) return;
   if (src && isProbablyImageAllowed(src)) {
+    // ensure placeholder hidden when we do have an image
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'none';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'true');
+    }
+    if (bigPreviewImg) bigPreviewImg.style.display = 'block';
     showBigPreview(src, query);
   } else {
-    if (state.isPreviewPinned) {
-      bigPreviewCap.textContent = node.name;
-      if (bigPreviewImg) {
-        bigPreviewImg.removeAttribute('src');
-        bigPreviewImg.style.display = 'none';
-      }
-      if (bigPreviewPlaceholder) {
-        bigPreviewPlaceholder.textContent = 'No image';
-        bigPreviewPlaceholder.style.display = 'grid';
-        bigPreviewPlaceholder.setAttribute('aria-hidden', 'false');
-      }
-      bigPreview.style.display = 'block';
-      bigPreview.style.opacity = '1';
-      bigPreview.setAttribute('aria-hidden', 'false');
-    } else {
-      hideBigPreview();
+    // Show fallback box with centered text even when not pinned
+    bigPreviewCap.textContent = node.name;
+    if (bigPreviewImg) {
+      bigPreviewImg.removeAttribute('src');
+      bigPreviewImg.style.display = 'none';
     }
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
+    }
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
   }
 }
 
@@ -69,11 +71,11 @@ export function showBigPreview(src, caption) {
   bigPreviewImg.alt = caption || '';
   bigPreviewImg.setAttribute('loading', 'lazy');
   bigPreviewImg.removeAttribute('src');
-  if (bigPreviewPlaceholder) {
-    bigPreviewPlaceholder.style.display = 'none';
-    bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
+  if (bigPreviewEmpty) {
+    bigPreviewEmpty.style.display = 'none';
+    bigPreviewEmpty.setAttribute('aria-hidden', 'true');
   }
-  if (bigPreviewImg) bigPreviewImg.style.display = 'block';
+  bigPreviewImg.style.display = 'block';
   bigPreview.style.display = 'block';
   bigPreview.style.opacity = '0';
   bigPreview.setAttribute('aria-hidden', 'false');
@@ -87,11 +89,6 @@ export function showBigPreview(src, caption) {
       // ignore decode errors, fallback to immediate swap
     }
     if (myToken !== previewReqToken) return;
-    if (bigPreviewPlaceholder) {
-      bigPreviewPlaceholder.style.display = 'none';
-      bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
-    }
-    if (bigPreviewImg) bigPreviewImg.style.display = 'block';
     bigPreviewImg.src = src;
     // Force reflow then fade in
     // eslint-disable-next-line no-unused-expressions
@@ -100,19 +97,17 @@ export function showBigPreview(src, caption) {
   };
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;
-    if (!state.isPreviewPinned) {
-      hideBigPreview();
-    } else {
-      if (bigPreviewImg) bigPreviewImg.style.display = 'none';
-      if (bigPreviewPlaceholder) {
-        bigPreviewPlaceholder.textContent = 'No image';
-        bigPreviewPlaceholder.style.display = 'grid';
-        bigPreviewPlaceholder.setAttribute('aria-hidden', 'false');
-      }
-      bigPreview.style.display = 'block';
-      bigPreview.style.opacity = '1';
-      bigPreview.setAttribute('aria-hidden', 'false');
+    // Fall back to placeholder text instead of hiding
+    bigPreviewImg.removeAttribute('src');
+    bigPreviewImg.style.display = 'none';
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
     }
+    bigPreviewCap.textContent = caption || '';
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
   };
   loader.referrerPolicy = 'no-referrer';
   loader.src = src;
@@ -134,11 +129,6 @@ export function hideBigPreview() {
   bigPreviewImg.src = '';
   bigPreviewImg.alt = '';
   bigPreviewCap.textContent = '';
-  if (bigPreviewPlaceholder) {
-    bigPreviewPlaceholder.style.display = 'none';
-    bigPreviewPlaceholder.setAttribute('aria-hidden', 'true');
-  }
-  if (bigPreviewImg) bigPreviewImg.style.display = 'block';
 }
 
 
