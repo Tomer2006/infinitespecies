@@ -18,9 +18,8 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-  const desc = n._leaves ?? 1;
   if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
-  if (tMeta) tMeta.textContent = `${desc.toLocaleString()} descendant${desc === 1 ? '' : 's'}`;
+  if (tMeta) tMeta.textContent = n.level || '';
   const m = 10;
   ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
   ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
