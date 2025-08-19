@@ -20,12 +20,6 @@ export const state = {
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
-
-  // dataset streaming (split files)
-  datasetManifest: null,
-  datasetBaseUrl: null,
-  currentLoadedPath: '',
-  chunkCache: new Map()
 };
 
 export function clearIndex() {

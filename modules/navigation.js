@@ -4,8 +4,6 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { state as appState } from './state.js';
-import { loadClosestPathSubtree } from './data.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -56,17 +54,6 @@ export function goToNode(node, animate = true) {
     state.camera.k = Math.min(W, H) / state.layout.diameter;
   }
   requestRender();
-
-  // Background-load a closer subtree if split dataset is available
-  if (appState.datasetManifest && appState.datasetBaseUrl) {
-    const path = [];
-    let p = node;
-    while (p) { path.unshift(p.name); p = p.parent; }
-    const subPath = path.join('/');
-    if (subPath && subPath !== appState.currentLoadedPath) {
-      loadClosestPathSubtree(subPath).catch(() => {});
-    }
-  }
 }
 
 

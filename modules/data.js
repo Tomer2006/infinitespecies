@@ -152,12 +152,7 @@ export async function loadFromUrl(url) {
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
       if (manifest.version && manifest.files) {
-        // Save manifest/base for dynamic streaming
-        state.datasetManifest = manifest;
-        state.datasetBaseUrl = url.replace(/[^/]*$/, '');
-        state.currentLoadedPath = '';
-        state.chunkCache.clear?.();
-        return await loadFromSplitFiles(state.datasetBaseUrl, manifest);
+        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
       }
     }
   } catch (e) {
@@ -262,7 +257,6 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const normalizedTree = normalizeTree(mergedTree);
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
-  state.currentLoadedPath = 'Life';
   jumpToPreferredStart();
   const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
@@ -290,48 +284,6 @@ function jumpToPreferredStart() {
     state.highlightNode = preferred;
     requestRender();
   }
-}
-
-// Dynamic on-demand subtree loading for split datasets
-export async function loadClosestPathSubtree(targetPath) {
-  if (!state.datasetManifest || !state.datasetBaseUrl) return;
-  if (!targetPath) return;
-  // Find the closest available chunk whose path is a prefix of targetPath or vice versa
-  const files = state.datasetManifest.files || [];
-  let best = null;
-  let bestScore = -1;
-  for (const f of files) {
-    const p = String(f.path || '');
-    // Strip _part_x suffix
-    const pNoPart = p.replace(/_part_\d+$/, '');
-    const t = targetPath;
-    // Score by longest common prefix in path segments
-    const pSeg = pNoPart.split('/');
-    const tSeg = t.split('/');
-    let i = 0;
-    while (i < pSeg.length && i < tSeg.length && pSeg[i] === tSeg[i]) i++;
-    if (i > bestScore) {
-      bestScore = i;
-      best = f;
-    }
-  }
-  if (!best) return;
-  const base = state.datasetBaseUrl;
-  const url = base + best.filename;
-  const cached = state.chunkCache.get(url);
-  let chunk;
-  if (cached) chunk = cached;
-  else {
-    const res = await fetch(url, { cache: 'force-cache' });
-    if (!res.ok) return;
-    chunk = await res.json();
-    state.chunkCache.set(url, chunk);
-  }
-  // Convert to normalized structure
-  const normalized = normalizeTree(chunk);
-  await indexTreeProgressive(normalized);
-  setDataRoot(normalized);
-  state.currentLoadedPath = best.path;
 }
 
 
