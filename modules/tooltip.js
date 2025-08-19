@@ -18,7 +18,7 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-  if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
+  if (tName) tName.textContent = n.name;
   if (tMeta) tMeta.textContent = n.level || '';
   const m = 10;
   ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
