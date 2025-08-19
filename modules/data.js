@@ -8,7 +8,7 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
-import { showLoading, hideLoading } from './loading.js';
+import { initLazyLoader, resetLazyLoader } from './lazy-loader.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -145,6 +145,9 @@ export async function loadFromJSONText(text) {
 export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
   
+  // Reset lazy loader for new dataset
+  resetLazyLoader();
+  
   // Check if this is a split dataset by looking for manifest.json
   const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
   
@@ -152,34 +155,25 @@ export async function loadFromUrl(url) {
     const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
-      if (manifest.version && manifest.files) {
-        state.datasetManifest = manifest;
-        state.datasetBaseUrl = url.replace(/[^/]*$/, '');
-        // If an index is provided, prefer dynamic loading of the shallowest root
-        if (Array.isArray(manifest.index) && manifest.index.length) {
-          // Pick the shallowest entry as initial subtree (e.g., 'Life/Eukarya')
-          const shallow = manifest.index.reduce((best, cur) => {
-            const depth = String(cur.path || '').split('/').filter(Boolean).length;
-            if (!best) return { entry: cur, depth };
-            return depth < best.depth ? { entry: cur, depth } : best;
-          }, null);
-          const baseUrl = state.datasetBaseUrl;
-          const file = shallow?.entry?.filename;
-          if (file) {
-            const fileUrl = baseUrl + file;
-            const res = await fetch(fileUrl, { cache: 'force-cache' });
-            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-            const chunk = await res.json();
-            const normalized = normalizeTree(chunk);
-            await indexTreeProgressive(normalized);
-            setDataRoot(normalized);
-            state.currentLoadedPath = String(shallow.entry.path || '');
-            jumpToPreferredStart();
+      
+      // Check for dynamic loading manifest
+      if (manifest.type === 'dynamic' && manifest.version) {
+        const success = await initLazyLoader(manifestUrl);
+        if (success) {
+          // Load root chunk for dynamic dataset
+          const rootUrl = url.replace(/[^/]*$/, 'root.json');
+          const rootRes = await fetch(rootUrl, { cache: 'force-cache' });
+          if (rootRes.ok) {
+            const rootData = await rootRes.json();
+            await loadFromJSONText(JSON.stringify(rootData));
             return;
           }
         }
-        // Fallback: original split-file merge when no index
-        return await loadFromSplitFiles(state.datasetBaseUrl, manifest);
+      }
+      
+      // Legacy split files format
+      if (manifest.files) {
+        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
       }
     }
   } catch (e) {
@@ -287,36 +281,6 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   jumpToPreferredStart();
   const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
-}
-
-// Dynamic subtree loading: finds the closest available path in the manifest index
-export async function loadClosestPathSubtree(pathStr) {
-  const manifest = state.datasetManifest;
-  const baseUrl = state.datasetBaseUrl;
-  if (!manifest || !Array.isArray(manifest.index) || !baseUrl) return;
-  // If already loaded, skip
-  if (state.currentLoadedPath === pathStr) return;
-  const parts = String(pathStr || '').split('/').filter(Boolean);
-  for (let len = parts.length; len >= 1; len--) {
-    const sub = parts.slice(0, len).join('/');
-    const entry = manifest.index.find(e => String(e.path || '') === sub);
-    if (!entry) continue;
-    const url = baseUrl + entry.filename;
-    try {
-      showLoading(`Loading ${sub}…`);
-      const res = await fetch(url, { cache: 'force-cache' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const chunk = await res.json();
-      const normalized = normalizeTree(chunk);
-      await indexTreeProgressive(normalized);
-      setDataRoot(normalized);
-      state.currentLoadedPath = sub;
-      hideLoading();
-      return;
-    } catch (_e) {
-      hideLoading();
-    }
-  }
 }
 
 export function setDataRoot(root) {
