@@ -20,6 +20,11 @@ export const state = {
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
+
+  // dataset/manifest info for on-demand loading
+  datasetBaseUrl: '',
+  datasetManifest: null,
+  currentLoadedPath: 'Life'
 };
 
 export function clearIndex() {

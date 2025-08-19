@@ -143,23 +143,27 @@ export async function loadFromJSONText(text) {
 
 export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
-  
-  // Check if this is a split dataset by looking for manifest.json
-  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
-  
+
+  // Detect split dataset
+  const base = url.replace(/[^/]*$/, '');
+  const manifestUrl = base + 'manifest.json';
   try {
     const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
-      if (manifest.version && manifest.files) {
-        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+      if (manifest?.version && Array.isArray(manifest.files)) {
+        state.datasetBaseUrl = base;
+        state.datasetManifest = manifest;
+        // Load minimal root chunk only
+        await loadClosestPathSubtree('Life');
+        return;
       }
     }
-  } catch (e) {
-    // No manifest found, try loading as single file
+  } catch (_e) {
+    // fall through to single file
   }
-  
-  // Single file loading
+
+  // Single file fallback
   const res = await fetch(url, { cache: 'force-cache' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
@@ -260,6 +264,99 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   jumpToPreferredStart();
   const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
+}
+
+// New: load only the files that correspond to the closest path prefix
+export async function loadClosestPathSubtree(pathStr) {
+  if (!state.datasetManifest || !state.datasetBaseUrl) throw new Error('No manifest loaded');
+  const files = state.datasetManifest.files || [];
+  // Find all parts that start with the requested path prefix (manifest stores path with _part suffixes)
+  const wantPrefix = pathStr.replace(/\/$/, '') + '_part_';
+  const matches = files.filter(f => typeof f.path === 'string' && f.path.startsWith(wantPrefix));
+  // If no direct matches, progressively pop segments until we find some
+  if (!matches.length) {
+    const segs = pathStr.split('/').filter(Boolean);
+    while (segs.length && !matches.length) {
+      segs.pop();
+      const pfx = (segs.join('/') || 'Life') + '_part_';
+      for (const f of files) if (typeof f.path === 'string' && f.path.startsWith(pfx)) matches.push(f);
+    }
+  }
+  if (!matches.length) throw new Error('No matching subtree files in manifest for ' + pathStr);
+
+  // Fetch selected parts with limited concurrency
+  const concurrency = computeFetchConcurrency();
+  let completed = 0;
+  const chunks = new Array(matches.length);
+  let inFlight = 0;
+  let nextIndex = 0;
+  await new Promise((resolve, reject) => {
+    const startNext = () => {
+      while (inFlight < concurrency && nextIndex < matches.length) {
+        const i = nextIndex++;
+        inFlight++;
+        const fileUrl = state.datasetBaseUrl + matches[i].filename;
+        fetch(fileUrl, { cache: 'force-cache' })
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+            return res.json();
+          })
+          .then(chunk => {
+            chunks[i] = chunk;
+            completed++;
+            if (completed === matches.length) resolve();
+          })
+          .catch(err => reject(err))
+          .finally(() => {
+            inFlight--;
+            if (completed < matches.length) startNext();
+          });
+      }
+    };
+    startNext();
+  });
+
+  // Merge into a single tree like loadFromSplitFiles did
+  // Determine schema type
+  const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
+  let mergedTree;
+  const anyStructured = chunks.some(c => isStructuredNode(c));
+  if (anyStructured) {
+    mergedTree = { name: 'Life', level: 0, children: [] };
+    for (const chunk of chunks) {
+      if (chunk && Array.isArray(chunk.children)) mergedTree.children.push(...chunk.children);
+      else if (isStructuredNode(chunk)) mergedTree.children.push(chunk);
+    }
+  } else {
+    // Nested map merge
+    const deepMerge = (target, source) => {
+      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+      for (const [k, v] of Object.entries(source)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
+          deepMerge(target[k], v);
+        } else {
+          target[k] = v;
+        }
+      }
+      return target;
+    };
+    const mergedMap = {};
+    for (const chunk of chunks) deepMerge(mergedMap, chunk);
+    const normalizedTree = normalizeTree(mergedMap);
+    await indexTreeProgressive(normalizedTree);
+    setDataRoot(normalizedTree);
+    setProgress(1, 'Loaded subtree');
+    state.currentLoadedPath = pathStr;
+    return;
+  }
+
+  // Process structured merged tree
+  const normalizedTree = normalizeTree(mergedTree);
+  await indexTreeProgressive(normalizedTree);
+  setDataRoot(normalizedTree);
+  setProgress(1, 'Loaded subtree');
+  state.currentLoadedPath = pathStr;
 }
 
 export function setDataRoot(root) {
