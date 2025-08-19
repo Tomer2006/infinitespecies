@@ -32,7 +32,6 @@ import { showLoading, hideLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
 import { getNodePath } from './deeplink.js';
 import { showBigFor, hideBigPreview } from './preview.js';
-import { applyPreset, getCurrentPresetName } from './performance.js';
 
 export function initEvents() {
   let isMiddlePanning = false;
@@ -68,7 +67,7 @@ export function initEvents() {
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
         state.hoverNode = n;
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        requestRender();
+        // No canvas redraw needed for tooltip-only updates
       });
     }
   });
@@ -137,7 +136,7 @@ export function initEvents() {
     }
   });
 
-  // R / F / M / ?
+  // R / F / ?
   window.addEventListener('keydown', e => {
     const active = document.activeElement;
     const tag = (active && active.tagName) || '';
@@ -150,21 +149,6 @@ export function initEvents() {
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
       if (target) fitNodeInView(target);
-      e.preventDefault();
-    } else if (e.code === 'KeyM') {
-      const next = getCurrentPresetName() === 'normal' ? 'performance' : 'normal';
-      applyPreset(next);
-      // Resize to apply DPR cap immediately
-      const evt = new Event('resize');
-      window.dispatchEvent(evt);
-      if (progressLabel) {
-        progressLabel.textContent = `Preset: ${next}`;
-        progressLabel.style.color = next === 'performance' ? '#71f7c5' : '';
-        setTimeout(() => {
-          if (progressLabel.textContent?.startsWith('Preset:')) progressLabel.textContent = '';
-        }, 1400);
-      }
-      requestRender();
       e.preventDefault();
     } else if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
       if (!helpModal) return;
