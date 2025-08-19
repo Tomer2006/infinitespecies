@@ -1,5 +1,4 @@
 import { state } from './state.js';
-import { loadClosestPathSubtree } from './data.js';
 
 export function getNodePath(node) {
   const names = [];
@@ -38,16 +37,7 @@ export function findNodeByPath(pathStr) {
   for (let i = 1; i < parts.length; i++) {
     const name = parts[i];
     const child = (node.children || []).find(c => String(c.name) === name);
-    if (!child) {
-      // Attempt to lazy-load deeper subtree if available in manifest
-      if (state.datasetManifest && state.datasetBaseUrl) {
-        // Load closest subtree for the partial path up to i
-        const subPath = parts.slice(0, i + 1).join('/');
-        // Fire-and-forget; caller can navigate after load
-        loadClosestPathSubtree(subPath).catch(() => {});
-      }
-      break;
-    }
+    if (!child) break;
     node = child;
   }
   return node;

@@ -1,11 +1,10 @@
 import { breadcrumbsEl } from './dom.js';
 import { layoutFor } from './layout.js';
-import { rebuildNodeMap, state } from './state.js';
+import { rebuildNodeMap, state as appState } from './state.js';
+import { loadClosestPathSubtree } from './data.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { state as appState } from './state.js';
-import { loadClosestPathSubtree } from './data.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -43,22 +42,21 @@ export function fitNodeInView(node) {
 }
 
 export function goToNode(node, animate = true) {
-  state.current = node;
-  state.layout = layoutFor(state.current);
+  appState.current = node;
+  appState.layout = layoutFor(appState.current);
   rebuildNodeMap();
-  setBreadcrumbs(state.current);
+  setBreadcrumbs(appState.current);
   if (animate) {
-    const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+    const targetK = Math.min(W / appState.layout.diameter, H / appState.layout.diameter);
     animateToCam(0, 0, targetK);
   } else {
-    state.camera.x = 0;
-    state.camera.y = 0;
-    state.camera.k = Math.min(W, H) / state.layout.diameter;
+    appState.camera.x = 0;
+    appState.camera.y = 0;
+    appState.camera.k = Math.min(W, H) / appState.layout.diameter;
   }
   requestRender();
 
-  // If manifest exists and navigating into a node that likely has many descendants,
-  // trigger a background load to swap to a tighter subtree to reduce memory.
+  // If manifest exists, try to load the closest available subtree for this path
   if (appState.datasetManifest && appState.datasetBaseUrl) {
     const path = [];
     let p = node;

@@ -20,11 +20,11 @@ export const state = {
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
-
-  // dataset/manifest info for on-demand loading
-  datasetBaseUrl: '',
-  datasetManifest: null,
-  currentLoadedPath: 'Life'
+  
+  // dataset (dynamic loading)
+  datasetManifest: null,     // parsed manifest.json when present
+  datasetBaseUrl: '',        // base URL where manifest and files live
+  currentLoadedPath: ''      // path string of the currently loaded subtree root
 };
 
 export function clearIndex() {
