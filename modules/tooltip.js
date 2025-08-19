@@ -1,7 +1,7 @@
 import { ttip, tName, tMeta } from './dom.js';
 import { state } from './state.js';
 import { showBigFor, hideBigPreview } from './preview.js';
-import { requestRender, W, H } from './canvas.js';
+import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
@@ -36,6 +36,7 @@ export function updateTooltip(n, px, py) {
       }
     }, 60);
   }
+  // No canvas redraw here; tooltip DOM updates don't need a frame
 }
 
 

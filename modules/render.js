@@ -33,8 +33,7 @@ function getGridPattern(ctx) {
 export function draw() {
   const ctx = getContext();
   if (!ctx || !state.layout) return;
-  // Clear once per frame only if something will be drawn
-  // (ctx.clearRect is still needed because we redraw the whole frame)
+  // Clear once per frame
   ctx.clearRect(0, 0, W, H);
 
   // Grid via cached pattern fill (toggleable)

@@ -65,8 +65,11 @@ export function initEvents() {
       requestAnimationFrame(() => {
         pickingScheduled = false;
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
+        const prevId = state.hoverNode?._id || 0;
+        const nextId = n?._id || 0;
         state.hoverNode = n;
         updateTooltip(n, lastMouse.x, lastMouse.y);
+        if (prevId !== nextId) requestRender();
       });
     }
   });
