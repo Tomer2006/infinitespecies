@@ -4,7 +4,8 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { loadClosestPathSubtree } from './lazyload.js';
+import { loadStubNode, indexTreeProgressive, mapToChildren } from './data.js';
+import { showLoading, hideLoading } from './loading.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -20,7 +21,7 @@ export function setBreadcrumbs(node) {
     el.className = 'crumb';
     el.textContent = n.name;
     el.title = `Go to ${n.name}`;
-    el.addEventListener('click', () => goToNode(n, true));
+    el.addEventListener('click', () => goToNode(n, true).catch(console.error));
     breadcrumbsEl.appendChild(el);
     if (i < path.length - 1) {
       const sep = document.createElement('div');
@@ -41,7 +42,37 @@ export function fitNodeInView(node) {
   animateToCam(d._vx, d._vy, k);
 }
 
-export function goToNode(node, animate = true) {
+export async function goToNode(node, animate = true) {
+  // Check if this is a stub node that needs to be loaded
+  if (node._isStub) {
+    try {
+      showLoading(`Loading ${node.name || 'data'}...`);
+      const loadedData = await loadStubNode(node);
+      
+      // Convert the loaded data to proper tree structure
+      const newChildren = mapToChildren(loadedData);
+      
+      // Replace stub properties with real data
+      delete node._isStub;
+      delete node._lazyFiles;
+      delete node._stubPath;
+      delete node._hasChildren;
+      
+      // Add the loaded children
+      node.children = newChildren;
+      
+      // Re-index the node and its children
+      const tempRoot = { name: 'temp', children: [node] };
+      await indexTreeProgressive(tempRoot);
+      
+      hideLoading();
+    } catch (error) {
+      hideLoading();
+      console.error('Failed to load lazy node:', error);
+      // Continue with stub node if loading fails
+    }
+  }
+  
   state.current = node;
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
@@ -55,18 +86,6 @@ export function goToNode(node, animate = true) {
     state.camera.k = Math.min(W, H) / state.layout.diameter;
   }
   requestRender();
-
-  // If manifest exists and navigating into a node that likely has many descendants,
-  // trigger a background load to swap to a tighter subtree to reduce memory.
-  if (state.datasetManifest && state.datasetBaseUrl) {
-    const path = [];
-    let p = node;
-    while (p) { path.unshift(p.name); p = p.parent; }
-    const subPath = path.join('/');
-    if (subPath && subPath !== state.currentLoadedPath) {
-      loadClosestPathSubtree(subPath).catch(() => {});
-    }
-  }
 }
 
 
