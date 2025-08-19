@@ -67,7 +67,6 @@ export function initEvents() {
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
         state.hoverNode = n;
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        // No canvas redraw needed for tooltip-only updates
       });
     }
   });
@@ -76,7 +75,6 @@ export function initEvents() {
     state.hoverNode = null;
     if (document.getElementById('tooltip')) document.getElementById('tooltip').style.opacity = 0;
     hideBigPreview();
-    requestRender();
   });
 
   canvas.addEventListener('mousedown', ev => {

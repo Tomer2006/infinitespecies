@@ -33,7 +33,8 @@ function getGridPattern(ctx) {
 export function draw() {
   const ctx = getContext();
   if (!ctx || !state.layout) return;
-  // Clear once per frame
+  // Clear once per frame only if something will be drawn
+  // (ctx.clearRect is still needed because we redraw the whole frame)
   ctx.clearRect(0, 0, W, H);
 
   // Grid via cached pattern fill (toggleable)
@@ -51,14 +52,13 @@ export function draw() {
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
   const labelCandidates = [];
-  const labelCap = (perf.rendering.maxLabels || 0) * (perf.rendering.labelCandidateCapMultiplier || 4);
 
   let drawn = 0;
   const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
 
   function visit(d) {
     if (drawn >= maxNodes) return;
-    // Cull subtrees quickly using precomputed viewport circle test
+    // Cull entire subtree if parent circle is out of view
     if (!circleInViewportWorld(d._vx, d._vy, d._vr, perf.rendering.verticalPadPx)) return;
     const sr = d._vr * state.camera.k;
     // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
@@ -78,7 +78,7 @@ export function draw() {
     drawn++;
     if (drawn >= maxNodes) return;
 
-    if (sr > LABEL_MIN && labelCandidates.length < labelCap) {
+    if (sr > LABEL_MIN) {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
       if (fontSize >= perf.rendering.labelMinFontPx) {
         const text = d.data.name;

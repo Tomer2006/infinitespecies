@@ -37,13 +37,17 @@ export function resizeCanvas() {
 }
 
 export function requestRender() {
-  needRender = true;
-  ensureRAF();
+  if (!needRender) {
+    needRender = true;
+    ensureRAF();
+  }
 }
 
 export function tick() {
-  needRender = true;
-  ensureRAF();
+  if (!needRender) {
+    needRender = true;
+    ensureRAF();
+  }
 }
 
 function ensureRAF() {

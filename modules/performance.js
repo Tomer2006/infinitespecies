@@ -19,8 +19,6 @@ export const perf = {
     strokeMinPxRadius: 24,
     maxLabels: 180,
     labelGridCellPx: 30,
-    // Collect at most this many times maxLabels as candidates before pruning smallest fonts
-    labelCandidateCapMultiplier: 6,
     maxNodesPerFrame: 9000,
     showGrid: false
   },

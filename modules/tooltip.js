@@ -36,7 +36,6 @@ export function updateTooltip(n, px, py) {
       }
     }, 60);
   }
-  requestRender();
 }
 
 
