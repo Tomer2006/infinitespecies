@@ -18,12 +18,7 @@ export function mapToChildren(obj) {
   if (!obj || typeof obj !== 'object') return out;
   for (const [key, val] of Object.entries(obj)) {
     const node = { name: String(key) };
-    
-    // Handle stub nodes
-    if (val && val._isStub) {
-      Object.assign(node, val); // Copy stub properties
-      node.children = []; // Stubs start with no children until loaded
-    } else if (val && typeof val === 'object' && Object.keys(val).length) {
+    if (val && typeof val === 'object' && Object.keys(val).length) {
       node.children = mapToChildren(val);
     } else {
       node.children = [];
@@ -157,7 +152,12 @@ export async function loadFromUrl(url) {
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
       if (manifest.version && manifest.files) {
-        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+        // Save manifest/base for dynamic streaming
+        state.datasetManifest = manifest;
+        state.datasetBaseUrl = url.replace(/[^/]*$/, '');
+        state.currentLoadedPath = '';
+        state.chunkCache.clear?.();
+        return await loadFromSplitFiles(state.datasetBaseUrl, manifest);
       }
     }
   } catch (e) {
@@ -171,138 +171,101 @@ export async function loadFromUrl(url) {
   await loadFromJSONText(text);
 }
 
-// Store manifest and base URL for dynamic loading
-let manifestCache = null;
-let baseUrlCache = null;
-const loadedChunks = new Set(); // Track which chunks we've loaded
-
 async function loadFromSplitFiles(baseUrl, manifest) {
-  manifestCache = manifest;
-  baseUrlCache = baseUrl;
-  
-  setProgress(0, 'Loading root tree structure...');
-  
-  // Find and load only the root file initially
-  const rootFile = manifest.files.find(f => f.is_root);
-  if (!rootFile) throw new Error('No root file found in manifest');
-  
-  const rootUrl = baseUrl + rootFile.filename;
-  const res = await fetch(rootUrl, { cache: 'force-cache' });
-  if (!res.ok) throw new Error(`Failed to fetch ${rootUrl} (${res.status})`);
-  const rootChunk = await res.json();
-  loadedChunks.add(rootFile.filename);
-  
-  setProgress(0.5, 'Creating lazy-loaded tree structure...');
-  
-  // Create tree with stub nodes for unloaded chunks
-  const tree = createTreeWithStubs(rootChunk, manifest);
-  
-  setProgress(0.8, 'Processing tree...');
-  
-  const normalizedTree = normalizeTree(tree);
-  await indexTreeProgressive(normalizedTree);
-  setDataRoot(normalizedTree);
-  jumpToPreferredStart();
-  setProgress(1, `Loaded root structure with ${manifest.total_files - 1} lazy chunks available`);
-}
-
-function createTreeWithStubs(rootChunk, manifest) {
-  // For nested map format, convert to structured format with stubs
-  const pathToFileMap = new Map();
-  manifest.files.forEach(file => {
-    if (!file.is_root && file.path) {
-      pathToFileMap.set(file.path, file);
-    }
+  const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
+  setProgress(0, `Loading ${totalFiles} split files...`);
+  // Concurrency-limited loader (browser typically limits to ~6 per host)
+  const concurrency = computeFetchConcurrency();
+  let completed = 0;
+  const results = new Array(manifest.files.length);
+  let inFlight = 0;
+  let nextIndex = 0;
+  await new Promise((resolve, reject) => {
+    const startNext = () => {
+      while (inFlight < concurrency && nextIndex < manifest.files.length) {
+        const i = nextIndex++;
+        inFlight++;
+        const fileInfo = manifest.files[i];
+        const fileUrl = baseUrl + fileInfo.filename;
+        fetch(fileUrl, { cache: 'force-cache' })
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+            return res.json();
+          })
+          .then(chunk => {
+            results[i] = { index: i, chunk, fileInfo };
+            completed++;
+            if (completed % 2 === 0 || completed === totalFiles) {
+              setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
+            }
+          })
+          .then(() => {
+            inFlight--;
+            if (completed === totalFiles) resolve();
+            else startNext();
+          })
+          .catch(err => reject(err));
+      }
+    };
+    startNext();
   });
   
-  function processNode(obj, currentPath = '') {
-    if (!obj || typeof obj !== 'object') return obj;
-    
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
-      const nodePath = currentPath ? `${currentPath}/${key}` : key;
-      
-      // Check if this path has a corresponding file to load
-      const matchingFiles = Array.from(pathToFileMap.entries()).filter(([path]) => 
-        path.startsWith(nodePath + '_part_') || path === nodePath
-      );
-      
-      if (matchingFiles.length > 0) {
-        // Create a stub node that will be loaded on demand
-        result[key] = {
-          _isStub: true,
-          _lazyFiles: matchingFiles.map(([, file]) => file),
-          _stubPath: nodePath,
-          _hasChildren: true
-        };
-      } else if (value && typeof value === 'object' && Object.keys(value).length > 0) {
-        // Recursively process nested objects
-        result[key] = processNode(value, nodePath);
-      } else {
-        // Leaf node
-        result[key] = value;
-      }
-    }
-    return result;
-  }
+  setProgress(0.95, 'Merging tree data...');
   
-  return processNode(rootChunk);
-}
+  // Sort by index to maintain order
+  results.sort((a, b) => a.index - b.index);
 
-// Function to load a stub node on demand
-export async function loadStubNode(stubNode) {
-  if (!stubNode._isStub || !stubNode._lazyFiles) return stubNode;
-  
-  setProgress(0, `Loading ${stubNode._lazyFiles.length} chunks...`);
-  
-  const chunks = [];
-  for (let i = 0; i < stubNode._lazyFiles.length; i++) {
-    const file = stubNode._lazyFiles[i];
-    if (loadedChunks.has(file.filename)) continue; // Skip already loaded
-    
-    const fileUrl = baseUrlCache + file.filename;
-    const res = await fetch(fileUrl, { cache: 'force-cache' });
-    if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-    const chunk = await res.json();
-    chunks.push(chunk);
-    loadedChunks.add(file.filename);
-    
-    setProgress((i + 1) / stubNode._lazyFiles.length, `Loading chunk ${i + 1}/${stubNode._lazyFiles.length}...`);
-  }
-  
-  // Merge all chunks for this stub
-  const mergedChunk = {};
-  const deepMerge = (target, source) => {
-    if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
-    for (const [k, v] of Object.entries(source)) {
-      if (v && typeof v === 'object' && !Array.isArray(v)) {
-        if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
-        deepMerge(target[k], v);
-      } else {
-        target[k] = v;
+  // Determine schema type: structured nodes vs nested map
+  const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
+
+  const anyStructured = results.some(r => isStructuredNode(r.chunk));
+
+  let mergedTree;
+  if (anyStructured) {
+    // Structured nodes: collect children
+    mergedTree = { name: 'Life', level: 0, children: [] };
+    for (const { chunk } of results) {
+      if (chunk && Array.isArray(chunk.children)) {
+        mergedTree.children.push(...chunk.children);
+      } else if (isStructuredNode(chunk)) {
+        mergedTree.children.push(chunk);
       }
     }
-    return target;
-  };
-  
-  for (const chunk of chunks) {
-    deepMerge(mergedChunk, chunk);
+  } else {
+    // Nested key map: deep-merge all object chunks
+    const deepMerge = (target, source) => {
+      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+      for (const [k, v] of Object.entries(source)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
+          deepMerge(target[k], v);
+        } else {
+          target[k] = v;
+        }
+      }
+      return target;
+    };
+    const mergedMap = {};
+    for (const { chunk } of results) deepMerge(mergedMap, chunk);
+    // Normalize will convert nested map to structured nodes
+    const normalizedTree = normalizeTree(mergedMap);
+    await indexTreeProgressive(normalizedTree);
+    setDataRoot(normalizedTree);
+    jumpToPreferredStart();
+    setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
+    return;
   }
   
-  // Find the relevant subtree in the merged chunk
-  const pathParts = stubNode._stubPath.split('/');
-  let subtree = mergedChunk;
-  for (const part of pathParts) {
-    if (subtree && subtree[part]) {
-      subtree = subtree[part];
-    } else {
-      subtree = {};
-      break;
-    }
-  }
+  setProgress(0.98, 'Processing merged tree...');
   
-  hideLoading();
-  return subtree || {};
+  // Process the merged tree
+  const normalizedTree = normalizeTree(mergedTree);
+  await indexTreeProgressive(normalizedTree);
+  setDataRoot(normalizedTree);
+  state.currentLoadedPath = 'Life';
+  jumpToPreferredStart();
+  const nodeCount = countNodes(normalizedTree);
+  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
 }
 
 export function setDataRoot(root) {
@@ -327,6 +290,48 @@ function jumpToPreferredStart() {
     state.highlightNode = preferred;
     requestRender();
   }
+}
+
+// Dynamic on-demand subtree loading for split datasets
+export async function loadClosestPathSubtree(targetPath) {
+  if (!state.datasetManifest || !state.datasetBaseUrl) return;
+  if (!targetPath) return;
+  // Find the closest available chunk whose path is a prefix of targetPath or vice versa
+  const files = state.datasetManifest.files || [];
+  let best = null;
+  let bestScore = -1;
+  for (const f of files) {
+    const p = String(f.path || '');
+    // Strip _part_x suffix
+    const pNoPart = p.replace(/_part_\d+$/, '');
+    const t = targetPath;
+    // Score by longest common prefix in path segments
+    const pSeg = pNoPart.split('/');
+    const tSeg = t.split('/');
+    let i = 0;
+    while (i < pSeg.length && i < tSeg.length && pSeg[i] === tSeg[i]) i++;
+    if (i > bestScore) {
+      bestScore = i;
+      best = f;
+    }
+  }
+  if (!best) return;
+  const base = state.datasetBaseUrl;
+  const url = base + best.filename;
+  const cached = state.chunkCache.get(url);
+  let chunk;
+  if (cached) chunk = cached;
+  else {
+    const res = await fetch(url, { cache: 'force-cache' });
+    if (!res.ok) return;
+    chunk = await res.json();
+    state.chunkCache.set(url, chunk);
+  }
+  // Convert to normalized structure
+  const normalized = normalizeTree(chunk);
+  await indexTreeProgressive(normalized);
+  setDataRoot(normalized);
+  state.currentLoadedPath = best.path;
 }
 
 

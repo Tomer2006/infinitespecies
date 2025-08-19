@@ -104,7 +104,7 @@ export function initEvents() {
     const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
     if (!n) return;
     if (n === state.current) fitNodeInView(n);
-    else goToNode(n, true).catch(console.error);
+    else goToNode(n, true);
   });
 
   canvas.addEventListener(
@@ -145,7 +145,7 @@ export function initEvents() {
     if (isTyping) return;
 
     if (e.code === 'KeyR') {
-      if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true).catch(console.error);
+      if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
       e.preventDefault();
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
@@ -213,7 +213,7 @@ export function initEvents() {
   });
 
   resetBtn?.addEventListener('click', () => {
-    if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true).catch(console.error);
+    if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
     state.highlightNode = null;
     requestRender();
   });

@@ -112,11 +112,10 @@ function renderResults(nodes, q) {
       const node = d?.data;
       if (!node) return;
       state.current = node;
-      goToNode(state.current, false).then(() => {
-        state.highlightNode = state.current;
-        pulseAtNode(state.current);
-        requestRender();
-      }).catch(console.error);
+      goToNode(state.current, false);
+      state.highlightNode = state.current;
+      pulseAtNode(state.current);
+      requestRender();
       hideResults();
     });
 
@@ -145,14 +144,13 @@ export function handleSearch(progressLabelEl) {
     return;
   }
   if (matches.length === 1) {
-          const node = matches[0];
-      state.current = node;
-      goToNode(state.current, false).then(() => {
-        state.highlightNode = state.current;
-        pulseAtNode(state.current);
-        requestRender();
-      }).catch(console.error);
-      hideResults();
+    const node = matches[0];
+    state.current = node;
+    goToNode(state.current, false);
+    state.highlightNode = state.current;
+    pulseAtNode(state.current);
+    requestRender();
+    hideResults();
   } else {
     renderResults(matches, q);
   }
