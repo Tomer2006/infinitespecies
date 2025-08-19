@@ -8,7 +8,6 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
-import { initLazyLoader, resetLazyLoader } from './lazy-loader.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -145,9 +144,6 @@ export async function loadFromJSONText(text) {
 export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
   
-  // Reset lazy loader for new dataset
-  resetLazyLoader();
-  
   // Check if this is a split dataset by looking for manifest.json
   const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
   
@@ -155,25 +151,10 @@ export async function loadFromUrl(url) {
     const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
-      
-      // Check for dynamic loading manifest
-      if (manifest.type === 'dynamic' && manifest.version) {
-        const success = await initLazyLoader(manifestUrl);
-        if (success) {
-          // Load root chunk for dynamic dataset
-          const rootUrl = url.replace(/[^/]*$/, 'root.json');
-          const rootRes = await fetch(rootUrl, { cache: 'force-cache' });
-          if (rootRes.ok) {
-            const rootData = await rootRes.json();
-            await loadFromJSONText(JSON.stringify(rootData));
-            return;
-          }
-        }
-      }
-      
-      // Legacy split files format
-      if (manifest.files) {
-        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+      if (manifest.version && manifest.files) {
+        state.datasetManifest = manifest;
+        state.datasetBaseUrl = url.replace(/[^/]*$/, '');
+        return await loadFromSplitFiles(state.datasetBaseUrl, manifest);
       }
     }
   } catch (e) {
@@ -188,99 +169,53 @@ export async function loadFromUrl(url) {
 }
 
 async function loadFromSplitFiles(baseUrl, manifest) {
-  const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
-  setProgress(0, `Loading ${totalFiles} split files...`);
-  // Concurrency-limited loader (browser typically limits to ~6 per host)
-  const concurrency = computeFetchConcurrency();
-  let completed = 0;
-  const results = new Array(manifest.files.length);
-  let inFlight = 0;
-  let nextIndex = 0;
-  await new Promise((resolve, reject) => {
-    const startNext = () => {
-      while (inFlight < concurrency && nextIndex < manifest.files.length) {
-        const i = nextIndex++;
-        inFlight++;
-        const fileInfo = manifest.files[i];
-        const fileUrl = baseUrl + fileInfo.filename;
-        fetch(fileUrl, { cache: 'force-cache' })
-          .then(res => {
-            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-            return res.json();
-          })
-          .then(chunk => {
-            results[i] = { index: i, chunk, fileInfo };
-            completed++;
-            if (completed % 2 === 0 || completed === totalFiles) {
-              setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
-            }
-          })
-          .then(() => {
-            inFlight--;
-            if (completed === totalFiles) resolve();
-            else startNext();
-          })
-          .catch(err => reject(err));
-      }
-    };
-    startNext();
-  });
-  
-  setProgress(0.95, 'Merging tree data...');
-  
-  // Sort by index to maintain order
-  results.sort((a, b) => a.index - b.index);
+  // Lazy strategy:
+  // 1) Load only root part(s)
+  // 2) Attach stub children for paths present in manifest, to be loaded on demand
+  setProgress(0, 'Loading root…');
+  const rootEntry = manifest.files.find(f => f.is_root) || manifest.files[0];
+  if (!rootEntry) throw new Error('Manifest has no files');
+  const rootUrl = baseUrl + rootEntry.filename;
+  const res = await fetch(rootUrl, { cache: 'force-cache' });
+  if (!res.ok) throw new Error(`Failed to fetch ${rootUrl} (${res.status})`);
+  const rootChunk = await res.json();
 
-  // Determine schema type: structured nodes vs nested map
-  const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
+  // Normalize and index minimal root
+  const normalizedRoot = normalizeTree(rootChunk);
+  await indexTreeProgressive(normalizedRoot);
 
-  const anyStructured = results.some(r => isStructuredNode(r.chunk));
-
-  let mergedTree;
-  if (anyStructured) {
-    // Structured nodes: collect children
-    mergedTree = { name: 'Life', level: 0, children: [] };
-    for (const { chunk } of results) {
-      if (chunk && Array.isArray(chunk.children)) {
-        mergedTree.children.push(...chunk.children);
-      } else if (isStructuredNode(chunk)) {
-        mergedTree.children.push(chunk);
-      }
-    }
-  } else {
-    // Nested key map: deep-merge all object chunks
-    const deepMerge = (target, source) => {
-      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
-      for (const [k, v] of Object.entries(source)) {
-        if (v && typeof v === 'object' && !Array.isArray(v)) {
-          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) target[k] = {};
-          deepMerge(target[k], v);
-        } else {
-          target[k] = v;
-        }
-      }
-      return target;
-    };
-    const mergedMap = {};
-    for (const { chunk } of results) deepMerge(mergedMap, chunk);
-    // Normalize will convert nested map to structured nodes
-    const normalizedTree = normalizeTree(mergedMap);
-    await indexTreeProgressive(normalizedTree);
-    setDataRoot(normalizedTree);
-    jumpToPreferredStart();
-    setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
-    return;
+  // Build a map of pathPrefix -> filenames for quick lookup
+  const pathToFiles = new Map();
+  for (const f of manifest.files) {
+    if (!f.path) continue;
+    const path = String(f.path);
+    if (!pathToFiles.has(path)) pathToFiles.set(path, []);
+    pathToFiles.get(path).push(f.filename);
   }
-  
-  setProgress(0.98, 'Processing merged tree...');
-  
-  // Process the merged tree
-  const normalizedTree = normalizeTree(mergedTree);
-  await indexTreeProgressive(normalizedTree);
-  setDataRoot(normalizedTree);
+
+  // Attach lazy stubs: for each top-level child under Life that has a matching manifest path,
+  // mark it as lazy with a pointer to its path prefix
+  function attachLazyStubs(node, pathPrefix) {
+    if (!Array.isArray(node.children)) node.children = [];
+    // If manifest lists deeper paths under this prefix, we consider it lazily loadable
+    const prefix = pathPrefix ? pathPrefix : node.name;
+    const hasParts = [...pathToFiles.keys()].some(p => p === prefix || p.startsWith(prefix + '/'));
+    if (hasParts) {
+      node._lazyPath = prefix;
+      // Keep children as-is if present, otherwise a placeholder so UI renders expandables uniformly
+      if (!node.children.length) node.children = [];
+    }
+    for (const ch of node.children) attachLazyStubs(ch, prefix + '/' + ch.name);
+  }
+
+  attachLazyStubs(normalizedRoot, 'Life');
+
+  setDataRoot(normalizedRoot);
+  state.datasetManifest = manifest;
+  state.datasetBaseUrl = baseUrl;
+  state.currentLoadedPath = 'Life';
   jumpToPreferredStart();
-  const nodeCount = countNodes(normalizedTree);
-  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
+  setProgress(1, 'Ready');
 }
 
 export function setDataRoot(root) {

@@ -4,8 +4,7 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { isStub, loadChunk, preloadNearbyChunks, clearMemory, getMemoryStats } from './lazy-loader.js';
-import { showLoading, hideLoading } from './loading.js';
+import { loadClosestPathSubtree } from './lazyload.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -42,47 +41,31 @@ export function fitNodeInView(node) {
   animateToCam(d._vx, d._vy, k);
 }
 
-export async function goToNode(node, animate = true) {
-  try {
-    // Load node data if it's a stub
-    if (isStub(node)) {
-      showLoading(`Loading ${node.name}...`);
-      node = await loadChunk(node);
-      hideLoading();
-    }
+export function goToNode(node, animate = true) {
+  state.current = node;
+  state.layout = layoutFor(state.current);
+  rebuildNodeMap();
+  setBreadcrumbs(state.current);
+  if (animate) {
+    const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+    animateToCam(0, 0, targetK);
+  } else {
+    state.camera.x = 0;
+    state.camera.y = 0;
+    state.camera.k = Math.min(W, H) / state.layout.diameter;
+  }
+  requestRender();
 
-    state.current = node;
-    state.layout = layoutFor(state.current);
-    rebuildNodeMap();
-    setBreadcrumbs(state.current);
-    
-    if (animate) {
-      const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-      animateToCam(0, 0, targetK);
-    } else {
-      state.camera.x = 0;
-      state.camera.y = 0;
-      state.camera.k = Math.min(W, H) / state.layout.diameter;
+  // If manifest exists and navigating into a node that likely has many descendants,
+  // trigger a background load to swap to a tighter subtree to reduce memory.
+  if (state.datasetManifest && state.datasetBaseUrl) {
+    const path = [];
+    let p = node;
+    while (p) { path.unshift(p.name); p = p.parent; }
+    const subPath = path.join('/');
+    if (subPath && subPath !== state.currentLoadedPath) {
+      loadClosestPathSubtree(subPath).catch(() => {});
     }
-    
-    requestRender();
-
-    // Background operations
-    setTimeout(() => {
-      // Preload nearby chunks for smooth navigation
-      preloadNearbyChunks(node).catch(() => {});
-      
-      // Manage memory if we have too many chunks loaded
-      const stats = getMemoryStats();
-      if (stats.chunksLoaded > 10) {
-        clearMemory(5);
-      }
-    }, 100);
-    
-  } catch (error) {
-    hideLoading();
-    console.error('Failed to navigate to node:', error);
-    // Fallback: stay on current node
   }
 }
 
