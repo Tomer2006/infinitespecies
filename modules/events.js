@@ -40,6 +40,7 @@ export function initEvents() {
   // Throttle picking to once per animation frame
   let pickingScheduled = false;
   let lastMouse = { x: 0, y: 0 };
+  let lastPickTime = 0;
 
   canvas.addEventListener('mousemove', ev => {
     const rect = canvas.getBoundingClientRect();
@@ -64,6 +65,11 @@ export function initEvents() {
       pickingScheduled = true;
       requestAnimationFrame(() => {
         pickingScheduled = false;
+        const now = performance.now();
+        // Reduce picking frequency when hovering over the same area
+        if (now - lastPickTime < 32) return; // ~30fps max picking rate
+        lastPickTime = now;
+        
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
         const prevId = state.hoverNode?._id || 0;
         const nextId = n?._id || 0;

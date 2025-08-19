@@ -22,8 +22,25 @@ export function nodeInView(d) {
 export function pickNodeAt(px, py) {
   const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
   const [wx, wy] = screenToWorld(px, py);
+  
+  // Spatial culling: only check nodes that could possibly be under the mouse
+  const cullRadius = 200 / state.camera.k; // 200px radius in world space
+  let checked = 0;
+  const maxChecks = 500; // Limit iterations per frame
+  
   for (const d of nodes) {
+    if (checked >= maxChecks) break;
+    
+    // Quick distance check before expensive nodeInView
+    const roughDx = wx - d._vx;
+    const roughDy = wy - d._vy;
+    const roughDist2 = roughDx * roughDx + roughDy * roughDy;
+    const maxDist2 = (cullRadius + d._vr) * (cullRadius + d._vr);
+    
+    if (roughDist2 > maxDist2) continue;
     if (!nodeInView(d)) continue;
+    
+    checked++;
     const dx = wx - d._vx,
       dy = wy - d._vy;
     if (dx * dx + dy * dy <= d._vr * d._vr) return d.data;
