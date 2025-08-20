@@ -135,14 +135,20 @@ export function initEvents() {
       const target = state.hoverNode || state.current || state.DATA_ROOT;
       if (target) openProviderSearch(target);
       e.preventDefault();
-    } else if (e.code === 'KeyR') {
+      return;
+    }
+    if (e.code === 'KeyR') {
       if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
       e.preventDefault();
-    } else if (e.code === 'KeyF') {
+      return;
+    }
+    if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
       if (target) fitNodeInView(target);
       e.preventDefault();
-    } else if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
+      return;
+    }
+    if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
       if (!helpModal) return;
       const isOpen = helpModal.classList.contains('open');
       if (isOpen) {
@@ -153,6 +159,7 @@ export function initEvents() {
         helpModal.setAttribute('aria-hidden', 'false');
       }
       e.preventDefault();
+      return;
     }
   });
 
@@ -172,7 +179,7 @@ export function initEvents() {
   copyLinkBtn?.addEventListener('click', async () => {
     const url = new URL(location.href);
     const path = (state.current ? getNodePath(state.current) : []).join('/');
-    url.hash = path ? `#${encodeURIComponent(path)}` : '';
+    url.hash = path ? `#${encodePath(path)}` : '';
     try {
       await navigator.clipboard.writeText(url.toString());
       if (progressLabel) {
@@ -183,7 +190,22 @@ export function initEvents() {
         }, 1200);
       }
     } catch (_e) {
-      window.prompt('Copy link:', url.toString());
+      // Validate URL before prompting user
+      const urlString = url.toString();
+      try {
+        new URL(urlString); // Validate URL format
+        window.prompt('Copy link:', urlString);
+      } catch (urlError) {
+        console.error('Invalid URL generated:', urlError);
+        if (progressLabel) {
+          progressLabel.textContent = 'Error: Invalid URL';
+          progressLabel.style.color = 'var(--danger)';
+          setTimeout(() => {
+            progressLabel.textContent = '';
+            progressLabel.style.color = '';
+          }, 2000);
+        }
+      }
     }
   });
 
