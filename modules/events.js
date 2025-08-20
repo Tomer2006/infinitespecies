@@ -124,27 +124,18 @@ export function initEvents() {
     { passive: false }
   );
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - consolidated into single listener
   window.addEventListener('keydown', e => {
     const active = document.activeElement;
     const tag = (active && active.tagName) || '';
     const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (active && active.isContentEditable === true);
     if (isTyping) return;
+
     if (e.code === 'KeyS') {
       const target = state.hoverNode || state.current || state.DATA_ROOT;
       if (target) openProviderSearch(target);
       e.preventDefault();
-    }
-  });
-
-  // R / F / ?
-  window.addEventListener('keydown', e => {
-    const active = document.activeElement;
-    const tag = (active && active.tagName) || '';
-    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (active && active.isContentEditable === true);
-    if (isTyping) return;
-
-    if (e.code === 'KeyR') {
+    } else if (e.code === 'KeyR') {
       if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
       e.preventDefault();
     } else if (e.code === 'KeyF') {
