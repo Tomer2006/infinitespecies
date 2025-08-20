@@ -64,14 +64,11 @@ export function initEvents() {
       pickingScheduled = true;
       requestAnimationFrame(() => {
         pickingScheduled = false;
-        // Use the mouse coordinates captured at event time, not the latest lastMouse
-        const eventX = x;
-        const eventY = y;
-        const n = pickNodeAt(eventX, eventY);
+        const n = pickNodeAt(lastMouse.x, lastMouse.y);
         const prevId = state.hoverNode?._id || 0;
         const nextId = n?._id || 0;
         state.hoverNode = n;
-        updateTooltip(n, eventX, eventY);
+        updateTooltip(n, lastMouse.x, lastMouse.y);
         if (prevId !== nextId) requestRender();
       });
     }
