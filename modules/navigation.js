@@ -45,18 +45,12 @@ export function goToNode(node, animate = true) {
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
-
-  // Get the target node's position in the layout
-  const d = state.nodeLayoutMap.get(node._id);
-  const targetX = d ? d._vx : 0;
-  const targetY = d ? d._vy : 0;
-
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-    animateToCam(targetX, targetY, targetK);
+    animateToCam(0, 0, targetK);
   } else {
-    state.camera.x = targetX;
-    state.camera.y = targetY;
+    state.camera.x = 0;
+    state.camera.y = 0;
     state.camera.k = Math.min(W, H) / state.layout.diameter;
   }
   requestRender();
