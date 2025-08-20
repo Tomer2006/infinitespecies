@@ -37,11 +37,7 @@ async function loadTreeJson() {
 
 function applyData(root) {
   setDataRoot(root);
-  setCurrent(root);
-  setLayout(layoutFor(root));
-  rebuildNodeMap();
-  setBreadcrumbs(root);
-  requestRender();
+  // Note: setDataRoot already handles setting current, layout, rebuildNodeMap, breadcrumbs, and render
 }
 
 export async function initializeApp() {

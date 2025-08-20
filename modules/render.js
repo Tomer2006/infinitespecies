@@ -7,21 +7,6 @@ import { nodeInView } from './picking.js';
 // Simple LRU-ish cache for text measurement
 const measureCache = new Map();
 
-function isMetadataNodeName(name) {
-  if (!name || typeof name !== 'string') return false;
-  const lower = name.toLowerCase();
-  return lower.includes('sibling_higher') || 
-         lower.includes('barren') || 
-         lower.includes('was_container') || 
-         lower.includes('not_otu') || 
-         lower.includes('unplaced') || 
-         lower.includes('hidden') || 
-         lower.includes('inconsistent') || 
-         lower.includes('merged') ||
-         lower === 'infraspecific' ||
-         /^[a-z_,]+$/.test(lower); // all lowercase with only underscores/commas
-}
-
 // Cached grid pattern for the background
 let gridPattern = null;
 function getGridPattern(ctx) {
@@ -96,10 +81,6 @@ export function draw() {
       const fontSize = Math.min(18, Math.max(10, sr / 3));
       if (fontSize >= perf.rendering.labelMinFontPx) {
         const text = d.data.name;
-        // Skip metadata/administrative nodes
-        if (isMetadataNodeName(text)) {
-          return;
-        }
         const key = fontSize + '|' + text;
         let metrics = measureCache.get(key);
         if (!metrics) {

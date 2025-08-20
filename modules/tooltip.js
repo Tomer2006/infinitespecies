@@ -6,24 +6,9 @@ import { W, H } from './canvas.js';
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
 
-function isMetadataNode(name) {
-  if (!name || typeof name !== 'string') return false;
-  const lower = name.toLowerCase();
-  return lower.includes('sibling_higher') || 
-         lower.includes('barren') || 
-         lower.includes('was_container') || 
-         lower.includes('not_otu') || 
-         lower.includes('unplaced') || 
-         lower.includes('hidden') || 
-         lower.includes('inconsistent') || 
-         lower.includes('merged') ||
-         lower === 'infraspecific' ||
-         /^[a-z_,]+$/.test(lower); // all lowercase with only underscores/commas
-}
-
 export function updateTooltip(n, px, py) {
   if (!ttip) return;
-  if (!n || isMetadataNode(n.name)) {
+  if (!n) {
     ttip.style.opacity = 0;
     lastThumbShownForId = 0;
     if (thumbDelayTimer) {
