@@ -19,8 +19,30 @@ export function nodeInView(d) {
   return dx * dx + dy * dy <= r * r;
 }
 
+// Cache the sorted pick order to avoid expensive recalculation
+let cachedPickOrder = null;
+let cachedPickOrderLayout = null;
+
+function getPickOrder() {
+  // Use cached order if available and layout hasn't changed
+  if (cachedPickOrder && cachedPickOrderLayout === state.layout) {
+    return cachedPickOrder;
+  }
+
+  // Rebuild cache when layout changes
+  if (state.layout && state.layout.root) {
+    cachedPickOrder = state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
+    cachedPickOrderLayout = state.layout;
+  } else {
+    cachedPickOrder = null;
+    cachedPickOrderLayout = null;
+  }
+
+  return cachedPickOrder || [];
+}
+
 export function pickNodeAt(px, py) {
-  const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
+  const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : getPickOrder();
   const [wx, wy] = screenToWorld(px, py);
   for (const d of nodes) {
     if (!nodeInView(d)) continue;
@@ -29,6 +51,12 @@ export function pickNodeAt(px, py) {
     if (dx * dx + dy * dy <= d._vr * d._vr) return d.data;
   }
   return null;
+}
+
+// Export function to clear cache when layout changes
+export function clearPickOrderCache() {
+  cachedPickOrder = null;
+  cachedPickOrderLayout = null;
 }
 
 

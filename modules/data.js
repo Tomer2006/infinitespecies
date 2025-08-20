@@ -8,6 +8,7 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
+import { clearPickOrderCache } from './picking.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -285,6 +286,7 @@ export function setDataRoot(root) {
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
+  clearPickOrderCache(); // Clear picking cache when data changes
   state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
   state.camera.x = 0;
   state.camera.y = 0;
