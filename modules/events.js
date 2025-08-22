@@ -42,9 +42,8 @@ export function initEvents() {
   let lastMouse = { x: 0, y: 0 };
 
   canvas.addEventListener('mousemove', ev => {
-    const rect = canvas.getBoundingClientRect();
-    const x = ev.clientX - rect.left,
-      y = ev.clientY - rect.top;
+    const x = ev.offsetX,
+      y = ev.offsetY;
     lastMouse = { x, y };
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,

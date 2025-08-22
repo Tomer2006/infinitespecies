@@ -4,7 +4,6 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { clearPickOrderCache } from './picking.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -46,7 +45,6 @@ export function goToNode(node, animate = true) {
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
-  clearPickOrderCache(); // Clear picking cache when layout changes
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
     animateToCam(0, 0, targetK);
