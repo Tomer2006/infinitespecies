@@ -82,8 +82,7 @@ export function initEvents() {
   canvas.addEventListener('mousedown', ev => {
     if (ev.button === 1) {
       isMiddlePanning = true;
-      const rect = canvas.getBoundingClientRect();
-      lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      lastPan = { x: ev.offsetX, y: ev.offsetY };
       ev.preventDefault();
     }
   });
@@ -99,8 +98,7 @@ export function initEvents() {
 
   canvas.addEventListener('click', ev => {
     if (ev.button !== 0) return;
-    const rect = canvas.getBoundingClientRect();
-    const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
+    const n = pickNodeAt(ev.offsetX, ev.offsetY);
     if (!n) return;
     if (n === state.current) fitNodeInView(n);
     else goToNode(n, true);
@@ -110,13 +108,12 @@ export function initEvents() {
     'wheel',
     ev => {
       const scale = Math.exp(-ev.deltaY * 0.0015);
-      const rect = canvas.getBoundingClientRect();
-      const mx = ev.clientX - rect.left,
-        my = ev.clientY - rect.top;
+      const mx = ev.offsetX,
+        my = ev.offsetY;
       const [wx, wy] = screenToWorld(mx, my);
       state.camera.k *= scale;
-      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
-      state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
+      state.camera.x = wx - (mx - canvas.clientWidth / 2) / state.camera.k;
+      state.camera.y = wy - (my - canvas.clientHeight / 2) / state.camera.k;
       requestRender();
       ev.preventDefault();
     },
