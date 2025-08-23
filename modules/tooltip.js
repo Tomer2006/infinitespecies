@@ -5,16 +5,18 @@ import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
-let lastPosition = { x: -1, y: -1 };
-let lastNodeId = -1;
+let lastTooltipNodeId = 0;
+let tooltipVisible = false;
+let tooltipPosInit = false;
 
 export function updateTooltip(n, px, py) {
   if (!ttip) return;
   if (!n) {
-    ttip.style.opacity = 0;
+    if (tooltipVisible) {
+      ttip.style.opacity = 0;
+      tooltipVisible = false;
+    }
     lastThumbShownForId = 0;
-    lastPosition = { x: -1, y: -1 };
-    lastNodeId = -1;
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
       thumbDelayTimer = null;
@@ -22,38 +24,34 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-
-  const nodeId = n._id;
-  const positionChanged = Math.abs(px - lastPosition.x) > 2 || Math.abs(py - lastPosition.y) > 2;
-  const nodeChanged = nodeId !== lastNodeId;
-
-  // Only update content when node changes
-  if (nodeChanged) {
+  if (!tooltipPosInit) {
+    // Anchor once; subsequent frames use transforms only (GPU-friendly)
+    ttip.style.left = '0px';
+    ttip.style.top = '0px';
+    ttip.style.willChange = 'transform, opacity';
+    tooltipPosInit = true;
+  }
+  if (n._id !== lastTooltipNodeId) {
     if (tName) tName.textContent = n.name;
     if (tMeta) tMeta.textContent = '';
-    lastNodeId = nodeId;
+    lastTooltipNodeId = n._id;
   }
-
-  // Only update position when it significantly changes
-  if (positionChanged || nodeChanged) {
-    const m = 10;
-    ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
-    ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
-    lastPosition = { x: px, y: py };
-  }
-
-  // Only show tooltip if it's not already visible
-  if (ttip.style.opacity !== '1') {
+  const m = 10;
+  const x = Math.min(W - m, Math.max(m, px));
+  const y = Math.min(H - m, Math.max(m, py));
+  // Compose pointer position first, then fixed anchor offset
+  ttip.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, calc(-100% - 12px))`;
+  if (!tooltipVisible) {
     ttip.style.opacity = 1;
+    tooltipVisible = true;
   }
-
-  if (nodeId !== lastThumbShownForId) {
-    lastThumbShownForId = nodeId;
+  if (n._id !== lastThumbShownForId) {
+    lastThumbShownForId = n._id;
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
     }
     thumbDelayTimer = setTimeout(() => {
-      if (state.hoverNode && state.hoverNode._id === nodeId) {
+      if (state.hoverNode && state.hoverNode._id === n._id) {
         showBigFor(n);
       }
     }, 60);
