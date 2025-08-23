@@ -14,7 +14,7 @@ let drawCallback = null;
 let frameCounter = 0; // incremented each frame
 let lastFpsUpdate = 0;
 let framesSinceFps = 0;
-
+let lastCam = { x: 0, y: 0, k: 1 };
 
 export function getContext() {
   return ctx;
@@ -55,7 +55,16 @@ function loop() {
   rafId = null;
   if (!needRender) return; // skip if nothing requested
   needRender = false;
-  if (drawCallback) drawCallback();
+
+  // Avoid redraw if camera hasn't changed and no one requested a draw
+  const cam = state.camera;
+  const sameCam = cam.x === lastCam.x && cam.y === lastCam.y && cam.k === lastCam.k;
+  if (!drawCallback || sameCam) {
+    // Still update FPS box timing even when skipping draw
+  } else {
+    if (drawCallback) drawCallback();
+    lastCam = { x: cam.x, y: cam.y, k: cam.k };
+  }
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;
   // Update FPS text ~8 times/sec to reduce layout cost

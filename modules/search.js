@@ -2,7 +2,6 @@ import { state } from './state.js';
 import { requestRender, worldToScreen } from './canvas.js';
 import { goToNode } from './navigation.js';
 import { searchResultsEl } from './dom.js';
-import { getNodePath } from './deeplink.js';
 
 export function findByQuery(q) {
   if (!q) return null;
@@ -87,16 +86,7 @@ function renderResults(nodes, q) {
     const nameEl = document.createElement('div');
     nameEl.className = 'name';
     nameEl.textContent = n.name || '';
-    const pathEl = document.createElement('div');
-    pathEl.className = 'path';
-    try {
-      const path = getNodePath(n).join(' / ');
-      pathEl.textContent = path;
-    } catch (_e) {
-      pathEl.textContent = '';
-    }
     item.appendChild(nameEl);
-    item.appendChild(pathEl);
     frag.appendChild(item);
   });
   searchResultsEl.appendChild(frag);
