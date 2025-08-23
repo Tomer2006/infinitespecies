@@ -90,9 +90,7 @@ export function showBigPreview(src, caption) {
     }
     if (myToken !== previewReqToken) return;
     bigPreviewImg.src = src;
-    // Force reflow then fade in
-    // eslint-disable-next-line no-unused-expressions
-    bigPreview.offsetHeight;
+    // Fade in without forcing reflow (more performant)
     bigPreview.style.opacity = '1';
   };
   loader.onerror = () => {
