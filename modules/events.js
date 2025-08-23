@@ -67,9 +67,15 @@ export function initEvents() {
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
         const prevId = state.hoverNode?._id || 0;
         const nextId = n?._id || 0;
-        state.hoverNode = n;
+        
+        // Only update state and trigger renders when the node actually changes
+        if (prevId !== nextId) {
+          state.hoverNode = n;
+          requestRender();
+        }
+        
+        // Always update tooltip position for smooth following, but it's now optimized internally
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        if (prevId !== nextId) requestRender();
       });
     }
   });

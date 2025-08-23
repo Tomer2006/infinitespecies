@@ -5,22 +5,16 @@ import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
-
-// Cache the last tooltip state to avoid unnecessary DOM updates
-let lastTooltipNodeId = null;
-let lastTooltipPosition = { x: -1, y: -1 };
+let lastPosition = { x: -1, y: -1 };
+let lastNodeId = -1;
 
 export function updateTooltip(n, px, py) {
   if (!ttip) return;
-
   if (!n) {
-    // Only hide if not already hidden
-    if (ttip.style.opacity !== '0') {
-      ttip.style.opacity = 0;
-      lastTooltipNodeId = null;
-      lastTooltipPosition = { x: -1, y: -1 };
-    }
+    ttip.style.opacity = 0;
     lastThumbShownForId = 0;
+    lastPosition = { x: -1, y: -1 };
+    lastNodeId = -1;
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
       thumbDelayTimer = null;
@@ -29,41 +23,40 @@ export function updateTooltip(n, px, py) {
     return;
   }
 
-  const m = 10;
-  const clampedX = Math.min(W - m, Math.max(m, px));
-  const clampedY = Math.min(H - m, Math.max(m, py));
+  const nodeId = n._id;
+  const positionChanged = Math.abs(px - lastPosition.x) > 2 || Math.abs(py - lastPosition.y) > 2;
+  const nodeChanged = nodeId !== lastNodeId;
 
-  // Only update position if it changed significantly (more than 2 pixels)
-  const posChanged = Math.abs(clampedX - lastTooltipPosition.x) > 2 ||
-                    Math.abs(clampedY - lastTooltipPosition.y) > 2;
-
-  // Only update content if node changed
-  const nodeChanged = n._id !== lastTooltipNodeId;
-
+  // Only update content when node changes
   if (nodeChanged) {
     if (tName) tName.textContent = n.name;
     if (tMeta) tMeta.textContent = '';
-    lastTooltipNodeId = n._id;
+    lastNodeId = nodeId;
   }
 
-  if (posChanged || nodeChanged) {
-    ttip.style.left = clampedX + 'px';
-    ttip.style.top = clampedY + 'px';
+  // Only update position when it significantly changes
+  if (positionChanged || nodeChanged) {
+    const m = 10;
+    ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
+    ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
+    lastPosition = { x: px, y: py };
+  }
+
+  // Only show tooltip if it's not already visible
+  if (ttip.style.opacity !== '1') {
     ttip.style.opacity = 1;
-    lastTooltipPosition = { x: clampedX, y: clampedY };
   }
 
-  if (n._id !== lastThumbShownForId) {
-    lastThumbShownForId = n._id;
+  if (nodeId !== lastThumbShownForId) {
+    lastThumbShownForId = nodeId;
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
     }
-    // Increase delay to reduce frequency of expensive preview loading
     thumbDelayTimer = setTimeout(() => {
-      if (state.hoverNode && state.hoverNode._id === n._id) {
+      if (state.hoverNode && state.hoverNode._id === nodeId) {
         showBigFor(n);
       }
-    }, 150); // Increased from 60ms to 150ms
+    }, 60);
   }
   // No canvas redraw here; tooltip DOM updates don't need a frame
 }
