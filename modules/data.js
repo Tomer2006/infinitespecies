@@ -132,9 +132,7 @@ export async function loadFromJSONText(text) {
   try {
     parsed = JSON.parse(text);
   } catch (e) {
-    // Sanitize error message to prevent XSS
-    const sanitizedMessage = String(e.message || '').replace(/[<>&"']/g, '');
-    throw new Error('Invalid JSON: ' + sanitizedMessage);
+    throw new Error('Invalid JSON: ' + e.message);
   }
   const nroot = normalizeTree(parsed);
   await indexTreeProgressive(nroot);
@@ -147,18 +145,7 @@ export async function loadFromUrl(url) {
   if (!url) throw new Error('No URL provided');
   
   // Check if this is a split dataset by looking for manifest.json
-  // Use URL constructor for safer path manipulation
-  let manifestUrl;
-  try {
-    const urlObj = new URL(url, window.location.origin);
-    const pathParts = urlObj.pathname.split('/');
-    pathParts[pathParts.length - 1] = 'manifest.json';
-    urlObj.pathname = pathParts.join('/');
-    manifestUrl = urlObj.toString();
-  } catch (e) {
-    // Fallback to simple replacement if URL parsing fails
-    manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
-  }
+  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
   
   try {
     const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
@@ -169,10 +156,6 @@ export async function loadFromUrl(url) {
       }
     }
   } catch (e) {
-    // Only ignore errors related to missing manifest, not network errors
-    if (e.name !== 'TypeError' && !e.message.includes('404')) {
-      console.warn('Error checking for manifest:', e);
-    }
     // No manifest found, try loading as single file
   }
   

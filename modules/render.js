@@ -9,44 +9,35 @@ const measureCache = new Map();
 
 // Cached grid pattern for the background
 let gridPattern = null;
-let gridCanvas = null; // Keep reference to avoid garbage collection
-
 function getGridPattern(ctx) {
   if (gridPattern) return gridPattern;
-
-  // Create canvas element once and reuse
-  if (!gridCanvas) {
-    gridCanvas = document.createElement('canvas');
-    gridCanvas.width = 40;
-    gridCanvas.height = 40;
-    const tctx = gridCanvas.getContext('2d');
-    if (tctx) {
-      tctx.strokeStyle = '#8aa1ff';
-      tctx.globalAlpha = 0.05;
-      tctx.lineWidth = 1;
-      tctx.beginPath();
-      // vertical line at x=0
-      tctx.moveTo(0, 0);
-      tctx.lineTo(0, 40);
-      // horizontal line at y=0
-      tctx.moveTo(0, 0);
-      tctx.lineTo(40, 0);
-      tctx.stroke();
-    }
-  }
-
-  gridPattern = ctx.createPattern(gridCanvas, 'repeat');
+  const tile = document.createElement('canvas');
+  tile.width = 40;
+  tile.height = 40;
+  const tctx = tile.getContext('2d');
+  tctx.strokeStyle = '#8aa1ff';
+  tctx.globalAlpha = 0.05;
+  tctx.lineWidth = 1;
+  tctx.beginPath();
+  // vertical line at x=0
+  tctx.moveTo(0, 0);
+  tctx.lineTo(0, 40);
+  // horizontal line at y=0
+  tctx.moveTo(0, 0);
+  tctx.lineTo(40, 0);
+  tctx.stroke();
+  gridPattern = ctx.createPattern(tile, 'repeat');
   return gridPattern;
 }
 
 export function draw() {
   const ctx = getContext();
-  if (!ctx || !state.layout || !state.layout.root) return;
+  if (!ctx || !state.layout) return;
   // Clear once per frame
   ctx.clearRect(0, 0, W, H);
 
   // Grid via cached pattern fill (toggleable)
-  if (perf.rendering.showGrid && state.camera.k > 0) {
+  if (perf.rendering.showGrid) {
     ctx.save();
     const pat = getGridPattern(ctx);
     const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
@@ -68,7 +59,7 @@ export function draw() {
     if (drawn >= maxNodes) return;
     // Cull entire subtree if parent circle is out of view
     if (!circleInViewportWorld(d._vx, d._vy, d._vr, perf.rendering.verticalPadPx)) return;
-    const sr = d._vr * (state.camera.k || 1); // Prevent division by zero
+    const sr = d._vr * state.camera.k;
     // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
     if (sr < MIN_PX_R) return;
 
@@ -97,11 +88,7 @@ export function draw() {
           ctx.font = `600 ${fontSize}px ui-sans-serif`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
-          // Implement LRU cache eviction - remove oldest 25% of entries
-          if (measureCache.size > 2000) {
-            const keysToDelete = Array.from(measureCache.keys()).slice(0, 500);
-            keysToDelete.forEach(key => measureCache.delete(key));
-          }
+          if (measureCache.size > 2000) measureCache.clear();
           measureCache.set(key, metrics);
         }
         const textWidth = metrics.width;
@@ -185,8 +172,8 @@ export function draw() {
   if (state.highlightNode) {
     const d = state.nodeLayoutMap.get(state.highlightNode._id);
     if (d && nodeVertInView(d, perf.rendering.verticalPadPx) && nodeInView(d)) {
-          const [sx, sy] = worldToScreen(d._vx, d._vy);
-    const sr = d._vr * (state.camera.k || 1); // Prevent division by zero
+      const [sx, sy] = worldToScreen(d._vx, d._vy);
+      const sr = d._vr * state.camera.k;
       if (sr > 4) {
         ctx.beginPath();
         ctx.arc(sx, sy, sr + 3, 0, Math.PI * 2);

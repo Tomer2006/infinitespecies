@@ -90,11 +90,10 @@ export function showBigPreview(src, caption) {
     }
     if (myToken !== previewReqToken) return;
     bigPreviewImg.src = src;
-    // Fade in on next frame without forcing a sync reflow
-    requestAnimationFrame(() => {
-      if (myToken !== previewReqToken) return;
-      bigPreview.style.opacity = '1';
-    });
+    // Force reflow then fade in
+    // eslint-disable-next-line no-unused-expressions
+    bigPreview.offsetHeight;
+    bigPreview.style.opacity = '1';
   };
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;

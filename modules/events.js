@@ -42,8 +42,9 @@ export function initEvents() {
   let lastMouse = { x: 0, y: 0 };
 
   canvas.addEventListener('mousemove', ev => {
-    const x = ev.offsetX,
-      y = ev.offsetY;
+    const rect = canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left,
+      y = ev.clientY - rect.top;
     lastMouse = { x, y };
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,
@@ -63,11 +64,14 @@ export function initEvents() {
       pickingScheduled = true;
       requestAnimationFrame(() => {
         pickingScheduled = false;
-        const n = pickNodeAt(lastMouse.x, lastMouse.y);
+        // Use the mouse coordinates captured at event time, not the latest lastMouse
+        const eventX = x;
+        const eventY = y;
+        const n = pickNodeAt(eventX, eventY);
         const prevId = state.hoverNode?._id || 0;
         const nextId = n?._id || 0;
         state.hoverNode = n;
-        updateTooltip(n, lastMouse.x, lastMouse.y);
+        updateTooltip(n, eventX, eventY);
         if (prevId !== nextId) requestRender();
       });
     }
@@ -82,7 +86,8 @@ export function initEvents() {
   canvas.addEventListener('mousedown', ev => {
     if (ev.button === 1) {
       isMiddlePanning = true;
-      lastPan = { x: ev.offsetX, y: ev.offsetY };
+      const rect = canvas.getBoundingClientRect();
+      lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
       ev.preventDefault();
     }
   });
@@ -98,7 +103,8 @@ export function initEvents() {
 
   canvas.addEventListener('click', ev => {
     if (ev.button !== 0) return;
-    const n = pickNodeAt(ev.offsetX, ev.offsetY);
+    const rect = canvas.getBoundingClientRect();
+    const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
     if (!n) return;
     if (n === state.current) fitNodeInView(n);
     else goToNode(n, true);
@@ -108,12 +114,13 @@ export function initEvents() {
     'wheel',
     ev => {
       const scale = Math.exp(-ev.deltaY * 0.0015);
-      const mx = ev.offsetX,
-        my = ev.offsetY;
+      const rect = canvas.getBoundingClientRect();
+      const mx = ev.clientX - rect.left,
+        my = ev.clientY - rect.top;
       const [wx, wy] = screenToWorld(mx, my);
       state.camera.k *= scale;
-      state.camera.x = wx - (mx - canvas.clientWidth / 2) / state.camera.k;
-      state.camera.y = wy - (my - canvas.clientHeight / 2) / state.camera.k;
+      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
+      state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
       requestRender();
       ev.preventDefault();
     },
@@ -131,20 +138,14 @@ export function initEvents() {
       const target = state.hoverNode || state.current || state.DATA_ROOT;
       if (target) openProviderSearch(target);
       e.preventDefault();
-      return;
-    }
-    if (e.code === 'KeyR') {
+    } else if (e.code === 'KeyR') {
       if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
       e.preventDefault();
-      return;
-    }
-    if (e.code === 'KeyF') {
+    } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
       if (target) fitNodeInView(target);
       e.preventDefault();
-      return;
-    }
-    if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
+    } else if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
       if (!helpModal) return;
       const isOpen = helpModal.classList.contains('open');
       if (isOpen) {
@@ -155,7 +156,6 @@ export function initEvents() {
         helpModal.setAttribute('aria-hidden', 'false');
       }
       e.preventDefault();
-      return;
     }
   });
 
@@ -175,7 +175,7 @@ export function initEvents() {
   copyLinkBtn?.addEventListener('click', async () => {
     const url = new URL(location.href);
     const path = (state.current ? getNodePath(state.current) : []).join('/');
-    url.hash = path ? `#${encodePath(path)}` : '';
+    url.hash = path ? `#${encodeURIComponent(path)}` : '';
     try {
       await navigator.clipboard.writeText(url.toString());
       if (progressLabel) {
@@ -186,22 +186,7 @@ export function initEvents() {
         }, 1200);
       }
     } catch (_e) {
-      // Validate URL before prompting user
-      const urlString = url.toString();
-      try {
-        new URL(urlString); // Validate URL format
-        window.prompt('Copy link:', urlString);
-      } catch (urlError) {
-        console.error('Invalid URL generated:', urlError);
-        if (progressLabel) {
-          progressLabel.textContent = 'Error: Invalid URL';
-          progressLabel.style.color = 'var(--danger)';
-          setTimeout(() => {
-            progressLabel.textContent = '';
-            progressLabel.style.color = '';
-          }, 2000);
-        }
-      }
+      window.prompt('Copy link:', url.toString());
     }
   });
 
