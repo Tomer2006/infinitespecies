@@ -5,16 +5,6 @@ const thumbCache = new Map();
 let lastThumbNodeId = null;
 let previewReqToken = 0;
 
-// Performance optimization variables
-let previewDebounceTimer = null;
-let lastPreviewState = {
-  nodeId: null,
-  content: '',
-  imageSrc: '',
-  visible: false,
-  loading: false
-};
-
 export const THUMB_SIZE = 96;
 
 export async function fetchWikipediaThumb(title) {
@@ -44,249 +34,97 @@ function isProbablyImageAllowed(src) {
 }
 
 export async function showBigFor(node) {
-  if (!node) {
-    if (lastPreviewState.visible) {
-      hideBigPreview();
+  lastThumbNodeId = node._id;
+  const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
+  const query = node.name;
+  const src = await fetchWikipediaThumb(query);
+  if (lastThumbNodeId !== node._id) return;
+  if (src && isProbablyImageAllowed(src)) {
+    // ensure placeholder hidden when we do have an image
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'none';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'true');
     }
-    return;
-  }
-
-  // Clear any pending debounce timer
-  if (previewDebounceTimer) {
-    clearTimeout(previewDebounceTimer);
-    previewDebounceTimer = null;
-  }
-
-  // Check if this is the same node and content hasn't changed
-  const newContent = node.name;
-  const nodeChanged = node._id !== lastPreviewState.nodeId;
-  const contentChanged = newContent !== lastPreviewState.content;
-
-  if (!nodeChanged && !contentChanged && lastPreviewState.visible) {
-    return; // Nothing to update
-  }
-
-  // Debounce the preview update to avoid excessive DOM manipulation
-  previewDebounceTimer = setTimeout(async () => {
-    const myNodeId = node._id;
-    lastThumbNodeId = myNodeId;
-    lastPreviewState.nodeId = myNodeId;
-    lastPreviewState.content = newContent;
-    lastPreviewState.loading = true;
-
-    const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
-    const query = node.name;
-    const src = await fetchWikipediaThumb(query);
-
-    // Check if we're still showing the same node
-    if (lastThumbNodeId !== myNodeId) return;
-
-    if (src && isProbablyImageAllowed(src)) {
-      // Batch DOM updates for image display
-      const updates = [];
-      if (bigPreviewEmpty) {
-        updates.push(() => {
-          bigPreviewEmpty.style.display = 'none';
-          bigPreviewEmpty.setAttribute('aria-hidden', 'true');
-        });
-      }
-      if (bigPreviewImg) {
-        updates.push(() => bigPreviewImg.style.display = 'block');
-      }
-      updates.push(() => showBigPreview(src, query));
-
-      // Apply all updates in batch
-      updates.forEach(update => update());
-
-      lastPreviewState.imageSrc = src;
-      lastPreviewState.visible = true;
-      lastPreviewState.loading = false;
-    } else {
-      // Show fallback with batched updates
-      const updates = [];
-      updates.push(() => bigPreviewCap.textContent = node.name);
-
-      if (bigPreviewImg) {
-        updates.push(() => {
-          bigPreviewImg.removeAttribute('src');
-          bigPreviewImg.style.display = 'none';
-        });
-      }
-
-      if (bigPreviewEmpty) {
-        updates.push(() => {
-          bigPreviewEmpty.style.display = 'flex';
-          bigPreviewEmpty.setAttribute('aria-hidden', 'false');
-        });
-      }
-
-      updates.push(() => {
-        bigPreview.style.display = 'block';
-        bigPreview.style.opacity = '1';
-        bigPreview.setAttribute('aria-hidden', 'false');
-      });
-
-      // Apply all updates in batch
-      updates.forEach(update => update());
-
-      lastPreviewState.imageSrc = '';
-      lastPreviewState.visible = true;
-      lastPreviewState.loading = false;
+    if (bigPreviewImg) bigPreviewImg.style.display = 'block';
+    showBigPreview(src, query);
+  } else {
+    // Show fallback box with centered text even when not pinned
+    bigPreviewCap.textContent = node.name;
+    if (bigPreviewImg) {
+      bigPreviewImg.removeAttribute('src');
+      bigPreviewImg.style.display = 'none';
     }
-  }, 16); // ~60fps debounce
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
+    }
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
+  }
 }
 
 export function showBigPreview(src, caption) {
   if (!bigPreview) return;
   const myToken = ++previewReqToken;
-
-  // Batch initial DOM updates
-  const initialUpdates = [];
-
-  if (bigPreviewCap) initialUpdates.push(() => bigPreviewCap.textContent = caption || '');
-  if (bigPreviewImg) {
-    initialUpdates.push(() => {
-      bigPreviewImg.alt = caption || '';
-      bigPreviewImg.setAttribute('loading', 'lazy');
-      bigPreviewImg.removeAttribute('src');
-      bigPreviewImg.style.display = 'block';
-    });
-  }
-
+  bigPreviewCap.textContent = caption || '';
+  bigPreviewImg.alt = caption || '';
+  bigPreviewImg.setAttribute('loading', 'lazy');
+  bigPreviewImg.removeAttribute('src');
   if (bigPreviewEmpty) {
-    initialUpdates.push(() => {
-      bigPreviewEmpty.style.display = 'none';
-      bigPreviewEmpty.setAttribute('aria-hidden', 'true');
-    });
+    bigPreviewEmpty.style.display = 'none';
+    bigPreviewEmpty.setAttribute('aria-hidden', 'true');
   }
-
-  initialUpdates.push(() => {
-    bigPreview.style.display = 'block';
-    bigPreview.style.opacity = '0';
-    bigPreview.setAttribute('aria-hidden', 'false');
-  });
-
-  // Apply initial updates in batch
-  initialUpdates.forEach(update => update());
-
-  // Optimized image loading with better error handling
+  bigPreviewImg.style.display = 'block';
+  bigPreview.style.display = 'block';
+  bigPreview.style.opacity = '0';
+  bigPreview.setAttribute('aria-hidden', 'false');
   const loader = new Image();
   loader.decoding = 'async';
-  loader.referrerPolicy = 'no-referrer';
-
   loader.onload = async () => {
     if (myToken !== previewReqToken) return;
-
     try {
-      // Use requestAnimationFrame for smoother updates
-      requestAnimationFrame(async () => {
-        if (myToken !== previewReqToken) return;
-
-        try {
-          if (loader.decode) await loader.decode();
-        } catch (_) {
-          // ignore decode errors, fallback to immediate swap
-        }
-
-        if (myToken !== previewReqToken) return;
-
-        // Batch the final DOM updates
-        const finalUpdates = [];
-        if (bigPreviewImg) finalUpdates.push(() => bigPreviewImg.src = src);
-
-        finalUpdates.push(() => {
-          // Force reflow then fade in using transform for better performance
-          bigPreview.offsetHeight; // Force reflow
-          bigPreview.style.opacity = '1';
-        });
-
-        finalUpdates.forEach(update => update());
-      });
+      if (loader.decode) await loader.decode();
     } catch (_) {
-      // Handle any unexpected errors gracefully
+      // ignore decode errors, fallback to immediate swap
     }
+    if (myToken !== previewReqToken) return;
+    bigPreviewImg.src = src;
+    // Force reflow then fade in
+    // eslint-disable-next-line no-unused-expressions
+    bigPreview.offsetHeight;
+    bigPreview.style.opacity = '1';
   };
-
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;
-
-    // Optimized fallback with batched updates
-    requestAnimationFrame(() => {
-      if (myToken !== previewReqToken) return;
-
-      const fallbackUpdates = [];
-      if (bigPreviewImg) {
-        fallbackUpdates.push(() => {
-          bigPreviewImg.removeAttribute('src');
-          bigPreviewImg.style.display = 'none';
-        });
-      }
-
-      if (bigPreviewEmpty) {
-        fallbackUpdates.push(() => {
-          bigPreviewEmpty.style.display = 'flex';
-          bigPreviewEmpty.setAttribute('aria-hidden', 'false');
-        });
-      }
-
-      if (bigPreviewCap) fallbackUpdates.push(() => bigPreviewCap.textContent = caption || '');
-
-      fallbackUpdates.push(() => {
-        bigPreview.style.display = 'block';
-        bigPreview.style.opacity = '1';
-        bigPreview.setAttribute('aria-hidden', 'false');
-      });
-
-      fallbackUpdates.forEach(update => update());
-    });
+    // Fall back to placeholder text instead of hiding
+    bigPreviewImg.removeAttribute('src');
+    bigPreviewImg.style.display = 'none';
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
+    }
+    bigPreviewCap.textContent = caption || '';
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
   };
-
+  loader.referrerPolicy = 'no-referrer';
   loader.src = src;
+  // no pin behavior
 }
 
 export function hideBigPreview() {
   if (!bigPreview) return;
-
-  // Clear any pending debounce timer
-  if (previewDebounceTimer) {
-    clearTimeout(previewDebounceTimer);
-    previewDebounceTimer = null;
-  }
-
-  // Update state
-  lastPreviewState.nodeId = null;
-  lastPreviewState.content = '';
-  lastPreviewState.imageSrc = '';
-  lastPreviewState.visible = false;
-  lastPreviewState.loading = false;
-
   previewReqToken++; // cancel in-flight load
-
-  // Batch DOM cleanup updates
-  const cleanupUpdates = [];
-  cleanupUpdates.push(() => bigPreview.style.opacity = '0');
-  cleanupUpdates.push(() => bigPreview.setAttribute('aria-hidden', 'true'));
-
-  if (bigPreviewImg) {
-    cleanupUpdates.push(() => {
-      bigPreviewImg.src = '';
-      bigPreviewImg.alt = '';
-    });
-  }
-
-  if (bigPreviewCap) {
-    cleanupUpdates.push(() => bigPreviewCap.textContent = '');
-  }
-
-  // Apply cleanup updates in batch
-  cleanupUpdates.forEach(update => update());
-
-  // Use requestAnimationFrame instead of setTimeout for better performance
-  requestAnimationFrame(() => {
-    if (bigPreview && bigPreview.style.opacity === '0') {
-      bigPreview.style.display = 'none';
-    }
-  });
+  bigPreview.style.opacity = '0';
+  setTimeout(() => {
+    if (bigPreview.style.opacity === '0') bigPreview.style.display = 'none';
+  }, 60);
+  bigPreview.setAttribute('aria-hidden', 'true');
+  bigPreviewImg.src = '';
+  bigPreviewImg.alt = '';
+  bigPreviewCap.textContent = '';
 }
 
 

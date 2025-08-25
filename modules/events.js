@@ -36,15 +36,22 @@ import { showBigFor, hideBigPreview } from './preview.js';
 export function initEvents() {
   let isMiddlePanning = false;
   let lastPan = null;
+  // Cache canvas bounding rect to avoid layout thrash on mousemove
+  let canvasRect = canvas.getBoundingClientRect();
+  const refreshCanvasRect = () => {
+    canvasRect = canvas.getBoundingClientRect();
+  };
+  window.addEventListener('resize', refreshCanvasRect);
+  // Update on scroll as a safety in case layout shifts
+  window.addEventListener('scroll', refreshCanvasRect, true);
 
   // Throttle picking to once per animation frame
   let pickingScheduled = false;
   let lastMouse = { x: 0, y: 0 };
 
   canvas.addEventListener('mousemove', ev => {
-    const rect = canvas.getBoundingClientRect();
-    const x = ev.clientX - rect.left,
-      y = ev.clientY - rect.top;
+    const x = ev.clientX - canvasRect.left,
+      y = ev.clientY - canvasRect.top;
     lastMouse = { x, y };
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,
@@ -57,6 +64,8 @@ export function initEvents() {
       const tooltipEl = document.getElementById('tooltip');
       if (tooltipEl) tooltipEl.style.opacity = 0;
       hideBigPreview();
+      // Suppress hover preview during interaction
+      if (typeof performance !== 'undefined') state.suppressHoverPreviewUntil = performance.now() + 200;
       return;
     }
 
@@ -84,8 +93,8 @@ export function initEvents() {
   canvas.addEventListener('mousedown', ev => {
     if (ev.button === 1) {
       isMiddlePanning = true;
-      const rect = canvas.getBoundingClientRect();
-      lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      lastPan = { x: ev.clientX - canvasRect.left, y: ev.clientY - canvasRect.top };
+      if (typeof performance !== 'undefined') state.suppressHoverPreviewUntil = performance.now() + 200;
       ev.preventDefault();
     }
   });
@@ -101,8 +110,7 @@ export function initEvents() {
 
   canvas.addEventListener('click', ev => {
     if (ev.button !== 0) return;
-    const rect = canvas.getBoundingClientRect();
-    const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
+    const n = pickNodeAt(ev.clientX - canvasRect.left, ev.clientY - canvasRect.top);
     if (!n) return;
     if (n === state.current) fitNodeInView(n);
     else goToNode(n, true);
@@ -112,14 +120,16 @@ export function initEvents() {
     'wheel',
     ev => {
       const scale = Math.exp(-ev.deltaY * 0.0015);
-      const rect = canvas.getBoundingClientRect();
-      const mx = ev.clientX - rect.left,
-        my = ev.clientY - rect.top;
+      const mx = ev.clientX - canvasRect.left,
+        my = ev.clientY - canvasRect.top;
       const [wx, wy] = screenToWorld(mx, my);
       state.camera.k *= scale;
-      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
-      state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
+      state.camera.x = wx - (mx - canvasRect.width / 2) / state.camera.k;
+      state.camera.y = wy - (my - canvasRect.height / 2) / state.camera.k;
       requestRender();
+      // Hide and suppress preview during zoom interaction
+      hideBigPreview();
+      if (typeof performance !== 'undefined') state.suppressHoverPreviewUntil = performance.now() + 250;
       ev.preventDefault();
     },
     { passive: false }
