@@ -14,7 +14,6 @@ export const state = {
   // hover/highlight
   hoverNode: null,
   highlightNode: null,
-  suppressHoverPreviewUntil: 0,
 
   // layout map
   nodeLayoutMap: new Map(),

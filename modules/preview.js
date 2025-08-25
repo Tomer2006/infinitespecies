@@ -4,6 +4,7 @@ import { state } from './state.js';
 const thumbCache = new Map();
 let lastThumbNodeId = null;
 let previewReqToken = 0;
+let pendingRequests = new Set(); // Track pending requests to avoid duplicates
 
 export const THUMB_SIZE = 96;
 
@@ -11,16 +12,28 @@ export async function fetchWikipediaThumb(title) {
   const key = title.toLowerCase();
   const existing = thumbCache.get(key);
   if (existing) return existing; // may be Promise or string/null
+  
+  // Avoid duplicate requests
+  if (pendingRequests.has(key)) {
+    return thumbCache.get(key);
+  }
+  
+  pendingRequests.add(key);
   const p = (async () => {
     try {
       const encoded = encodeURIComponent(title.replace(/\s+/g, '_'));
       const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`;
-      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      const res = await fetch(url, { 
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
       if (!res.ok) return null;
       const data = await res.json();
       return data?.thumbnail?.source || data?.originalimage?.source || null;
     } catch (_e) {
       return null;
+    } finally {
+      pendingRequests.delete(key);
     }
   })();
   thumbCache.set(key, p);
