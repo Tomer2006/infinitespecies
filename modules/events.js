@@ -37,20 +37,15 @@ export function initEvents() {
   let isMiddlePanning = false;
   let lastPan = null;
 
-  // Optimized picking with reduced frequency and mouse movement threshold
+  // Throttle picking to once per animation frame
   let pickingScheduled = false;
   let lastMouse = { x: 0, y: 0 };
-  let lastPickTime = 0;
-  let lastPickPosition = { x: 0, y: 0 };
-  const MOUSE_MOVE_THRESHOLD = 3; // pixels - only pick if mouse moved this much
-  const MIN_PICK_INTERVAL = 32; // ms - minimum time between picks (~30fps)
 
   canvas.addEventListener('mousemove', ev => {
     const rect = canvas.getBoundingClientRect();
     const x = ev.clientX - rect.left,
       y = ev.clientY - rect.top;
     lastMouse = { x, y };
-
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,
         dy = y - lastPan.y;
@@ -65,12 +60,7 @@ export function initEvents() {
       return;
     }
 
-    // Only schedule picking if mouse moved significantly and enough time passed
-    const mouseMoved = Math.abs(x - lastPickPosition.x) > MOUSE_MOVE_THRESHOLD ||
-                      Math.abs(y - lastPickPosition.y) > MOUSE_MOVE_THRESHOLD;
-    const timeSinceLastPick = performance.now() - lastPickTime;
-
-    if (!pickingScheduled && mouseMoved && timeSinceLastPick >= MIN_PICK_INTERVAL) {
+    if (!pickingScheduled) {
       pickingScheduled = true;
       requestAnimationFrame(() => {
         pickingScheduled = false;
@@ -78,22 +68,28 @@ export function initEvents() {
         const prevId = state.hoverNode?._id || 0;
         const nextId = n?._id || 0;
         state.hoverNode = n;
-        lastPickTime = performance.now();
-        lastPickPosition = { x: lastMouse.x, y: lastMouse.y };
-        // Update tooltip with current mouse position
+        // Only update tooltip position every frame; only update content when id changes (handled inside)
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        if (prevId !== nextId) requestRender();
+        // Only trigger re-render for highlight ring if node changed and we want to show highlight
+        // For pure tooltip movement, no canvas re-render needed
+        if (prevId !== nextId && n) {
+          state.highlightNode = n;
+          requestRender();
+        } else if (prevId !== nextId && !n) {
+          // Clear highlight when moving off nodes
+          state.highlightNode = null;
+          requestRender();
+        }
       });
-    } else if (!pickingScheduled) {
-      // If not picking, still update tooltip position for smooth following
-      updateTooltip(state.hoverNode, lastMouse.x, lastMouse.y);
     }
   });
 
   canvas.addEventListener('mouseleave', () => {
     state.hoverNode = null;
+    state.highlightNode = null;
     if (document.getElementById('tooltip')) document.getElementById('tooltip').style.opacity = 0;
     hideBigPreview();
+    requestRender(); // Clear highlight ring
   });
 
   canvas.addEventListener('mousedown', ev => {

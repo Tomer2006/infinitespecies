@@ -22,19 +22,11 @@ export function nodeInView(d) {
 export function pickNodeAt(px, py) {
   const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth);
   const [wx, wy] = screenToWorld(px, py);
-
   for (const d of nodes) {
     if (!nodeInView(d)) continue;
-
-    // Quick distance check using squared distance to avoid sqrt
     const dx = wx - d._vx,
       dy = wy - d._vy;
-    const distSquared = dx * dx + dy * dy;
-
-    // Check if point is inside the circle
-    if (distSquared <= d._vr * d._vr) {
-      return d.data;
-    }
+    if (dx * dx + dy * dy <= d._vr * d._vr) return d.data;
   }
   return null;
 }

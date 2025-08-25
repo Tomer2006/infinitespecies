@@ -5,14 +5,9 @@ import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
-let lastTooltipUpdate = 0;
-const TOOLTIP_THROTTLE_MS = 16; // ~60fps
 
 export function updateTooltip(n, px, py) {
   if (!ttip) return;
-  
-  const now = performance.now();
-  
   if (!n) {
     ttip.style.opacity = 0;
     lastThumbShownForId = 0;
@@ -23,13 +18,14 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-  
-  // Update content immediately for new nodes
+  if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
+  if (tMeta) tMeta.textContent = n.level || '';
+  const m = 10;
+  ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
+  ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
+  ttip.style.opacity = 1;
   if (n._id !== lastThumbShownForId) {
-    if (tName) tName.textContent = n.name;
-    if (tMeta) tMeta.textContent = '';
     lastThumbShownForId = n._id;
-    
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
     }
@@ -37,19 +33,10 @@ export function updateTooltip(n, px, py) {
       if (state.hoverNode && state.hoverNode._id === n._id) {
         showBigFor(n);
       }
-    }, 200);
+    }, 60);
   }
-  
-  // Throttle position updates to reduce DOM thrashing
-  if (now - lastTooltipUpdate >= TOOLTIP_THROTTLE_MS) {
-    const m = 10;
-    ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
-    ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
-    lastTooltipUpdate = now;
-  }
-  
-  ttip.style.opacity = 1;
   // No canvas redraw here; tooltip DOM updates don't need a frame
 }
+
 
 
