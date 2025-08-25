@@ -11,9 +11,8 @@ export const state = {
   targetCam: { x: 0, y: 0, k: 1 },
   animating: false,
 
-  // hover/highlight
+  // hover
   hoverNode: null,
-  highlightNode: null,
 
   // layout map
   nodeLayoutMap: new Map(),

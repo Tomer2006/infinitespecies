@@ -5,7 +5,7 @@ export const stage = document.getElementById('stage');
 export const ttip = document.getElementById('tooltip');
 export const tName = ttip?.querySelector('.name');
 export const tMeta = ttip?.querySelector('.meta');
-export const nodeHighlight = document.getElementById('nodeHighlight');
+
 
 export const bigPreview = document.getElementById('bigPreview');
 export const bigPreviewImg = document.getElementById('bigPreviewImg');
