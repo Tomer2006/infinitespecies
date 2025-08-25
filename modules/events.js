@@ -70,26 +70,16 @@ export function initEvents() {
         state.hoverNode = n;
         // Only update tooltip position every frame; only update content when id changes (handled inside)
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        // Only trigger re-render for highlight ring if node changed and we want to show highlight
-        // For pure tooltip movement, no canvas re-render needed
-        if (prevId !== nextId && n) {
-          state.highlightNode = n;
-          requestRender();
-        } else if (prevId !== nextId && !n) {
-          // Clear highlight when moving off nodes
-          state.highlightNode = null;
-          requestRender();
-        }
+        // No canvas re-render needed - highlight is now CSS-based
       });
     }
   });
 
   canvas.addEventListener('mouseleave', () => {
     state.hoverNode = null;
-    state.highlightNode = null;
     if (document.getElementById('tooltip')) document.getElementById('tooltip').style.opacity = 0;
     hideBigPreview();
-    requestRender(); // Clear highlight ring
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   canvas.addEventListener('mousedown', ev => {
@@ -218,16 +208,14 @@ export function initEvents() {
   });
   clearBtn?.addEventListener('click', () => {
     document.getElementById('searchInput').value = '';
-    state.highlightNode = null;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
     const r = document.getElementById('searchResults');
     if (r) { r.style.display = 'none'; r.innerHTML = ''; }
   });
 
   resetBtn?.addEventListener('click', () => {
     if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
-    state.highlightNode = null;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   fitBtn?.addEventListener('click', () => {
@@ -246,8 +234,7 @@ export function initEvents() {
     const pick = leaves[Math.floor(Math.random() * leaves.length)];
     state.current = pick;
     goToNode(state.current, false);
-    state.highlightNode = state.current;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   // JSON modal and loader

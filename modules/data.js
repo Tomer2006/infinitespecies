@@ -281,8 +281,7 @@ function jumpToPreferredStart() {
   if (preferred) {
     // Jump without animation to avoid initial lag
     goToNode(preferred, false);
-    state.highlightNode = preferred;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
   }
 }
 

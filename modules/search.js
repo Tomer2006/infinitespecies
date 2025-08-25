@@ -103,9 +103,8 @@ function renderResults(nodes, q) {
       if (!node) return;
       state.current = node;
       goToNode(state.current, false);
-      state.highlightNode = state.current;
       pulseAtNode(state.current);
-      requestRender();
+      // No canvas re-render needed - highlight is now CSS-based
       hideResults();
     });
 
@@ -137,9 +136,8 @@ export function handleSearch(progressLabelEl) {
     const node = matches[0];
     state.current = node;
     goToNode(state.current, false);
-    state.highlightNode = state.current;
     pulseAtNode(state.current);
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
     hideResults();
   } else {
     renderResults(matches, q);

@@ -168,21 +168,7 @@ export function draw() {
     }
   }
 
-  // Highlight ring
-  if (state.highlightNode) {
-    const d = state.nodeLayoutMap.get(state.highlightNode._id);
-    if (d && nodeVertInView(d, perf.rendering.verticalPadPx) && nodeInView(d)) {
-      const [sx, sy] = worldToScreen(d._vx, d._vy);
-      const sr = d._vr * state.camera.k;
-      if (sr > 4) {
-        ctx.beginPath();
-        ctx.arc(sx, sy, sr + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255,255,255,.35)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
-  }
+  // Highlight ring removed - now handled by CSS overlay for better performance
 }
 
 
