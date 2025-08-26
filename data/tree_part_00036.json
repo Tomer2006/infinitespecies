@@ -1,15 +1,389 @@
 {
-  "root": {
+  "Life": {
     "cellular organisms": {
       "Eukaryota": {
-        "Viridiplantae": {
-          "Streptophyta": {
-            "unclassified Streptophyta": {
-              "Streptophyta sp. 100_UnivF-1183": {},
-              "Streptophyta sp.": {}
-            },
-            "environmental samples": {
-              "uncultured Streptophyta": {}
+        "Opisthokonta": {
+          "Holozoa": {
+            "sibling_higher": {
+              "barren,sibling_higher": {},
+              "Corallochytida": {},
+              "Ichthyophonida": {
+                "Ichthyophonae": {
+                  "Abeoformidae": {
+                    "Abeoforma": {
+                      "Abeoforma whisleri": {}
+                    },
+                    "Caullerya (genus in Holozoa)": {
+                      "Caullerya mesnili": {}
+                    },
+                    "Pirum": {
+                      "Ichthyosporea sp. ex Tenebrio molitor": {},
+                      "Pirum gemmata": {}
+                    }
+                  },
+                  "environmental,unplaced": {},
+                  "not_otu,environmental,unplaced": {},
+                  "not_otu,was_container,unplaced": {},
+                  "Pseudoperkinsidae": {
+                    "Anurofeca": {
+                      "Anurofeca richardsi": {},
+                      "Anurofeca sp. LAH-2003": {},
+                      "not_otu,was_container": {}
+                    },
+                    "Creolimax": {
+                      "Creolimax fragrantissima": {}
+                    },
+                    "LKM51": {
+                      "Ichthyophonida gen. sp. LKM51": {},
+                      "uncultured Ichthyophonida": {}
+                    },
+                    "Pseudoperkinsus": {
+                      "barren,merged": {},
+                      "sibling_higher": {
+                        "infraspecific": {}
+                      },
+                      "Sphaeroforma gastrica": {},
+                      "Sphaeroforma napiecek": {},
+                      "Sphaeroforma nootkatensis": {},
+                      "Sphaeroforma sirkka": {},
+                      "Sphaeroforma tapetis": {}
+                    }
+                  },
+                  "Psorospermium (merged with Ichthyophonae)": {},
+                  "Psorospermium haeckeli": {},
+                  "sibling_higher": {
+                    "Alacrinella": {
+                      "Alacrinella limnoriae": {},
+                      "Alacrinella sanjuanensis": {}
+                    },
+                    "Amoebidiaceae": {},
+                    "Amoebidiidae (merged with Ichthyophonidae)": {},
+                    "Amoebidium appalachense": {},
+                    "Amoebidium appalachiense": {},
+                    "Amoebidium australiense": {},
+                    "Amoebidium colluviei": {},
+                    "Amoebidium parasiticum": {
+                      "infraspecific": {}
+                    },
+                    "Amoebidium recticola": {},
+                    "Amoebidium sp. TN-27-W4": {},
+                    "Arundinula": {
+                      "Arundinula abyssicola": {},
+                      "Arundinula capitata": {},
+                      "Arundinula galatheae": {},
+                      "Arundinula hapalogaster": {},
+                      "Arundinula incurvata": {},
+                      "Arundinula opeongoensis": {},
+                      "Arundinula orconectis": {},
+                      "Arundinula sp. LA-9-W2a": {},
+                      "Arundinula washingtoniensis": {},
+                      "incertae_sedis": {},
+                      "not_otu,was_container": {}
+                    },
+                    "Astreptonema": {
+                      "Astreptonema corophii": {},
+                      "Astreptonema gammari": {},
+                      "Astreptonema longisporum": {},
+                      "Astreptonema pacificum": {},
+                      "Astreptonema typicum": {},
+                      "incertae_sedis": {},
+                      "not_otu,was_container": {}
+                    },
+                    "barren,incertae_sedis,merged": {},
+                    "barren,merged": {},
+                    "barren,sibling_higher,merged": {},
+                    "Eccrinaceae": {},
+                    "Eccrinidus": {},
+                    "Eccrinidus flexilis": {},
+                    "Eccrinoides": {
+                      "Eccrinoides broelemannii": {},
+                      "Eccrinoides helleriae": {},
+                      "Eccrinoides henneguyi": {},
+                      "Eccrinoides monticolae": {}
+                    },
+                    "Enterobryus": {
+                      "Astreptonema sp. CMJ-2003": {},
+                      "Enterobryus adjanohounii": {},
+                      "Enterobryus ahlesii": {},
+                      "Enterobryus apheloriae": {},
+                      "Enterobryus bifurcatus": {},
+                      "Enterobryus borariae": {},
+                      "Enterobryus broelemannii": {},
+                      "Enterobryus centroboli": {},
+                      "Enterobryus cf. euryuri ONT-3-W6": {},
+                      "Enterobryus chaleponci": {},
+                      "Enterobryus cherokiae": {},
+                      "Enterobryus cingaloboli": {},
+                      "Enterobryus cylindroiuli": {},
+                      "Enterobryus dixidesmi": {},
+                      "Enterobryus duboscqii": {},
+                      "Enterobryus elegans": {},
+                      "Enterobryus euryuri": {},
+                      "Enterobryus halophilus": {},
+                      "Enterobryus helocharis": {},
+                      "Enterobryus hydrophilorum": {},
+                      "Enterobryus intestinalis": {},
+                      "Enterobryus isoporostrepti": {},
+                      "Enterobryus leptoiuli": {},
+                      "Enterobryus moniliformis": {},
+                      "Enterobryus onychostrepti": {},
+                      "Enterobryus oxidi": {},
+                      "Enterobryus oxydesmi": {},
+                      "Enterobryus peridontopygei": {},
+                      "Enterobryus philhydri": {},
+                      "Enterobryus rectus": {},
+                      "Enterobryus robinii": {},
+                      "Enterobryus sp. CMJ-2003": {},
+                      "Enterobryus sp. CO-16-W6": {},
+                      "Enterobryus sp. CR-LS-C1": {},
+                      "Enterobryus sp. FL-2-W7": {},
+                      "Enterobryus sp. ID-165-G2": {},
+                      "Enterobryus sp. ID-165-G4": {},
+                      "Enterobryus sp. KY-5-P5": {},
+                      "Enterobryus sp. MA-11-C1": {},
+                      "Enterobryus sp. Mex-4-C1": {},
+                      "Enterobryus sp. SPA-10-C6": {},
+                      "Enterobryus sp. SPA-2-C10": {},
+                      "Enterobryus tuzetae": {},
+                      "Enterobryus viequensis": {},
+                      "Enterobryus zinophorae": {},
+                      "incertae_sedis": {},
+                      "not_otu,was_container": {}
+                    },
+                    "Enteromyces": {
+                      "Enteromyces callianassae": {}
+                    },
+                    "Enteropogon (genus in Opisthokonta)": {
+                      "Enteropogon formosensis": {},
+                      "Enteropogon sexuale": {}
+                    },
+                    "Freshwater Ichthyosporeans 1": {
+                      "barren,incertae_sedis,inconsistent": {},
+                      "barren,unplaced": {},
+                      "Dalaola": {},
+                      "hidden,barren,major_rank_conflict,unplaced": {},
+                      "Parataeniellaceae": {
+                        "Lajassiella": {
+                          "Lajassiella aphodii": {}
+                        },
+                        "Nodocrinella": {
+                          "Nodocrinella hylonisci": {}
+                        },
+                        "Parataeniella": {
+                          "incertae_sedis": {},
+                          "not_otu,was_container": {},
+                          "Parataeniella armadillidii": {},
+                          "Parataeniella dilatata": {},
+                          "Parataeniella flavispora": {},
+                          "Parataeniella latrobi": {},
+                          "Parataeniella mercieri": {},
+                          "Parataeniella scotonisci": {},
+                          "Parataeniella sp. NOR-1-W1": {}
+                        }
+                      },
+                      "sibling_higher": {},
+                      "was_container,unplaced": {}
+                    },
+                    "Leidyomyces": {
+                      "incertae_sedis": {},
+                      "Leidyomyces attenuatus": {},
+                      "Leidyomyces sp. GUA-X-18": {},
+                      "Leidyomyces sp. Mex-38-C8": {},
+                      "not_otu,was_container": {}
+                    },
+                    "not_otu,was_container": {},
+                    "Palavascia": {
+                      "Palavascia patagonica": {},
+                      "Palavascia philosciae": {},
+                      "Palavascia sphaeromae": {}
+                    },
+                    "Palavasciaceae": {},
+                    "Paramacrinella": {
+                      "Paramacrinella microdeutopi": {}
+                    },
+                    "Paramoebidium": {
+                      "incertae_sedis": {},
+                      "not_otu,was_container": {},
+                      "Paramoebidium angulatum": {},
+                      "Paramoebidium argentinense": {},
+                      "Paramoebidium avitruviense": {},
+                      "Paramoebidium bacillare": {},
+                      "Paramoebidium bibrachium": {},
+                      "Paramoebidium cassidula": {},
+                      "Paramoebidium cf. grande ID-164-G2": {},
+                      "Paramoebidium chattonii": {},
+                      "Paramoebidium corpulentum": {},
+                      "Paramoebidium curvum": {},
+                      "Paramoebidium digitoideum": {},
+                      "Paramoebidium ecdyonuridae": {},
+                      "Paramoebidium grande": {},
+                      "Paramoebidium hamatum": {},
+                      "Paramoebidium inflexum": {},
+                      "Paramoebidium papillatum": {},
+                      "Paramoebidium sp. ALG-9-W10": {},
+                      "Paramoebidium sp. AR-30-C7": {},
+                      "Paramoebidium sp. AR-30-C9": {},
+                      "Paramoebidium sp. AR-31-C31": {},
+                      "Paramoebidium sp. AR-31-C7": {},
+                      "Paramoebidium sp. BC-5a-W6": {},
+                      "Paramoebidium sp. CAL-17-L1": {},
+                      "Paramoebidium sp. CAL-17-L6": {},
+                      "Paramoebidium sp. CMJ-2003": {},
+                      "Paramoebidium sp. CO-16-W12": {},
+                      "Paramoebidium sp. CO-3-W13": {},
+                      "Paramoebidium sp. DR-16-C8": {},
+                      "Paramoebidium sp. ID-156-T1": {},
+                      "Paramoebidium sp. ID-65e-E1": {},
+                      "Paramoebidium sp. KS-61-W20": {},
+                      "Paramoebidium sp. MA-3-W51": {},
+                      "Paramoebidium sp. ME-2-W3": {},
+                      "Paramoebidium sp. Mex-17-W2": {},
+                      "Paramoebidium sp. MO-19-W15": {},
+                      "Paramoebidium sp. NF-10-W15": {},
+                      "Paramoebidium sp. NOR-10-W1": {},
+                      "Paramoebidium sp. NOR-10-W10a": {},
+                      "Paramoebidium sp. NOR-10-W15": {},
+                      "Paramoebidium sp. NOR-16-W3": {},
+                      "Paramoebidium sp. NOR-21-W5": {},
+                      "Paramoebidium sp. NOR-3-1": {},
+                      "Paramoebidium sp. NOR-3-W2": {},
+                      "Paramoebidium sp. NOR-35-3": {},
+                      "Paramoebidium sp. NOR-4-W9": {},
+                      "Paramoebidium sp. NOR-40-W2": {},
+                      "Paramoebidium sp. NOR-40-W8": {},
+                      "Paramoebidium sp. NOR-5-2": {},
+                      "Paramoebidium sp. NOR-5-W14": {},
+                      "Paramoebidium sp. NOR-50-W2": {},
+                      "Paramoebidium sp. NOR-54-2": {},
+                      "Paramoebidium sp. NOR-54-W10": {},
+                      "Paramoebidium sp. NOR-54-W17": {},
+                      "Paramoebidium sp. NOR-61-W11": {},
+                      "Paramoebidium sp. NOR-7-W2": {},
+                      "Paramoebidium sp. NS-16-W2": {},
+                      "Paramoebidium sp. NS-24-W16": {},
+                      "Paramoebidium sp. NS-34-W17": {},
+                      "Paramoebidium sp. NS-35-L2": {},
+                      "Paramoebidium sp. NS-35-W14": {},
+                      "Paramoebidium sp. NS-35-W22b": {},
+                      "Paramoebidium sp. NS-35-W8": {},
+                      "Paramoebidium sp. NS-6-W8-10": {},
+                      "Paramoebidium sp. NS-X-17": {},
+                      "Paramoebidium sp. NS-X-29": {},
+                      "Paramoebidium sp. NY-3-C7": {},
+                      "Paramoebidium sp. ONT-X-10": {},
+                      "Paramoebidium sp. OR-13-W1": {},
+                      "Paramoebidium sp. OR-14-W1": {},
+                      "Paramoebidium sp. OR-3-W12": {},
+                      "Paramoebidium sp. PA-2-W2": {},
+                      "Paramoebidium sp. PEI-X-12": {},
+                      "Paramoebidium sp. RMBL-71-3": {},
+                      "Paramoebidium sp. RMBL-72-3": {},
+                      "Paramoebidium sp. RMBL-75-1": {},
+                      "Paramoebidium sp. TN-13-W20": {},
+                      "Paramoebidium sp. TN-38-W13": {},
+                      "Paramoebidium sp. TN-38-W15": {},
+                      "Paramoebidium sp. UT-1-W14": {},
+                      "Paramoebidium sp. UT-2-W5": {},
+                      "Paramoebidium sp. VT-3-W1": {},
+                      "Paramoebidium stipula": {},
+                      "Paramoebidium umbonatum": {}
+                    },
+                    "Passalomyces": {
+                      "Passalomyces compressus": {}
+                    },
+                    "Ramacrinella": {
+                      "Ramacrinella raibautii": {}
+                    },
+                    "sibling_higher": {
+                      "Ichthyophonus hoferi": {},
+                      "Ichthyophonus irregularis": {},
+                      "Ichthyophonus sp. A3": {},
+                      "Ichthyophonus sp. D5": {},
+                      "Ichthyophonus sp. ID-155-N1-2": {},
+                      "Ichthyophonus sp. ID-155-N2-1": {},
+                      "Ichthyophonus sp. JLG-2013a": {},
+                      "Ichthyophonus sp. JLG-2013b": {},
+                      "Ichthyophonus sp. JLG-2013c": {},
+                      "Ichthyophonus sp. JLG-2013d": {},
+                      "Ichthyophonus sp. JLG-2013e": {},
+                      "Ichthyophonus sp. JLG-2013f": {},
+                      "incertae_sedis": {},
+                      "not_otu,was_container": {}
+                    },
+                    "Taeniella": {
+                      "Taeniella carcini": {}
+                    },
+                    "Taeniellopsis": {
+                      "not_otu,was_container": {},
+                      "Taeniellopsis flexilis": {},
+                      "Taeniellopsis orchestiae": {},
+                      "Taeniellopsis sp. CMJ-2003": {},
+                      "Taeniellopsis susplugasi": {}
+                    },
+                    "Trichella": {
+                      "Trichella pentodontis": {}
+                    },
+                    "uncultured Ichthyosporea": {}
+                  },
+                  "was_container,unplaced": {}
+                }
+              },
+              "Ichthyosporea sp. NK52": {},
+              "incertae_sedis": {},
+              "not_otu,environmental": {},
+              "not_otu,incertae_sedis": {},
+              "not_otu,was_container": {},
+              "sibling_higher": {
+                "barren": {},
+                "barren,inconsistent": {},
+                "Dermocystida sp. Larzac/A-f": {},
+                "Dermocystida sp. Larzac/B-m": {},
+                "Dermosporidium": {
+                  "Dermosporidium hylarum": {}
+                },
+                "incertae_sedis": {},
+                "not_otu,sibling_higher": {},
+                "not_otu,was_container": {},
+                "Rhinosporideacae": {
+                  "Amphibiocystidium": {
+                    "Amphibiocystidium ranae": {},
+                    "Amphibiocystidium sp. viridescens": {},
+                    "Amphibiocystidium viridescens": {},
+                    "incertae_sedis": {},
+                    "not_otu,incertae_sedis": {},
+                    "not_otu,was_container": {}
+                  },
+                  "Amphibiothecum": {
+                    "Amphibiothecum penneri": {}
+                  },
+                  "barren,merged": {},
+                  "barren,sibling_higher,merged": {},
+                  "Dermocystidium (genus in Opisthokonta)": {
+                    "Dermocystidium percae": {},
+                    "Dermocystidium salmonis": {},
+                    "not_otu,was_container": {}
+                  },
+                  "Dermocystidium sp.": {},
+                  "Dermocystidium sp. CM-2002": {},
+                  "sibling_higher": {
+                    "not_otu,was_container": {},
+                    "Rhinosporidium cygnus": {},
+                    "Rhinosporidium seeberi": {},
+                    "Rhinosporidium sp. ex Canis familiaris": {}
+                  }
+                },
+                "sibling_higher": {
+                  "Sphaerothecum caipira": {},
+                  "Sphaerothecum destruens": {}
+                },
+                "Valentines": {
+                  "Valentines rwandae": {}
+                },
+                "was_container": {}
+              },
+              "uncultured Amoebidium": {},
+              "was_container": {},
+              "was_container,barren": {}
             }
           }
         }

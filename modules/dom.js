@@ -6,9 +6,11 @@ export const ttip = document.getElementById('tooltip');
 export const tName = ttip?.querySelector('.name');
 export const tMeta = ttip?.querySelector('.meta');
 
+
 export const bigPreview = document.getElementById('bigPreview');
 export const bigPreviewImg = document.getElementById('bigPreviewImg');
 export const bigPreviewCap = document.getElementById('bigPreviewCap');
+export const bigPreviewEmpty = document.getElementById('bigPreviewEmpty');
 
 export const helpModal = document.getElementById('helpModal');
 export const helpCloseBtn = document.getElementById('helpCloseBtn');

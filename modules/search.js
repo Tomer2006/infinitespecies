@@ -2,7 +2,6 @@ import { state } from './state.js';
 import { requestRender, worldToScreen } from './canvas.js';
 import { goToNode } from './navigation.js';
 import { searchResultsEl } from './dom.js';
-import { getNodePath } from './deeplink.js';
 
 export function findByQuery(q) {
   if (!q) return null;
@@ -87,16 +86,7 @@ function renderResults(nodes, q) {
     const nameEl = document.createElement('div');
     nameEl.className = 'name';
     nameEl.textContent = n.name || '';
-    const pathEl = document.createElement('div');
-    pathEl.className = 'path';
-    try {
-      const path = getNodePath(n).join(' / ');
-      pathEl.textContent = path;
-    } catch (_e) {
-      pathEl.textContent = '';
-    }
     item.appendChild(nameEl);
-    item.appendChild(pathEl);
     frag.appendChild(item);
   });
   searchResultsEl.appendChild(frag);
@@ -113,9 +103,8 @@ function renderResults(nodes, q) {
       if (!node) return;
       state.current = node;
       goToNode(state.current, false);
-      state.highlightNode = state.current;
       pulseAtNode(state.current);
-      requestRender();
+      // No canvas re-render needed - highlight is now CSS-based
       hideResults();
     });
 
@@ -147,9 +136,8 @@ export function handleSearch(progressLabelEl) {
     const node = matches[0];
     state.current = node;
     goToNode(state.current, false);
-    state.highlightNode = state.current;
     pulseAtNode(state.current);
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
     hideResults();
   } else {
     renderResults(matches, q);

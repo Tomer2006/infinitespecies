@@ -1,4 +1,4 @@
-import { bigPreview, bigPreviewCap, bigPreviewImg } from './dom.js';
+import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom.js';
 import { state } from './state.js';
 
 const thumbCache = new Map();
@@ -38,19 +38,29 @@ export async function showBigFor(node) {
   const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
   const query = node.name;
   const src = await fetchWikipediaThumb(query);
-  if (!state.isPreviewPinned && lastThumbNodeId !== node._id) return;
+  if (lastThumbNodeId !== node._id) return;
   if (src && isProbablyImageAllowed(src)) {
+    // ensure placeholder hidden when we do have an image
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'none';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'true');
+    }
+    if (bigPreviewImg) bigPreviewImg.style.display = 'block';
     showBigPreview(src, query);
   } else {
-    if (state.isPreviewPinned) {
-      bigPreviewCap.textContent = node.name;
+    // Show fallback box with centered text even when not pinned
+    bigPreviewCap.textContent = node.name;
+    if (bigPreviewImg) {
       bigPreviewImg.removeAttribute('src');
-      bigPreview.style.display = 'block';
-      bigPreview.style.opacity = '1';
-      bigPreview.setAttribute('aria-hidden', 'false');
-    } else {
-      hideBigPreview();
+      bigPreviewImg.style.display = 'none';
     }
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
+    }
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
   }
 }
 
@@ -61,6 +71,11 @@ export function showBigPreview(src, caption) {
   bigPreviewImg.alt = caption || '';
   bigPreviewImg.setAttribute('loading', 'lazy');
   bigPreviewImg.removeAttribute('src');
+  if (bigPreviewEmpty) {
+    bigPreviewEmpty.style.display = 'none';
+    bigPreviewEmpty.setAttribute('aria-hidden', 'true');
+  }
+  bigPreviewImg.style.display = 'block';
   bigPreview.style.display = 'block';
   bigPreview.style.opacity = '0';
   bigPreview.setAttribute('aria-hidden', 'false');
@@ -82,20 +97,26 @@ export function showBigPreview(src, caption) {
   };
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;
-    if (!state.isPreviewPinned) hideBigPreview();
+    // Fall back to placeholder text instead of hiding
+    bigPreviewImg.removeAttribute('src');
+    bigPreviewImg.style.display = 'none';
+    if (bigPreviewEmpty) {
+      bigPreviewEmpty.style.display = 'flex';
+      bigPreviewEmpty.setAttribute('aria-hidden', 'false');
+    }
+    bigPreviewCap.textContent = caption || '';
+    bigPreview.style.display = 'block';
+    bigPreview.style.opacity = '1';
+    bigPreview.setAttribute('aria-hidden', 'false');
   };
   loader.referrerPolicy = 'no-referrer';
   loader.src = src;
-  if (state.isPreviewPinned && (state.hoverNode || state.current)) {
-    const n = state.hoverNode || state.current;
-    state.pinnedNodeId = n._id;
-  }
+  // no pin behavior
 }
 
 export function hideBigPreview() {
   if (!bigPreview) return;
   previewReqToken++; // cancel in-flight load
-  if (state.isPreviewPinned) return; // do not hide if pinned
   bigPreview.style.opacity = '0';
   setTimeout(() => {
     if (bigPreview.style.opacity === '0') bigPreview.style.display = 'none';

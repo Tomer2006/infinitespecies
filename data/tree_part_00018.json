@@ -1,150 +1,35 @@
 {
-  "root": {
+  "Life": {
     "cellular organisms": {
-      "Bacteria": {
-        "Candidatus Krumholzibacteriota": {
-          "Candidatus Krumholzibacteriia": {
-            "Candidatus Krumholzibacteriales": {
-              "Candidatus Krumholzibacteriaceae": {
-                "Candidatus Krumholzibacterium": {
-                  "Candidatus Krumholzibacterium zodletonense": {},
-                  "unclassified Candidatus Krumholzibacterium": {
-                    "Candidatus Krumholzibacterium sp.": {}
-                  }
-                },
-                "unclassified Candidatus Krumholzibacteriaceae": {
-                  "Candidatus Krumholzibacteriaceae bacterium": {}
-                }
-              },
-              "unclassified Candidatus Krumholzibacteriales": {
-                "Candidatus Krumholzibacteriales bacterium": {}
-              }
-            },
-            "unclassified Candidatus Krumholzibacteriia": {
-              "Candidatus Krumholzibacteriia bacterium": {}
-            }
-          },
-          "unclassified Candidatus Krumholzibacteriota": {
-            "Candidatus Krumholzibacteriota bacterium": {}
-          }
-        },
-        "Candidatus Tharpellota": {
-          "Candidatus Tharpellia": {
-            "Candidatus Tharpellales": {
-              "Candidatus Tharpellaceae": {
-                "Candidatus Tharpella": {
-                  "Candidatus Tharpella aukensis": {},
-                  "unclassified Candidatus Tharpella": {
-                    "Candidatus Tharpella sp.": {}
-                  }
-                },
-                "unclassified Candidatus Tharpellaceae": {
-                  "Candidatus Tharpellaceae bacterium": {}
-                }
-              }
-            }
-          }
-        },
-        "Candidatus Deferrimicrobiota": {
-          "Candidatus Deferrimicrobia": {
-            "Candidatus Deferrimicrobiales": {
-              "Candidatus Deferrimicrobiaceae": {
-                "Candidatus Deferrimicrobium": {
-                  "Candidatus Deferrimicrobium borealis": {},
-                  "unclassified Candidatus Deferrimicrobium": {
-                    "Candidatus Deferrimicrobium sp.": {}
-                  }
-                },
-                "unclassified Candidatus Deferrimicrobiaceae": {
-                  "Candidatus Deferrimicrobiaceae bacterium": {}
-                }
-              }
-            },
-            "unclassified Candidatus Deferrimicrobia": {
-              "Candidatus Deferrimicrobia bacterium": {}
-            }
-          },
-          "unclassified Candidatus Deferrimicrobiota": {
-            "Candidatus Deferrimicrobiota bacterium": {}
-          }
-        },
-        "Candidatus Lernaellota": {
-          "Candidatus Lernaellaia": {
-            "Candidatus Lernaellales": {
-              "Candidatus Alcyoniellaceae": {
-                "Candidatus Alcyoniella": {
-                  "Candidatus Alcyoniella australis": {}
-                }
-              },
-              "Candidatus Lernaellaceae": {
-                "Candidatus Lernaella": {
-                  "Candidatus Lernaella stagnicola": {}
-                }
-              }
-            }
-          }
-        },
-        "Candidatus Hinthialibacterota": {
-          "Candidatus Hinthialibacteria": {
-            "Candidatus Hinthialibacterales": {
-              "Candidatus Hinthialibacteraceae": {
-                "Candidatus Hinthialibacter": {
-                  "Candidatus Hinthialibacter antarcticus": {},
-                  "unclassified Candidatus Hinthialibacter": {
-                    "Candidatus Hinthialibacter sp.": {},
-                    "Candidatus Hinthialibacter sp. E05-079": {}
+      "Eukaryota": {
+        "Opisthokonta": {
+          "Holozoa": {
+            "Metazoa": {
+              "Eumetazoa": {
+                "Bilateria": {
+                  "Protostomia": {
+                    "Ecdysozoa": {
+                      "Panarthropoda": {
+                        "Arthropoda": {
+                          "Mandibulata": {
+                            "Pancrustacea": {
+                              "Hexapoda": {
+                                "Insecta": {
+                                  "Dicondylia": {
+                                    "Pterygota (subclass in Opisthokonta)": {
+                                      "incertae_sedis": {}
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
-            },
-            "unclassified Candidatus Hinthialibacteria": {
-              "Candidatus Hinthialibacteria bacterium": {}
-            }
-          },
-          "unclassified Candidatus Hinthialibacterota": {
-            "Candidatus Hinthialibacteria bacterium OLB16": {}
-          }
-        },
-        "Candidatus Moduliflexota": {
-          "Candidatus Moduliflexia": {
-            "Candidatus Moduliflexales": {
-              "Candidatus Moduliflexaceae": {
-                "Candidatus Moduliflexus": {
-                  "Candidatus Moduliflexus flocculans": {},
-                  "environmental samples": {
-                    "uncultured Candidatus Moduliflexus sp.": {}
-                  }
-                },
-                "unclassified Candidatus Moduliflexaceae": {
-                  "Candidatus Moduliflexaceae bacterium": {}
-                }
-              }
-            }
-          },
-          "Candidatus Vecturitrichia": {
-            "Candidatus Vecturitrichales": {
-              "Candidatus Vecturitrichaceae": {
-                "Candidatus Vecturithrix": {
-                  "Candidatus Vecturithrix granuli": {},
-                  "unclassified Candidatus Vecturithrix": {
-                    "Candidatus Vecturithrix sp.": {}
-                  }
-                }
-              }
-            }
-          },
-          "unclassified Candidatus Moduliflexota": {
-            "Candidatus Moduliflexota bacterium": {}
-          }
-        },
-        "Candidatus Effluviviacota": {
-          "Candidatus Effluviviaceae": {
-            "Candidatus Effluvivivax": {},
-            "Candidatus Effluvibates": {},
-            "unclassified Candidatus Effluviviaceae": {
-              "Candidatus Effluviviaceae Genus I sp.": {},
-              "Candidatus Effluviviaceae Genus IV sp.": {},
-              "Candidatus Effluviviaceae Genus V sp.": {}
             }
           }
         }

@@ -1,531 +1,293 @@
 {
   "version": "1.0",
-  "total_files": 75,
-  "max_size_mb": 5.0,
+  "total_files": 41,
+  "max_size_mb": 15.0,
   "total_nodes": 1,
   "files": [
     {
       "filename": "tree_part_00000.json",
-      "path": "root/Viruses_part_0",
-      "size_mb": 0.47,
+      "path": "Life_part_0",
+      "size_mb": 0.0,
       "nodes": 1,
       "is_root": true
     },
     {
       "filename": "tree_part_00001.json",
-      "path": "root/Viruses/Riboviria_part_0",
-      "size_mb": 0.16,
+      "path": "Life/cellular organisms_part_0",
+      "size_mb": 0.72,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00002.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae_part_0",
-      "size_mb": 0.01,
+      "path": "Life/cellular organisms/Bacteria_part_0",
+      "size_mb": 13.25,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00003.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota_part_0",
-      "size_mb": 0.32,
+      "path": "Life/cellular organisms/Bacteria_part_1",
+      "size_mb": 11.86,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00004.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina_part_0",
-      "size_mb": 0.02,
+      "path": "Life/cellular organisms_part_1",
+      "size_mb": 0.0,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00005.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina/Insthoviricetes/Articulavirales/Orthomyxoviridae_part_0",
-      "size_mb": 0.01,
+      "path": "Life/cellular organisms/Eukaryota_part_0",
+      "size_mb": 38.65,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00006.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina/Insthoviricetes/Articulavirales/Orthomyxoviridae/Alphainfluenzavirus/Alphainfluenzavirus influenzae/Influenza A virus_part_0",
-      "size_mb": 5.07,
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta_part_0",
+      "size_mb": 0.0,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00007.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina/Insthoviricetes/Articulavirales/Orthomyxoviridae/Alphainfluenzavirus/Alphainfluenzavirus influenzae/Influenza A virus_part_1",
-      "size_mb": 4.33,
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa_part_0",
+      "size_mb": 0.02,
       "nodes": 1,
       "is_root": false
     },
     {
       "filename": "tree_part_00008.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina/Insthoviricetes/Articulavirales/Orthomyxoviridae_part_1",
-      "size_mb": 1.36,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00009.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina/Insthoviricetes/Articulavirales_part_0",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00010.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota/Polyploviricotina_part_1",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa_part_0",
       "size_mb": 0.17,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00011.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae/Negarnaviricota_part_1",
-      "size_mb": 0.01,
+      "filename": "tree_part_00009.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria_part_0",
+      "size_mb": 19.22,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00012.json",
-      "path": "root/Viruses/Riboviria/Orthornavirae_part_1",
-      "size_mb": 3.61,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00013.json",
-      "path": "root/Viruses/Riboviria_part_1",
-      "size_mb": 0.27,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00014.json",
-      "path": "root/Viruses_part_1",
-      "size_mb": 3.04,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00015.json",
-      "path": "root/cellular organisms/Bacteria_part_0",
-      "size_mb": 3.29,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00016.json",
-      "path": "root/cellular organisms/Bacteria/Bacillati_part_0",
-      "size_mb": 5.2,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00017.json",
-      "path": "root/cellular organisms/Bacteria/Bacillati_part_1",
-      "size_mb": 7.55,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00018.json",
-      "path": "root/cellular organisms/Bacteria_part_1",
-      "size_mb": 0.01,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00019.json",
-      "path": "root/cellular organisms/Bacteria/Pseudomonadati/Pseudomonadota_part_0",
-      "size_mb": 7.42,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00020.json",
-      "path": "root/cellular organisms/Bacteria/Pseudomonadati/Pseudomonadota_part_1",
-      "size_mb": 5.7,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00021.json",
-      "path": "root/cellular organisms/Bacteria/Pseudomonadati_part_0",
-      "size_mb": 2.9,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00022.json",
-      "path": "root/cellular organisms/Bacteria_part_2",
-      "size_mb": 0.14,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00023.json",
-      "path": "root/cellular organisms_part_0",
-      "size_mb": 0.89,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00024.json",
-      "path": "root/cellular organisms/Eukaryota_part_0",
-      "size_mb": 0.56,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00025.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae_part_0",
-      "size_mb": 0.79,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00026.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta_part_0",
-      "size_mb": 0.02,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00027.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta_part_0",
-      "size_mb": 0.69,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00028.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta/Spermatophyta/Magnoliopsida_part_0",
-      "size_mb": 0.02,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00029.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta/Spermatophyta/Magnoliopsida/Mesangiospermae_part_0",
-      "size_mb": 4.15,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00030.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta/Spermatophyta/Magnoliopsida/Mesangiospermae_part_1",
-      "size_mb": 13.72,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00031.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta/Spermatophyta/Magnoliopsida_part_1",
-      "size_mb": 0.01,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00032.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta/Spermatophyta_part_0",
-      "size_mb": 0.12,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00033.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta/Euphyllophyta_part_0",
-      "size_mb": 0.62,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00034.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina/Embryophyta/Tracheophyta_part_0",
-      "size_mb": 0.06,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00035.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta/Streptophytina_part_0",
-      "size_mb": 0.08,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00036.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae/Streptophyta_part_1",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00037.json",
-      "path": "root/cellular organisms/Eukaryota/Viridiplantae_part_1",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00038.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Fungi_part_0",
-      "size_mb": 0.99,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00039.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Fungi/Dikarya_part_0",
-      "size_mb": 7.98,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00040.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Fungi/Dikarya_part_1",
-      "size_mb": 4.07,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00041.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Fungi_part_1",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00042.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta_part_0",
-      "size_mb": 0.01,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00043.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa_part_0",
-      "size_mb": 0.39,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00044.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa_part_0",
-      "size_mb": 0.98,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00045.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia_part_0",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00046.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa_part_0",
-      "size_mb": 1.48,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00047.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda_part_0",
-      "size_mb": 6.55,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00048.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata_part_0",
-      "size_mb": 0.36,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00049.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea_part_0",
-      "size_mb": 4.16,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00050.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda_part_0",
-      "size_mb": 1.46,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00051.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota_part_0",
-      "size_mb": 0.82,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00052.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera_part_0",
-      "size_mb": 7.75,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00053.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota_part_0",
-      "size_mb": 8.71,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00054.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota/Diptera/Nematocera_part_0",
-      "size_mb": 6.49,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00055.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota/Diptera/Nematocera_part_1",
-      "size_mb": 7.58,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00056.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota/Diptera_part_0",
-      "size_mb": 10.48,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00057.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota/Hymenoptera_part_0",
-      "size_mb": 13.95,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00058.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota/Hymenoptera_part_1",
-      "size_mb": 1.32,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00059.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera/Endopterygota_part_1",
-      "size_mb": 15.32,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00060.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota/Neoptera_part_1",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00061.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota_part_1",
-      "size_mb": 0.0,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00062.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia_part_0",
+      "filename": "tree_part_00010.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia_part_0",
       "size_mb": 0.03,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00063.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta_part_0",
+      "filename": "tree_part_00011.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa_part_0",
+      "size_mb": 0.05,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00012.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda_part_0",
+      "size_mb": 0.0,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00013.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda_part_0",
+      "size_mb": 14.76,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00014.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata_part_0",
+      "size_mb": 1.77,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00015.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea_part_0",
+      "size_mb": 10.09,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00016.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda_part_0",
+      "size_mb": 1.77,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00017.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta_part_0",
+      "size_mb": 0.04,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00018.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)_part_0",
+      "size_mb": 0.0,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00019.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)/Neoptera/Holometabola_part_0",
+      "size_mb": 36.46,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00020.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)/Neoptera/Holometabola_part_1",
+      "size_mb": 34.97,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00021.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)/Neoptera/Holometabola_part_2",
+      "size_mb": 39.59,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00022.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)/Neoptera/Holometabola_part_3",
+      "size_mb": 24.32,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00023.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)/Neoptera_part_0",
+      "size_mb": 21.43,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00024.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia/Pterygota (subclass in Opisthokonta)_part_1",
+      "size_mb": 1.5,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00025.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta/Dicondylia_part_0",
+      "size_mb": 0.06,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00026.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda/Insecta_part_1",
+      "size_mb": 0.24,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00027.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda_part_1",
+      "size_mb": 0.07,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00028.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea_part_1",
+      "size_mb": 0.0,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00029.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda_part_1",
       "size_mb": 0.02,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00064.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea/Hexapoda_part_1",
+      "filename": "tree_part_00030.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda_part_1",
+      "size_mb": 0.17,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00031.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa_part_1",
+      "size_mb": 2.97,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00032.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria/Protostomia_part_1",
+      "size_mb": 21.68,
+      "nodes": 1,
+      "is_root": false
+    },
+    {
+      "filename": "tree_part_00033.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa/Bilateria_part_1",
       "size_mb": 0.0,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00065.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata/Pancrustacea_part_1",
-      "size_mb": 0.0,
+      "filename": "tree_part_00034.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa/Eumetazoa_part_0",
+      "size_mb": 2.16,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00066.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda/Arthropoda/Mandibulata_part_1",
-      "size_mb": 0.0,
+      "filename": "tree_part_00035.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa/Metazoa_part_1",
+      "size_mb": 1.34,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00067.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa/Panarthropoda_part_0",
-      "size_mb": 0.14,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00068.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia/Ecdysozoa_part_1",
+      "filename": "tree_part_00036.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta/Holozoa_part_1",
       "size_mb": 0.02,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00069.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria/Protostomia_part_1",
-      "size_mb": 7.03,
+      "filename": "tree_part_00037.json",
+      "path": "Life/cellular organisms/Eukaryota/Opisthokonta_part_1",
+      "size_mb": 25.89,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00070.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa/Eumetazoa/Bilateria_part_0",
-      "size_mb": 12.98,
+      "filename": "tree_part_00038.json",
+      "path": "Life/cellular organisms/Eukaryota_part_1",
+      "size_mb": 8.05,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00071.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta/Metazoa_part_1",
-      "size_mb": 0.0,
+      "filename": "tree_part_00039.json",
+      "path": "Life/cellular organisms_part_2",
+      "size_mb": 0.01,
       "nodes": 1,
       "is_root": false
     },
     {
-      "filename": "tree_part_00072.json",
-      "path": "root/cellular organisms/Eukaryota/Opisthokonta_part_1",
-      "size_mb": 0.02,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00073.json",
-      "path": "root/cellular organisms/Eukaryota_part_1",
-      "size_mb": 2.84,
-      "nodes": 1,
-      "is_root": false
-    },
-    {
-      "filename": "tree_part_00074.json",
-      "path": "root_part_0",
-      "size_mb": 1.03,
+      "filename": "tree_part_00040.json",
+      "path": "Life_part_1",
+      "size_mb": 0.04,
       "nodes": 1,
       "is_root": false
     }

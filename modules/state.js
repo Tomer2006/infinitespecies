@@ -11,19 +11,14 @@ export const state = {
   targetCam: { x: 0, y: 0, k: 1 },
   animating: false,
 
-  // hover/highlight
+  // hover
   hoverNode: null,
-  highlightNode: null,
 
   // layout map
   nodeLayoutMap: new Map(),
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
-
-  // preview pinning
-  isPreviewPinned: false,
-  pinnedNodeId: null
 };
 
 export function clearIndex() {

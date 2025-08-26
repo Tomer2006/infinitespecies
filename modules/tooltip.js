@@ -1,10 +1,12 @@
 import { ttip, tName, tMeta } from './dom.js';
 import { state } from './state.js';
 import { showBigFor, hideBigPreview } from './preview.js';
-import { requestRender, W, H } from './canvas.js';
+import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
+
+
 
 export function updateTooltip(n, px, py) {
   if (!ttip) return;
@@ -18,14 +20,12 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-  const desc = n._leaves ?? 1;
-  if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
-  if (tMeta) tMeta.textContent = `${desc.toLocaleString()} descendant${desc === 1 ? '' : 's'}`;
+  if (tName) tName.textContent = n.name;
+  if (tMeta) tMeta.textContent = '';
   const m = 10;
   ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
   ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
   ttip.style.opacity = 1;
-  if (state.isPreviewPinned) return;
   if (n._id !== lastThumbShownForId) {
     lastThumbShownForId = n._id;
     if (thumbDelayTimer) {
@@ -37,7 +37,8 @@ export function updateTooltip(n, px, py) {
       }
     }, 60);
   }
-  requestRender();
+  // No canvas redraw here; tooltip DOM updates don't need a frame
 }
+
 
 

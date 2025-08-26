@@ -1,386 +1,55 @@
 {
-  "root": {
+  "Life": {
     "cellular organisms": {
       "Eukaryota": {
-        "Viridiplantae": {
-          "Streptophyta": {
-            "Streptophytina": {
-              "Embryophyta": {
-                "Tracheophyta": {
-                  "Euphyllophyta": {
-                    "Spermatophyta": {
-                      "Magnoliopsida": {
-                        "Austrobaileyales": {
-                          "Schisandraceae": {
-                            "Illicium": {
-                              "Illicium floridanum": {},
-                              "Illicium parviflorum": {},
-                              "Illicium henryi": {},
-                              "Illicium lanceolatum": {},
-                              "Illicium difengpi": {},
-                              "Illicium dunnianum": {
-                                "Illicium dunnianum var. latifolium": {}
-                              },
-                              "Illicium fargesii": {},
-                              "Illicium majus": {},
-                              "Illicium micranthum": {},
-                              "Illicium verum": {},
-                              "Illicium angustisepalum": {},
-                              "Illicium anisatum": {
-                                "Illicium anisatum var. anisatum": {}
-                              },
-                              "Illicium arborescens": {},
-                              "Illicium oligandrum": {},
-                              "Illicium parvifolium": {},
-                              "Illicium cubense": {
-                                "Illicium cubense subsp. bissei": {}
-                              },
-                              "Illicium guajaibonense": {},
-                              "Illicium ekmanii": {},
-                              "Illicium hottense": {},
-                              "Illicium leiophyllum": {},
-                              "Illicium mexicanum": {},
-                              "Illicium ternstroemioides": {},
-                              "Illicium tsangii": {},
-                              "Illicium jiadifengpi": {},
-                              "Illicium modestum": {},
-                              "Illicium simonsii": {},
-                              "Illicium burmanicum": {},
-                              "Illicium philippinense": {},
-                              "unclassified Illicium": {
-                                "Illicium sp. SM-2010": {},
-                                "Illicium sp. F. Cui 184_1": {},
-                                "Illicium sp. NTT-2019": {}
-                              },
-                              "Illicium tashiroi": {},
-                              "Illicium macranthum": {},
-                              "Illicium x rubellum": {},
-                              "Illicium tsaii": {},
-                              "Illicium brevistylum": {}
-                            },
-                            "Schisandra": {
-                              "Schisandra sphenanthera": {},
-                              "Schisandra chinensis": {},
-                              "Schisandra repanda": {},
-                              "Schisandra pubescens": {},
-                              "Schisandra glabra": {},
-                              "Schisandra glaucescens": {},
-                              "Schisandra grandiflora": {},
-                              "Schisandra henryi": {},
-                              "Schisandra propinqua": {
-                                "Schisandra propinqua subsp. sinensis": {}
-                              },
-                              "Schisandra rubriflora": {},
-                              "Schisandra viridis": {},
-                              "Schisandra bicolor": {
-                                "Schisandra bicolor var. tuberculata": {}
-                              },
-                              "Schisandra plena": {},
-                              "Schisandra nigra": {},
-                              "Schisandra lancifolia": {},
-                              "Schisandra arisanensis": {},
-                              "Schisandra elongata": {},
-                              "Schisandra sphaerandra": {},
-                              "unclassified Schisandra": {
-                                "Schisandra sp. SM-2010": {},
-                                "Schisandra sp. S.X. Luo 761": {},
-                                "Schisandra sp. Z.W. Wang 193": {},
-                                "Schisandra sp. US:3540614": {}
-                              },
-                              "Schisandra macrocarpa": {}
-                            },
-                            "Kadsura": {
-                              "Kadsura japonica": {},
-                              "Kadsura angustifolia": {},
-                              "Kadsura coccinea": {},
-                              "Kadsura heteroclita": {},
-                              "Kadsura longipedunculata": {},
-                              "Kadsura oblongifolia": {},
-                              "Kadsura scandens": {},
-                              "Kadsura ananosma": {},
-                              "Kadsura induta": {},
-                              "Kadsura polysperma": {},
-                              "Kadsura cf. longipedunculata MR-2013": {},
-                              "Kadsura philippinensis": {},
-                              "Kadsura matsudae": {},
-                              "Kadsura marmorata": {},
-                              "Kadsura acsmithii": {},
-                              "Kadsura interior": {},
-                              "unclassified Kadsura": {
-                                "Kadsura sp. MR-2013": {},
-                                "Kadsura sp. XY-2015": {},
-                                "Kadsura sp. RBGE E00220449": {}
-                              }
-                            },
-                            "unclassified Schisandraceae": {},
-                            "environmental samples": {
-                              "Illicium environmental sample": {}
-                            }
-                          },
-                          "Austrobaileyaceae": {
-                            "Austrobaileya": {
-                              "Austrobaileya scandens": {}
-                            }
-                          },
-                          "Trimeniaceae": {
-                            "Trimenia": {
-                              "Trimenia moorei": {},
-                              "Trimenia neocaledonica": {},
-                              "unclassified Trimenia (in: flowering plants)": {
-                                "Trimenia sp. CCWD-2000": {}
-                              }
-                            }
-                          }
-                        },
-                        "environmental samples": {
-                          "Magnoliophyta environmental sample": {},
-                          "angiosperm mycorrhizal host": {}
-                        },
-                        "Nymphaeales": {
-                          "Nymphaeaceae": {
-                            "Barclaya": {
-                              "Barclaya longifolia": {},
-                              "Barclaya kunstleri": {},
-                              "Barclaya motleyi": {},
-                              "Barclaya panchorensis": {},
-                              "Barclaya rotundifolia": {},
-                              "Barclaya rugosa": {},
-                              "Barclaya wellyi": {},
-                              "Barclaya hirta": {}
-                            },
-                            "Euryale": {
-                              "Euryale ferox": {},
-                              "unclassified Euryale (in: flowering plants)": {
-                                "Euryale sp. Palmer 790": {}
-                              }
-                            },
-                            "Nuphar": {
-                              "Nuphar variegata": {},
-                              "Nuphar pumila": {
-                                "Nuphar pumila subsp. sinensis": {}
-                              },
-                              "Nuphar japonica": {},
-                              "Nuphar shimadae": {},
-                              "Nuphar polysepala": {},
-                              "Nuphar oguraensis": {
-                                "Nuphar oguraensis var. akiensis": {}
-                              },
-                              "Nuphar rubrodisca": {},
-                              "Nuphar advena": {
-                                "Nuphar advena subsp. advena": {}
-                              },
-                              "Nuphar ozarkana": {},
-                              "Nuphar ulvacea": {},
-                              "Nuphar orbiculata": {},
-                              "Nuphar sagittifolia": {},
-                              "Nuphar lutea": {},
-                              "Nuphar microphylla": {},
-                              "Nuphar subintegerrima": {},
-                              "Nuphar submersa": {},
-                              "Nuphar x spenneriana": {},
-                              "Nuphar longifolia": {},
-                              "unclassified Nuphar": {
-                                "Nuphar sp. Palmer 689": {},
-                                "Nuphar sp. Qiu M114": {},
-                                "Nuphar sp. YLQ-2003": {}
-                              },
-                              "Nuphar saikokuensis": {}
-                            },
-                            "Nymphaea": {
-                              "Nymphaea odorata": {
-                                "Nymphaea odorata subsp. tuberosa": {},
-                                "Nymphaea odorata subsp. odorata": {}
-                              },
-                              "Nymphaea alba": {
-                                "Nymphaea alba subsp. alba": {}
-                              },
-                              "Nymphaea nouchali": {
-                                "Nymphaea nouchali var. caerulea": {}
-                              },
-                              "Nymphaea ondinea": {},
-                              "Nymphaea mexicana": {},
-                              "Nymphaea tetragona": {
-                                "Nymphaea tetragona var. wenzelii": {}
-                              },
-                              "Nymphaea colorata": {},
-                              "Nymphaea gigantea": {},
-                              "Nymphaea colorata x Nymphaea gigantea": {},
-                              "Nymphaea lotus": {
-                                "Nymphaea lotus var. thermalis": {},
-                                "Nymphaea lotus var. dentata": {}
-                              },
-                              "Nymphaea micrantha": {},
-                              "Nymphaea capensis": {},
-                              "Nymphaea elegans": {},
-                              "Nymphaea ampla": {},
-                              "Nymphaea cf. mexicana KN20": {},
-                              "Nymphaea cf. mexicana KN22": {},
-                              "Nymphaea pubescens": {},
-                              "Nymphaea candida": {},
-                              "Nymphaea rubra": {},
-                              "Nymphaea elleniae": {},
-                              "Nymphaea macrosperma": {},
-                              "Nymphaea gracilis": {},
-                              "Nymphaea amazonum": {},
-                              "Nymphaea jamesoniana": {},
-                              "Nymphaea novogranatensis": {},
-                              "Nymphaea oxypetala": {},
-                              "Nymphaea petersiana": {},
-                              "Nymphaea atrans": {},
-                              "Nymphaea belophylla": {},
-                              "Nymphaea conardii": {},
-                              "Nymphaea gardneriana": {},
-                              "Nymphaea glandulifera": {},
-                              "Nymphaea hastifolia": {},
-                              "Nymphaea heudelotii": {},
-                              "Nymphaea immutabilis": {},
-                              "Nymphaea lingulata": {},
-                              "Nymphaea potamophila": {},
-                              "Nymphaea rudgeana": {},
-                              "Nymphaea tenerinervia": {},
-                              "Nymphaea thermarum": {},
-                              "Nymphaea violacea": {},
-                              "Nymphaea cf. colorata Borsch 3835": {},
-                              "Nymphaea dimorpha": {},
-                              "Nymphaea x marliacea": {},
-                              "Nymphaea carpentariae": {},
-                              "Nymphaea cf. carpentariae NY434": {},
-                              "Nymphaea georginae": {},
-                              "Nymphaea cf. gigantea NY395": {},
-                              "Nymphaea cf. immutabilis NY450": {},
-                              "Nymphaea cf. macrosperma CL-2009": {},
-                              "Nymphaea kimberleyensis": {},
-                              "Nymphaea cyanea": {},
-                              "Nymphaea guineensis": {},
-                              "Nymphaea pulchella": {},
-                              "Nymphaea odorata x Nymphaea tetragona": {},
-                              "Nymphaea leibergii x Nymphaea odorata": {},
-                              "Nymphaea cf. candida TB-2013": {},
-                              "Nymphaea pygmaea": {},
-                              "Nymphaea leibergii": {},
-                              "Nymphaea leibergii x Nymphaea tetragona": {},
-                              "Nymphaea loriana": {},
-                              "Nymphaea prolifera": {},
-                              "unclassified Nymphaea": {
-                                "Nymphaea sp. Qiu 91029": {},
-                                "Nymphaea sp. cv. Paul Harriot": {},
-                                "Nymphaea sp. EMK-2003": {},
-                                "Nymphaea sp. Bergthorsson 0401": {},
-                                "Nymphaea sp. 722-01": {},
-                                "Nymphaea sp. 722-02": {},
-                                "Nymphaea sp. 722-03": {},
-                                "Nymphaea sp. 722-05": {},
-                                "Nymphaea hybrid cultivar": {},
-                                "Nymphaea sp. NY551": {},
-                                "Nymphaea sp. JN-2013": {},
-                                "Nymphaea sp. BC-2016": {},
-                                "Nymphaea sp. GW-2019": {},
-                                "Nymphaea sp. 1KP": {},
-                                "Nymphaea sp. NY566": {},
-                                "Nymphaea sp. NY590": {},
-                                "Nymphaea sp. NY668": {},
-                                "Nymphaea sp. NY701": {},
-                                "Nymphaea sp. ZQ-2021": {},
-                                "Nymphaea sp. Maurin 4392": {},
-                                "Nymphaea sp. TK4": {},
-                                "Nymphaea sp. TK2": {},
-                                "Nymphaea sp. RAD1": {},
-                                "Nymphaea sp. KR79": {},
-                                "Nymphaea sp. KR76": {},
-                                "Nymphaea sp. HAG2": {},
-                                "Nymphaea sp. HAG1": {},
-                                "Nymphaea sp. GEO48": {},
-                                "Nymphaea sp. BELL71": {},
-                                "Nymphaea sp. BELL69": {},
-                                "Nymphaea sp. 3461": {},
-                                "Nymphaea sp. 714": {},
-                                "Nymphaea sp. 742": {},
-                                "Nymphaea sp. DID": {},
-                                "Nymphaea sp. EBB": {},
-                                "Nymphaea sp. GOG": {},
-                                "Nymphaea sp. HOH": {},
-                                "Nymphaea sp. KES": {},
-                                "Nymphaea sp. RJJ": {},
-                                "Nymphaea sp. ZDC": {},
-                                "Nymphaea sp. ZLF": {},
-                                "Nymphaea sp. BAD": {},
-                                "Nymphaea sp. DAK": {},
-                                "Nymphaea sp. KAR3": {},
-                                "Nymphaea sp.": {}
-                              },
-                              "Nymphaea zenkeri": {},
-                              "Nymphaea alexii": {},
-                              "Nymphaea lukei": {},
-                              "Nymphaea cf. capensis MG-2022": {},
-                              "Nymphaea x daubenyana": {},
-                              "Nymphaea lasiophylla": {},
-                              "Nymphaea thermarum x Nymphaea dimorpha": {},
-                              "Nymphaea dimorpha x Nymphaea thermarum": {}
-                            },
-                            "Victoria": {
-                              "Victoria cruziana": {},
-                              "Victoria amazonica": {},
-                              "Victoria cf. amazonica": {},
-                              "Victoria amazonica x Victoria cruziana": {},
-                              "unclassified Victoria (in: flowering plants)": {
-                                "Victoria sp. NPNY27": {}
-                              },
-                              "Victoria boliviana": {}
-                            },
-                            "Ondinea": {},
-                            "environmental samples": {
-                              "Barclaya environmental sample": {},
-                              "Nuphar environmental sample": {}
-                            },
-                            "unclassified Nymphaeaceae": {
-                              "Nymphaeaceae sp. BOP010524": {}
-                            }
-                          },
-                          "Cabombaceae": {
-                            "Brasenia": {
-                              "Brasenia schreberi": {},
-                              "unclassified Brasenia": {
-                                "Brasenia sp. SM-2010": {}
-                              }
-                            },
-                            "Cabomba": {
-                              "Cabomba caroliniana": {},
-                              "Cabomba furcata": {},
-                              "Cabomba aquatica": {},
-                              "unclassified Cabomba": {
-                                "Cabomba sp.": {},
-                                "Cabomba sp. Palmer 688": {},
-                                "Cabomba sp. Qiu 97027": {},
-                                "Cabomba sp. SM-1999": {},
-                                "Cabomba sp. CL-2005": {},
-                                "Cabomba sp. NY401": {},
-                                "Cabomba sp. Schooler S11": {}
-                              }
-                            }
-                          },
-                          "Hydatellaceae": {
-                            "Trithuria": {
-                              "Trithuria submersa": {},
-                              "Trithuria inconspicua": {
-                                "Trithuria inconspicua subsp. brevistyla": {}
-                              },
-                              "Trithuria filamentosa": {},
-                              "Trithuria lanterna": {},
-                              "Trithuria austinensis": {},
-                              "Trithuria australis": {},
-                              "Trithuria bibracteata": {},
-                              "Trithuria cookeana": {},
-                              "Trithuria cowieana": {},
-                              "Trithuria konkanensis": {},
-                              "Trithuria occidentalis": {},
-                              "Trithuria polybracteata": {}
-                            }
-                          }
-                        },
-                        "Amborellales": {
-                          "Amborellaceae": {
-                            "Amborella": {
-                              "Amborella trichopoda": {}
+        "Opisthokonta": {
+          "Holozoa": {
+            "Metazoa": {
+              "Eumetazoa": {
+                "Bilateria": {
+                  "Protostomia": {
+                    "Ecdysozoa": {
+                      "Panarthropoda": {
+                        "Arthropoda": {
+                          "Mandibulata": {
+                            "Pancrustacea": {
+                              "incertae_sedis": {},
+                              "not_otu,was_container": {},
+                              "Pancrustacea sp. NZAC 03009099": {},
+                              "Pancrustacea sp. NZAC 03009125": {},
+                              "Pancrustacea sp. NZAC 03009194": {},
+                              "Pancrustacea sp. NZAC 03010368": {},
+                              "Pancrustacea sp. NZAC 03010403": {},
+                              "Pancrustacea sp. NZAC 03010563": {},
+                              "Pancrustacea sp. NZAC 03010686": {},
+                              "Pancrustacea sp. NZAC 03011442": {},
+                              "Pancrustacea sp. NZAC 03011493": {},
+                              "Pancrustacea sp. NZAC 03011557": {},
+                              "Pancrustacea sp. NZAC 03011688": {},
+                              "Pancrustacea sp. NZAC 03011721": {},
+                              "Pancrustacea sp. NZAC 03011807": {},
+                              "Pancrustacea sp. NZAC 03011923": {},
+                              "Pancrustacea sp. NZAC 03012248": {},
+                              "Pancrustacea sp. NZAC 03012275": {},
+                              "Pancrustacea sp. NZAC 03012285": {},
+                              "Pancrustacea sp. NZAC 03012397": {},
+                              "Pancrustacea sp. NZAC 03012760": {},
+                              "Pancrustacea sp. NZAC 03012776": {},
+                              "Pancrustacea sp. NZAC 03012795": {},
+                              "Pancrustacea sp. NZAC 03013097": {},
+                              "Pancrustacea sp. NZAC 03013551": {},
+                              "Pancrustacea sp. NZAC 03014429": {},
+                              "Pancrustacea sp. NZAC03010285": {},
+                              "Pancrustacea sp. NZAC03010402": {},
+                              "Pancrustacea sp. NZAC03010513": {},
+                              "Pancrustacea sp. NZAC03010854": {},
+                              "Pancrustacea sp. NZAC03010855": {},
+                              "Pancrustacea sp. NZAC03010913": {},
+                              "Pancrustacea sp. NZAC03012040": {},
+                              "Pancrustacea sp. NZAC03012264": {},
+                              "Pancrustacea sp. NZAC03012268": {},
+                              "Pancrustacea sp. NZAC03012308": {},
+                              "Pancrustacea sp. NZAC03012418": {}
                             }
                           }
                         }

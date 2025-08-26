@@ -37,12 +37,7 @@ npx http-server -p 8080
 - **Right Click**: Zoom to parent
 - **Mouse Wheel**: Smooth zoom
 - **Middle Drag**: Pan
-- **Enter**: Search; pick a result to jump
-- **S**: Web search hovered/current node
-- **R**: Reset to root
-- **F**: Fit hovered/current node in view
-- **P**: Pin/unpin image preview
-- **? / F1**: Toggle help
+-
 
 ### UI overview
 - **Top bar**:

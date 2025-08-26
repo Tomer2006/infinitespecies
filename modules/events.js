@@ -56,7 +56,7 @@ export function initEvents() {
       // Hide tooltip and big preview while panning
       const tooltipEl = document.getElementById('tooltip');
       if (tooltipEl) tooltipEl.style.opacity = 0;
-      if (!state.isPreviewPinned) hideBigPreview();
+      hideBigPreview();
       return;
     }
 
@@ -65,9 +65,12 @@ export function initEvents() {
       requestAnimationFrame(() => {
         pickingScheduled = false;
         const n = pickNodeAt(lastMouse.x, lastMouse.y);
+        const prevId = state.hoverNode?._id || 0;
+        const nextId = n?._id || 0;
         state.hoverNode = n;
+        // Only update tooltip position every frame; only update content when id changes (handled inside)
         updateTooltip(n, lastMouse.x, lastMouse.y);
-        requestRender();
+        // No canvas re-render needed - highlight is now CSS-based
       });
     }
   });
@@ -75,7 +78,8 @@ export function initEvents() {
   canvas.addEventListener('mouseleave', () => {
     state.hoverNode = null;
     if (document.getElementById('tooltip')) document.getElementById('tooltip').style.opacity = 0;
-    requestRender();
+    hideBigPreview();
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   canvas.addEventListener('mousedown', ev => {
@@ -135,7 +139,7 @@ export function initEvents() {
     }
   });
 
-  // R / F / P / ?
+  // R / F / ?
   window.addEventListener('keydown', e => {
     const active = document.activeElement;
     const tag = (active && active.tagName) || '';
@@ -148,18 +152,6 @@ export function initEvents() {
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
       if (target) fitNodeInView(target);
-      e.preventDefault();
-    } else if (e.code === 'KeyP') {
-      const target = state.hoverNode || state.current;
-      if (!state.isPreviewPinned) {
-        if (target) {
-          state.isPreviewPinned = true;
-          state.pinnedNodeId = target?._id ?? null;
-        }
-      } else {
-        state.isPreviewPinned = false;
-        state.pinnedNodeId = null;
-      }
       e.preventDefault();
     } else if (e.code === 'Slash' || e.code === 'IntlRo' || e.key === 'F1' || e.code === 'F1') {
       if (!helpModal) return;
@@ -216,16 +208,14 @@ export function initEvents() {
   });
   clearBtn?.addEventListener('click', () => {
     document.getElementById('searchInput').value = '';
-    state.highlightNode = null;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
     const r = document.getElementById('searchResults');
     if (r) { r.style.display = 'none'; r.innerHTML = ''; }
   });
 
   resetBtn?.addEventListener('click', () => {
     if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
-    state.highlightNode = null;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   fitBtn?.addEventListener('click', () => {
@@ -244,8 +234,7 @@ export function initEvents() {
     const pick = leaves[Math.floor(Math.random() * leaves.length)];
     state.current = pick;
     goToNode(state.current, false);
-    state.highlightNode = state.current;
-    requestRender();
+    // No canvas re-render needed - highlight is now CSS-based
   });
 
   // JSON modal and loader
