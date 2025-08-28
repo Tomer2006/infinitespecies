@@ -22,9 +22,9 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
+  if (tName) tName.textContent = n.name;
+  if (tMeta) tMeta.textContent = '';
   if (n._id !== lastTooltipId) {
-    if (tName) tName.textContent = n.name;
-    if (tMeta) tMeta.textContent = '';
     lastTooltipId = n._id;
   }
   const m = 10;
