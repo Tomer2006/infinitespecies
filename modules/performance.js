@@ -17,6 +17,8 @@ export const perf = {
     verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
     strokeMinPxRadius: 24,
+    // Nodes smaller than this on-screen are ignored for picking (in pixels)
+    pickMinPxRadius: 4,
     maxLabels: 180,
     labelGridCellPx: 30,
     maxNodesPerFrame: 9000,
