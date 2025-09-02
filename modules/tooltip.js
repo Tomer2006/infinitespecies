@@ -22,13 +22,17 @@ export function updateTooltip(n, px, py) {
   }
   if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
   
-  // Build metadata with counts and level info
+  // Build metadata with explicit labels for clarity
   const metaParts = [];
-  if (n.level) metaParts.push(n.level);
-  if (n._leaves && n._leaves > 1) metaParts.push(`${n._leaves.toLocaleString()} species`);
-  else if (n._leaves === 1) metaParts.push('1 species');
-  if (n.children && n.children.length > 0) metaParts.push(`${n.children.length} children`);
-  metaParts.push(`#${n._id}`);
+  const levelText = typeof n.level === 'number' || typeof n.level === 'string' ? String(n.level) : '';
+  const leavesNum = typeof n._leaves === 'number' ? n._leaves : 0;
+  const childrenNum = Array.isArray(n.children) ? n.children.length : 0;
+  const idNum = typeof n._id === 'number' ? n._id : 0;
+
+  metaParts.push(`Level: ${levelText}`);
+  metaParts.push(`Descendants: ${leavesNum.toLocaleString()}`);
+  metaParts.push(`Children: ${childrenNum}`);
+  metaParts.push(`ID: ${idNum}`);
   
   if (tMeta) tMeta.textContent = metaParts.join(' • ');
   const m = 10;
