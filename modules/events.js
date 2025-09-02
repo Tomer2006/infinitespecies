@@ -21,7 +21,7 @@ import {
   providerSelect,
   progressLabel
 } from './dom.js';
-import { requestRender, screenToWorld, W, H } from './canvas.js';
+import { requestRender, screenToWorld } from './canvas.js';
 import { pickNodeAt } from './picking.js';
 import { state } from './state.js';
 import { updateTooltip } from './tooltip.js';
@@ -42,8 +42,9 @@ export function initEvents() {
   let lastMouse = { x: 0, y: 0 };
 
   canvas.addEventListener('mousemove', ev => {
-    const x = ev.offsetX,
-      y = ev.offsetY;
+    const rect = canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left,
+      y = ev.clientY - rect.top;
     lastMouse = { x, y };
     if (isMiddlePanning && lastPan) {
       const dx = x - lastPan.x,
@@ -84,7 +85,8 @@ export function initEvents() {
   canvas.addEventListener('mousedown', ev => {
     if (ev.button === 1) {
       isMiddlePanning = true;
-      lastPan = { x: ev.offsetX, y: ev.offsetY };
+      const rect = canvas.getBoundingClientRect();
+      lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
       ev.preventDefault();
     }
   });
@@ -100,7 +102,8 @@ export function initEvents() {
 
   canvas.addEventListener('click', ev => {
     if (ev.button !== 0) return;
-    const n = pickNodeAt(ev.offsetX, ev.offsetY);
+    const rect = canvas.getBoundingClientRect();
+    const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
     if (!n) return;
     if (n === state.current) fitNodeInView(n);
     else goToNode(n, true);
@@ -110,12 +113,13 @@ export function initEvents() {
     'wheel',
     ev => {
       const scale = Math.exp(-ev.deltaY * 0.0015);
-      const mx = ev.offsetX,
-        my = ev.offsetY;
+      const rect = canvas.getBoundingClientRect();
+      const mx = ev.clientX - rect.left,
+        my = ev.clientY - rect.top;
       const [wx, wy] = screenToWorld(mx, my);
       state.camera.k *= scale;
-      state.camera.x = wx - (mx - W / 2) / state.camera.k;
-      state.camera.y = wy - (my - H / 2) / state.camera.k;
+      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
+      state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
       requestRender();
       ev.preventDefault();
     },

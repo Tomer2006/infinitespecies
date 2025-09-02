@@ -5,7 +5,6 @@ import { W, H } from './canvas.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
-let lastTooltipId = 0;
 
 
 
@@ -14,7 +13,6 @@ export function updateTooltip(n, px, py) {
   if (!n) {
     ttip.style.opacity = 0;
     lastThumbShownForId = 0;
-    lastTooltipId = 0;
     if (thumbDelayTimer) {
       clearTimeout(thumbDelayTimer);
       thumbDelayTimer = null;
@@ -22,15 +20,20 @@ export function updateTooltip(n, px, py) {
     hideBigPreview();
     return;
   }
-  if (tName) tName.textContent = n.name;
-  if (tMeta) tMeta.textContent = '';
-  if (n._id !== lastTooltipId) {
-    lastTooltipId = n._id;
-  }
+  if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
+  
+  // Build metadata with counts and level info
+  const metaParts = [];
+  if (n.level) metaParts.push(n.level);
+  if (n._leaves && n._leaves > 1) metaParts.push(`${n._leaves.toLocaleString()} species`);
+  else if (n._leaves === 1) metaParts.push('1 species');
+  if (n.children && n.children.length > 0) metaParts.push(`${n.children.length} children`);
+  metaParts.push(`#${n._id}`);
+  
+  if (tMeta) tMeta.textContent = metaParts.join(' • ');
   const m = 10;
-  const tx = Math.min(W - m, Math.max(m, px));
-  const ty = Math.min(H - m, Math.max(m, py));
-  ttip.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, calc(-100% - 12px))`;
+  ttip.style.left = Math.min(W - m, Math.max(m, px)) + 'px';
+  ttip.style.top = Math.min(H - m, Math.max(m, py)) + 'px';
   ttip.style.opacity = 1;
   if (n._id !== lastThumbShownForId) {
     lastThumbShownForId = n._id;
