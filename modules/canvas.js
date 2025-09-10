@@ -2,6 +2,7 @@ import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
+import { updatePerformanceMetrics } from './render.js';
 
 let ctx;
 let W = 0;
@@ -26,15 +27,49 @@ export function getSize() {
 
 export function resizeCanvas() {
   const bb = stage.getBoundingClientRect();
-  DPR = Math.max(1, Math.min(perf.canvas.maxDevicePixelRatio, window.devicePixelRatio || 1));
+  // Performance optimization: intelligently scale DPR based on performance needs
+  const rawDPR = window.devicePixelRatio || 1;
+  const maxDPR = perf.canvas.maxDevicePixelRatio;
+
+  // Reduce DPR on slower devices or when performance is critical
+  let targetDPR = Math.min(rawDPR, maxDPR);
+
+  // Performance heuristic: reduce DPR if the canvas would be very large
+  const canvasArea = bb.width * bb.height * targetDPR * targetDPR;
+  if (canvasArea > 8000000) { // ~8M pixels threshold
+    targetDPR = Math.max(1, targetDPR * 0.75);
+  }
+
+  DPR = Math.max(1, targetDPR);
   W = Math.floor(bb.width);
   H = Math.floor(bb.height);
   canvas.width = W * DPR;
   canvas.height = H * DPR;
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
-  ctx = canvas.getContext('2d', { desynchronized: true, alpha: false });
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // Performance optimization: use more efficient canvas context options
+  const contextOptions = {
+    desynchronized: true,
+    alpha: false,
+    // Add willReadFrequently for better performance when not reading pixels
+    willReadFrequently: false
+  };
+
+  // Try to get hardware-accelerated context if available
+  try {
+    ctx = canvas.getContext('2d', contextOptions);
+    if (ctx) {
+      // Enable image smoothing for better quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'medium'; // Balance quality vs performance
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+  } catch (e) {
+    // Fallback to basic context
+    ctx = canvas.getContext('2d');
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
 }
 
 export function requestRender() {
@@ -74,6 +109,14 @@ function loop() {
     const sec = (now - lastFpsUpdate) / 1000;
     const fps = framesSinceFps / sec;
     fpsEl.textContent = buildOverlayText(fps);
+
+    // Performance optimization: update performance metrics for dynamic optimization
+    try {
+      updatePerformanceMetrics(fps);
+    } catch (e) {
+      // Ignore performance monitoring errors
+    }
+
     lastFpsUpdate = now;
     framesSinceFps = 0;
   }

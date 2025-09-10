@@ -11,18 +11,23 @@ export const perf = {
   // Rendering and label/layout tunables
   rendering: {
     renderDistance: 0.9,          // tighter culling for better FPS
-    minPxRadius: 10,              // prune tiny nodes & their subtrees early
-    labelMinPxRadius: 22,         // minimum node radius (px) to consider it for labeling
-    labelMinFontPx: 12,           // minimum font size (px) for labels; smaller are skipped
+    minPxRadius: 8,               // prune tiny nodes & their subtrees early (reduced for better detail)
+    labelMinPxRadius: 18,         // minimum node radius (px) to consider it for labeling (reduced)
+    labelMinFontPx: 10,           // minimum font size (px) for labels; smaller are skipped (reduced)
     verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
-    strokeMinPxRadius: 24,
+    strokeMinPxRadius: 20,        // reduced for better performance
     // Nodes smaller than this on-screen are ignored for picking (in pixels)
     pickMinPxRadius: 4,
-    maxLabels: 180,
-    labelGridCellPx: 30,
-    maxNodesPerFrame: 9000,
-    showGrid: false
+    maxLabels: 150,               // reduced for better performance
+    labelGridCellPx: 40,          // increased for better performance
+    maxNodesPerFrame: 12000,      // increased to handle more nodes
+    showGrid: false,
+    // New performance optimizations
+    useFastRendering: true,       // enable fast rendering mode
+    batchDrawCalls: true,         // batch similar draw operations
+    lodLevels: 3,                 // number of level-of-detail levels
+    lodThresholds: [50, 200, 500] // pixel radius thresholds for LOD
   },
 
   // Canvas/device related caps

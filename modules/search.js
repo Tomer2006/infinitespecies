@@ -3,11 +3,72 @@ import { requestRender, worldToScreen } from './canvas.js';
 import { goToNode } from './navigation.js';
 import { searchResultsEl } from './dom.js';
 
+// Performance optimization: inverted search index
+let searchIndex = new Map();
+let searchIndexBuilt = false;
+
+function buildSearchIndex() {
+  if (searchIndexBuilt || !state.layout?.root) return;
+
+  searchIndex.clear();
+  const nodes = state.layout.root.descendants();
+
+  for (const node of nodes) {
+    const name = (node.data?.name || '').toLowerCase().trim();
+    if (!name) continue;
+
+    const words = name.split(/\s+/);
+    const nodeId = node.data._id;
+
+    // Index individual words and the full name
+    const terms = [...words, name];
+
+    for (const term of terms) {
+      if (!searchIndex.has(term)) {
+        searchIndex.set(term, new Set());
+      }
+      searchIndex.get(term).add(nodeId);
+    }
+  }
+
+  searchIndexBuilt = true;
+}
+
+function invalidateSearchIndex() {
+  searchIndexBuilt = false;
+  searchIndex.clear();
+}
+
 export function findByQuery(q) {
   if (!q) return null;
   q = q.trim().toLowerCase();
   if (!q || !state.layout?.root) return null;
-  // Simple on-demand scan of current hierarchy to reduce memory
+
+  // Performance optimization: use search index if available
+  if (searchIndexBuilt) {
+    // Try exact matches first
+    if (searchIndex.has(q)) {
+      const nodeIds = searchIndex.get(q);
+      for (const nodeId of nodeIds) {
+        const node = state.nodeLayoutMap.get(nodeId);
+        if (node) return node.data;
+      }
+    }
+
+    // Try prefix matches
+    for (const [term, nodeIds] of searchIndex) {
+      if (term.startsWith(q)) {
+        for (const nodeId of nodeIds) {
+          const node = state.nodeLayoutMap.get(nodeId);
+          if (node) return node.data;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  // Fallback to tree traversal (original implementation)
   const stack = [state.layout.root];
   while (stack.length) {
     const d = stack.pop();
@@ -23,6 +84,54 @@ export function findAllByQuery(q, limit = 50) {
   if (!q) return [];
   q = q.trim().toLowerCase();
   if (!q || !state.layout?.root) return [];
+
+  // Performance optimization: use search index if available
+  if (searchIndexBuilt) {
+    const results = [];
+    const seen = new Set();
+
+    // Collect all matching node IDs
+    const matchingIds = new Set();
+
+    // Exact matches
+    if (searchIndex.has(q)) {
+      for (const nodeId of searchIndex.get(q)) {
+        matchingIds.add(nodeId);
+      }
+    }
+
+    // Prefix matches
+    for (const [term, nodeIds] of searchIndex) {
+      if (term.startsWith(q) && term !== q) {
+        for (const nodeId of nodeIds) {
+          matchingIds.add(nodeId);
+        }
+      }
+    }
+
+    // Partial matches within terms
+    for (const [term, nodeIds] of searchIndex) {
+      if (term.includes(q)) {
+        for (const nodeId of nodeIds) {
+          matchingIds.add(nodeId);
+        }
+      }
+    }
+
+    // Convert to actual nodes
+    for (const nodeId of matchingIds) {
+      if (results.length >= limit) break;
+      const node = state.nodeLayoutMap.get(nodeId);
+      if (node && !seen.has(nodeId)) {
+        results.push(node.data);
+        seen.add(nodeId);
+      }
+    }
+
+    return results;
+  }
+
+  // Fallback to tree traversal (original implementation)
   const results = [];
   const stack = [state.layout.root];
   while (stack.length) {
