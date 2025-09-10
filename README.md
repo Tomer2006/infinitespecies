@@ -9,7 +9,8 @@ Interactive circle-packing visualization for exploring biological taxonomy data,
 ### ✨ Key Features
 - **🔍 Zoomable Interface**: Smooth circle-packing visualization from Life down to Species level
 - **🚀 Large Dataset Support**: Handles millions of taxonomy nodes via intelligent data splitting
-- **🔎 Smart Search**: Multi-result dropdown with visual highlighting and quick navigation  
+- **🔎 Smart Search**: Multi-result dropdown with quick navigation and pulse indicator  
+- **🧭 Informative Tooltips**: Name + Level, plus metadata: Level, Descendants (leaves), Children, ID
 - **🌐 External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - **📱 Responsive Design**: Works on desktop and mobile devices
 - **🔗 Deep Linking**: Share exact views via URL - every navigation state is preserved
@@ -32,6 +33,11 @@ npx http-server -p 8080
 # Then visit: http://localhost:8080/
 ```
 
+Windows (PowerShell) note:
+- If you see "The token '&&' is not a valid statement" error, run commands on separate lines:
+  - First: `cd C:\Users\<you>\Documents\biozoom`
+  - Then: `python -m http.server 8080`
+
 ### Controls
 - **Left Click**: Zoom into a group
 - **Right Click**: Zoom to parent
@@ -50,6 +56,7 @@ npx http-server -p 8080
   - `Copy Link`: copy a deep link to the current view (URL hash)
   - `Reset`: back to root
 - **Breadcrumbs**: click any crumb to navigate up (also updates the URL hash for deep linking)
+- **Tooltip**: shows `Level`, `Descendants` (leaf count), `Children` (direct), and `ID`
 
 ### 📊 Data Loading & Management
 
@@ -140,6 +147,8 @@ This application is optimized for **massive taxonomy datasets** (millions of nod
 - **Canvas-Based Rendering**: Direct 2D canvas with opaque context to reduce compositing
 - **DPR Clamp**: Caps devicePixelRatio for stability on HiDPI screens
 - **Work Caps**: Hard caps on max nodes per frame and max labels per frame
+- **Zero-Redraw Tooltips/Preview**: Tooltip and big preview are DOM-only and do not trigger canvas re-renders
+- **No Hover Ring**: Hover highlight circles were removed to avoid unnecessary redraws
 
 ### 📁 Project Structure
 
@@ -158,10 +167,10 @@ biozoom/
     ├── canvas.js          # Canvas setup, sizing, and rendering context
     ├── layout.js          # D3 pack layout and coordinate calculations
     ├── camera.js          # Pan/zoom camera system with animations
-    ├── render.js          # Main rendering engine (circles, labels, highlights)
+    ├── render.js          # Main rendering engine (circles, labels)
     ├── picking.js         # Mouse interaction and hit detection
     ├── navigation.js      # Breadcrumbs, navigation, and view management
-    ├── search.js          # Local search with highlighting and filtering
+    ├── search.js          # Local search with result list and pulse indicator
     ├── deeplink.js        # URL state management and sharing
     ├── providers.js       # External service integration (Wikipedia, NCBI, etc.)
     ├── preview.js         # Image previews and thumbnails
@@ -204,6 +213,7 @@ The application automatically tracks your navigation state in the URL for seamle
 | **JSON Parse Errors** | Use "Load JSON" modal - it shows detailed error messages with line numbers |
 | **Missing External Links** | Check browser pop-up blocker - external search opens in new tabs |
 | **Mobile Performance** | Try smaller datasets or use WiFi - mobile browsers have memory limits |
+| **PowerShell '&&' Error** | Run commands on separate lines: first `cd`, then `python -m http.server 8080` |
 
 **Performance Tips:**
 - **Large datasets**: Zoom to specific areas rather than viewing the entire tree

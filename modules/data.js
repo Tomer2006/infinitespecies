@@ -6,7 +6,7 @@ import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs } from './navigation.js';
-import { findByQuery } from './search.js';
+import { findByQuery, buildSearchIndex, invalidateSearchIndex } from './search.js';
 import { goToNode } from './navigation.js';
 
 function inferLevelByDepth(depth) {
@@ -271,6 +271,16 @@ export function setDataRoot(root) {
   state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
   state.camera.x = 0;
   state.camera.y = 0;
+
+  // Performance optimization: build search index after data is loaded
+  setTimeout(() => {
+    try {
+      buildSearchIndex();
+    } catch (e) {
+      console.warn('Failed to build search index:', e);
+    }
+  }, 100);
+
   requestRender();
 }
 
