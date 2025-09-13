@@ -15,6 +15,7 @@
   <link rel="modulepreload" href="modules/layout.js">
   <link rel="modulepreload" href="modules/performance.js">
   <link rel="modulepreload" href="modules/state.js">
+  <link rel="modulepreload" href="modules/landing.js">
   <script type="importmap">
   {
     "imports": {
@@ -26,9 +27,10 @@
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
+  <div class="topbar" style="visibility:hidden">
     <div class="title">Taxonomy Explorer</div>
     <div class="controls">
+      <button class="btn secondary" id="backToMenuBtn" title="Return to main menu">🏠 Menu</button>
       <button class="btn" id="loadBtn" title="Load custom JSON">Load JSON</button>
 
       <select id="providerSelect" class="select" title="Choose provider">
@@ -104,7 +106,7 @@
         <div class="splash-brand" aria-hidden="true">
           <div class="logo">🧬</div>
           <div class="brand-title">Taxonomy Explorer</div>
-          <div class="brand-sub">Getting things ready…</div>
+
         </div>
         <h3><span id="loadingTitle">Loading…</span></h3>
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -115,6 +117,43 @@
 
     <div class="pulse" id="pulse"></div>
     <div class="puff-link" id="puffLink"><a id="puffLinkAnchor" href="#" download="biozoom.png">Download PNG</a></div>
+  </div>
+
+  <!-- Landing Page -->
+  <div class="landing-page" id="landingPage">
+    <div class="landing-content">
+      <div class="landing-header">
+        <div class="landing-logo">🧬</div>
+        <h1 class="landing-title">Taxonomy Explorer</h1>
+        <p class="landing-tagline">Explore the Tree of Life — millions of organisms in one zoomable map.</p>
+      </div>
+
+      <div class="landing-menu">
+        <button class="landing-btn primary" id="startExplorationBtn">
+          <span class="btn-icon">🌍</span>
+          <span class="btn-text">Start Exploration</span>
+        </button>
+
+        <button class="landing-btn secondary" id="loadDataBtn">
+          <span class="btn-icon">📁</span>
+          <span class="btn-text">Load Custom Data</span>
+        </button>
+
+        <button class="landing-btn secondary" id="helpBtn">
+          <span class="btn-icon">❓</span>
+          <span class="btn-text">Help</span>
+        </button>
+
+        <button class="landing-btn secondary" id="aboutBtn">
+          <span class="btn-icon">ℹ️</span>
+          <span class="btn-text">About</span>
+        </button>
+      </div>
+
+      <div class="landing-footer">
+        <p>Navigate with mouse and keyboard. Press <kbd>?</kbd> for controls.</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -152,6 +191,7 @@
     <div class="modal-head">
       <div class="modal-title">Keyboard Shortcuts & Controls</div>
       <div style="display:flex;gap:.5rem">
+        <button class="btn secondary" id="helpBackToMenuBtn" title="Return to main menu">🏠 Menu</button>
         <button class="btn secondary" id="helpCloseBtn" title="Close help">Close</button>
       </div>
     </div>
