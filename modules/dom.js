@@ -2,6 +2,7 @@
 
 export const canvas = document.getElementById('view');
 export const stage = document.getElementById('stage');
+export const topbarEl = document.querySelector('.topbar');
 export const ttip = document.getElementById('tooltip');
 export const tName = ttip?.querySelector('.name');
 export const tMeta = ttip?.querySelector('.meta');
@@ -14,6 +15,7 @@ export const bigPreviewEmpty = document.getElementById('bigPreviewEmpty');
 
 export const helpModal = document.getElementById('helpModal');
 export const helpCloseBtn = document.getElementById('helpCloseBtn');
+export const helpBackToMenuBtn = document.getElementById('helpBackToMenuBtn');
 
 export const providerSelect = document.getElementById('providerSelect');
 export const providerSearchBtn = document.getElementById('providerSearchBtn');
@@ -28,6 +30,7 @@ export const progressPct = document.getElementById('progressPct');
 
 export const jsonModal = document.getElementById('jsonModal');
 export const loadBtn = document.getElementById('loadBtn');
+export const backToMenuBtn = document.getElementById('backToMenuBtn');
 export const cancelLoadBtn = document.getElementById('cancelLoadBtn');
 export const applyLoadBtn = document.getElementById('applyLoadBtn');
 export const insertSampleBtn = document.getElementById('insertSampleBtn');
