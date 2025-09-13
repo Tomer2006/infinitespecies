@@ -2,6 +2,7 @@ import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom
 import { state } from './state.js';
 
 const thumbCache = new Map();
+const MAX_THUMBS = 300; // cap to prevent runaway memory
 let lastThumbNodeId = null;
 let previewReqToken = 0;
 
@@ -10,7 +11,12 @@ export const THUMB_SIZE = 96;
 export async function fetchWikipediaThumb(title) {
   const key = title.toLowerCase();
   const existing = thumbCache.get(key);
-  if (existing) return existing; // may be Promise or string/null
+  if (existing) {
+    // Refresh insertion order to implement simple LRU behavior
+    thumbCache.delete(key);
+    thumbCache.set(key, existing);
+    return existing; // may be Promise or string/null
+  }
   const p = (async () => {
     try {
       const encoded = encodeURIComponent(title.replace(/\s+/g, '_'));
@@ -24,8 +30,20 @@ export async function fetchWikipediaThumb(title) {
     }
   })();
   thumbCache.set(key, p);
+  // Evict oldest entries if we exceed the cap
+  while (thumbCache.size > MAX_THUMBS) {
+    const oldest = thumbCache.keys().next().value;
+    if (oldest == null) break;
+    thumbCache.delete(oldest);
+  }
   const src = await p;
   thumbCache.set(key, src);
+  // Evict after finalization as well
+  while (thumbCache.size > MAX_THUMBS) {
+    const oldest = thumbCache.keys().next().value;
+    if (oldest == null) break;
+    thumbCache.delete(oldest);
+  }
   return src;
 }
 
