@@ -11,28 +11,29 @@ export const perf = {
   // Rendering and label/layout tunables
   rendering: {
     renderDistance: 0.9,          // tighter culling for better FPS
-    minPxRadius: 8,               // prune tiny nodes & their subtrees early (reduced for better detail)
-    labelMinPxRadius: 18,         // minimum node radius (px) to consider it for labeling (reduced)
-    labelMinFontPx: 10,           // minimum font size (px) for labels; smaller are skipped (reduced)
+    minPxRadius: 10,              // prune tiny nodes & their subtrees early
+    labelMinPxRadius: 22,         // minimum node radius (px) to consider it for labeling
+    labelMinFontPx: 12,           // minimum font size (px) for labels; smaller are skipped
     verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
-    strokeMinPxRadius: 20,        // reduced for better performance
+    strokeMinPxRadius: 24,
     // Nodes smaller than this on-screen are ignored for picking (in pixels)
     pickMinPxRadius: 4,
-    maxLabels: 150,               // reduced for better performance
-    labelGridCellPx: 40,          // increased for better performance
-    maxNodesPerFrame: 12000,      // increased to handle more nodes
+    maxLabels: 180,
+    labelGridCellPx: 30,
+    maxNodesPerFrame: 9000,
     showGrid: false,
-    // New performance optimizations
-    useFastRendering: true,       // enable fast rendering mode
-    batchDrawCalls: true,         // batch similar draw operations
-    lodLevels: 3,                 // number of level-of-detail levels
-    lodThresholds: [50, 200, 500] // pixel radius thresholds for LOD
+
+    // Level-of-detail thresholds (in pixels)
+    lodDetailThreshold: 8,     // Above this size, render with full detail
+    lodMediumThreshold: 4,     // Above this size, render with medium detail
+    lodSimpleThreshold: 2,     // Above this size, render simplified version
+    lodSkipThreshold: 1        // Below this size, skip rendering entirely
   },
 
   // Canvas/device related caps
   canvas: {
-    maxDevicePixelRatio: 1.5
+    maxDevicePixelRatio: 1
   },
 
   // Animation timing
@@ -52,6 +53,14 @@ export const perf = {
   indexing: {
     chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
     progressEvery: 2000           // update the progress UI every N nodes processed
+  },
+
+  // Memory management settings
+  memory: {
+    maxTextCacheSize: 1000,       // maximum text measurement cache entries
+    cacheCleanupThreshold: 800,   // cleanup when cache exceeds this size
+    gcHintInterval: 20000,        // suggest GC every 20 seconds during heavy usage
+    progressiveCleanupBatch: 100  // cleanup batch size for progressive operations
   }
 };
 

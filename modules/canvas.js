@@ -2,7 +2,6 @@ import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
-import { updatePerformanceMetrics } from './render.js';
 
 let ctx;
 let W = 0;
@@ -17,6 +16,11 @@ let lastFpsUpdate = 0;
 let framesSinceFps = 0;
 let lastCam = { x: 0, y: 0, k: 1 };
 
+// Frame rate limiting
+let lastRenderTime = 0;
+let targetFrameTime = 1000 / 60; // Target 60 FPS
+let adaptiveFrameRate = true;
+
 export function getContext() {
   return ctx;
 }
@@ -27,49 +31,15 @@ export function getSize() {
 
 export function resizeCanvas() {
   const bb = stage.getBoundingClientRect();
-  // Performance optimization: intelligently scale DPR based on performance needs
-  const rawDPR = window.devicePixelRatio || 1;
-  const maxDPR = perf.canvas.maxDevicePixelRatio;
-
-  // Reduce DPR on slower devices or when performance is critical
-  let targetDPR = Math.min(rawDPR, maxDPR);
-
-  // Performance heuristic: reduce DPR if the canvas would be very large
-  const canvasArea = bb.width * bb.height * targetDPR * targetDPR;
-  if (canvasArea > 8000000) { // ~8M pixels threshold
-    targetDPR = Math.max(1, targetDPR * 0.75);
-  }
-
-  DPR = Math.max(1, targetDPR);
+  DPR = Math.max(1, Math.min(perf.canvas.maxDevicePixelRatio, window.devicePixelRatio || 1));
   W = Math.floor(bb.width);
   H = Math.floor(bb.height);
   canvas.width = W * DPR;
   canvas.height = H * DPR;
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
-
-  // Performance optimization: use more efficient canvas context options
-  const contextOptions = {
-    desynchronized: true,
-    alpha: false,
-    // Add willReadFrequently for better performance when not reading pixels
-    willReadFrequently: false
-  };
-
-  // Try to get hardware-accelerated context if available
-  try {
-    ctx = canvas.getContext('2d', contextOptions);
-    if (ctx) {
-      // Enable image smoothing for better quality
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'medium'; // Balance quality vs performance
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    }
-  } catch (e) {
-    // Fallback to basic context
-    ctx = canvas.getContext('2d');
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  }
+  ctx = canvas.getContext('2d', { desynchronized: true, alpha: false });
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 
 export function requestRender() {
@@ -88,8 +58,23 @@ function ensureRAF() {
 
 function loop() {
   rafId = null;
-  if (!needRender) return; // skip if nothing requested
+
+  const now = performance.now();
+  const timeSinceLastRender = now - lastRenderTime;
+
+  // Frame rate limiting: skip frames if we're rendering too fast
+  if (adaptiveFrameRate && timeSinceLastRender < targetFrameTime) {
+    ensureRAF(); // Schedule next frame
+    return;
+  }
+
+  if (!needRender) {
+    ensureRAF(); // Continue the loop even when not rendering to maintain timing
+    return;
+  }
+
   needRender = false;
+  lastRenderTime = now;
 
   // Avoid redraw if camera hasn't changed and no one requested a draw
   const cam = state.camera;
@@ -102,24 +87,19 @@ function loop() {
   }
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;
+
   // Update FPS text ~8 times/sec to reduce layout cost
-  const now = performance.now();
   framesSinceFps++;
   if (fpsEl && now - lastFpsUpdate >= 125) {
     const sec = (now - lastFpsUpdate) / 1000;
     const fps = framesSinceFps / sec;
     fpsEl.textContent = buildOverlayText(fps);
-
-    // Performance optimization: update performance metrics for dynamic optimization
-    try {
-      updatePerformanceMetrics(fps);
-    } catch (e) {
-      // Ignore performance monitoring errors
-    }
-
     lastFpsUpdate = now;
     framesSinceFps = 0;
   }
+
+  // Always schedule next frame to maintain consistent timing
+  ensureRAF();
 }
 
 export function registerDrawCallback(cb) {
