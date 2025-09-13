@@ -10,7 +10,7 @@
 export const perf = {
   // Rendering and label/layout tunables
   rendering: {
-    renderDistance: 0.9,          // tighter culling for better FPS
+    renderDistance: 1,          // tighter culling for better FPS
     minPxRadius: 10,              // prune tiny nodes & their subtrees early
     labelMinPxRadius: 22,         // minimum node radius (px) to consider it for labeling
     labelMinFontPx: 12,           // minimum font size (px) for labels; smaller are skipped
