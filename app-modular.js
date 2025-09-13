@@ -9,6 +9,7 @@ import { loadFromUrl } from './modules/data.js';
 import { decodePath, findNodeByPath } from './modules/deeplink.js';
 import { goToNode } from './modules/navigation.js';
 import { state } from './modules/state.js';
+import { initLandingPage, showLandingPage } from './modules/landing.js';
 
 function initDeepLinks() {
   // Navigate when hash changes
@@ -73,11 +74,11 @@ async function initData() {
   // Wire UI and input events
   initEvents();
 
-  // Load data and deep links
-  initData();
-  initDeepLinks();
-  // After data load completes, attempt a jump to a lightweight start node
-  // Note: jump is triggered inside setDataRoot after layout/indexing
+  // Initialize landing page
+  initLandingPage();
+
+  // Show landing page first (data will be loaded when user chooses to start exploration)
+  showLandingPage();
 })();
 
 

@@ -2,6 +2,7 @@ import {
   canvas,
   helpModal,
   helpCloseBtn,
+  helpBackToMenuBtn,
   providerSearchBtn,
   copyLinkBtn,
   searchInputEl,
@@ -12,6 +13,7 @@ import {
   surpriseBtn,
   tooltipSearchBtn,
   loadBtn,
+  backToMenuBtn,
   cancelLoadBtn,
   applyLoadBtn,
   insertSampleBtn,
@@ -23,6 +25,7 @@ import {
 } from './dom.js';
 import { requestRender, screenToWorld } from './canvas.js';
 import { pickNodeAt } from './picking.js';
+import { showLandingPage } from './landing.js';
 import { state } from './state.js';
 import { updateTooltip } from './tooltip.js';
 import { openProviderSearch } from './providers.js';
@@ -251,6 +254,14 @@ export function initEvents() {
   }
 
   loadBtn?.addEventListener('click', () => openModal());
+  backToMenuBtn?.addEventListener('click', () => {
+    // Hide topbar and show landing page
+    const topbar = document.querySelector('.topbar');
+    if (topbar) {
+      topbar.style.visibility = 'hidden';
+    }
+    showLandingPage();
+  });
   cancelLoadBtn?.addEventListener('click', () => closeModal());
   insertSampleBtn?.addEventListener('click', () => {
     jsonText.value = JSON.stringify(
@@ -328,6 +339,20 @@ export function initEvents() {
     if (!helpModal) return;
     helpModal.classList.remove('open');
     helpModal.setAttribute('aria-hidden', 'true');
+  });
+
+  helpBackToMenuBtn?.addEventListener('click', () => {
+    // Close help modal and show landing page
+    if (helpModal) {
+      helpModal.classList.remove('open');
+      helpModal.setAttribute('aria-hidden', 'true');
+    }
+    // Hide topbar and show landing page
+    const topbar = document.querySelector('.topbar');
+    if (topbar) {
+      topbar.style.visibility = 'hidden';
+    }
+    showLandingPage();
   });
 }
 
