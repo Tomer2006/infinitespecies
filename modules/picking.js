@@ -24,6 +24,9 @@ export function pickNodeAt(px, py) {
   const [wx, wy] = screenToWorld(px, py);
   for (const d of nodes) {
     if (!nodeInView(d)) continue;
+    // Early reject nodes that are too small on screen to be interactable
+    const screenR = d._vr * state.camera.k;
+    if (screenR < (perf.rendering.pickMinPxRadius || 0)) continue;
     const dx = wx - d._vx,
       dy = wy - d._vy;
     if (dx * dx + dy * dy <= d._vr * d._vr) return d.data;

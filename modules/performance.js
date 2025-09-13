@@ -17,15 +17,23 @@ export const perf = {
     verticalPadPx: 100,           // extra vertical padding (px) when culling to keep near-edge nodes visible
     // Performance knobs
     strokeMinPxRadius: 24,
+    // Nodes smaller than this on-screen are ignored for picking (in pixels)
+    pickMinPxRadius: 4,
     maxLabels: 180,
     labelGridCellPx: 30,
     maxNodesPerFrame: 9000,
-    showGrid: false
+    showGrid: false,
+
+    // Level-of-detail thresholds (in pixels)
+    lodDetailThreshold: 8,     // Above this size, render with full detail
+    lodMediumThreshold: 4,     // Above this size, render with medium detail
+    lodSimpleThreshold: 2,     // Above this size, render simplified version
+    lodSkipThreshold: 1        // Below this size, skip rendering entirely
   },
 
   // Canvas/device related caps
   canvas: {
-    maxDevicePixelRatio: 1.5
+    maxDevicePixelRatio: 1
   },
 
   // Animation timing
@@ -45,6 +53,14 @@ export const perf = {
   indexing: {
     chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
     progressEvery: 2000           // update the progress UI every N nodes processed
+  },
+
+  // Memory management settings
+  memory: {
+    maxTextCacheSize: 1000,       // maximum text measurement cache entries
+    cacheCleanupThreshold: 800,   // cleanup when cache exceeds this size
+    gcHintInterval: 20000,        // suggest GC every 20 seconds during heavy usage
+    progressiveCleanupBatch: 100  // cleanup batch size for progressive operations
   }
 };
 

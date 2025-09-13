@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { requestRender, worldToScreen } from './canvas.js';
 import { goToNode } from './navigation.js';
 import { searchResultsEl } from './dom.js';
+import { getNodePath } from './deeplink.js';
 
 export function findByQuery(q) {
   if (!q) return null;
@@ -87,6 +88,20 @@ function renderResults(nodes, q) {
     nameEl.className = 'name';
     nameEl.textContent = n.name || '';
     item.appendChild(nameEl);
+
+    // Add path context under the name for disambiguation
+    try {
+      const parts = getNodePath(n);
+      const parentPath = parts.slice(0, Math.max(0, parts.length - 1)).join(' / ');
+      if (parentPath) {
+        const pathEl = document.createElement('div');
+        pathEl.className = 'path';
+        pathEl.textContent = parentPath;
+        item.appendChild(pathEl);
+      }
+    } catch (_e) {
+      // best-effort; ignore path errors
+    }
     frag.appendChild(item);
   });
   searchResultsEl.appendChild(frag);

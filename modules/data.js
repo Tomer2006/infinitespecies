@@ -103,16 +103,23 @@ export async function indexTreeProgressive(root, options = {}) {
     if (node == null || typeof node !== 'object') continue;
     // Normalize and trim strings in-place to reduce memory
     node.name = String(node.name ?? 'Unnamed');
-    if (node.name.length > 200) node.name = node.name.slice(0, 200);
+    if (node.name.length > 100) node.name = node.name.slice(0, 100);
     node.level = node.level || inferLevelByDepth(depth);
     node.parent = parent;
     node._id = state.globalId++;
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
-    // Drop empty metadata to free memory
+
+    // Aggressive memory optimization: drop all non-essential properties
+    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves']);
     for (const k of Object.keys(node)) {
-      if (k === 'name' || k === 'children' || k === 'level' || k === 'parent') continue;
-      const v = node[k];
-      if (v == null || (typeof v === 'object' && Object.keys(v).length === 0)) delete node[k];
+      if (!essentialKeys.has(k)) {
+        delete node[k];
+      }
+    }
+
+    // Further optimize: use shorter property names where possible
+    if (node.children && node.children.length === 0) {
+      node.children = []; // Ensure consistent empty array
     }
     registerNode(node);
     for (let i = node.children.length - 1; i >= 0; i--)
@@ -148,7 +155,7 @@ export async function loadFromUrl(url) {
   const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
   
   try {
-    const manifestRes = await fetch(manifestUrl, { cache: 'force-cache' });
+    const manifestRes = await fetch(manifestUrl, { cache: 'default' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
       if (manifest.version && manifest.files) {
@@ -160,7 +167,7 @@ export async function loadFromUrl(url) {
   }
   
   // Single file loading
-  const res = await fetch(url, { cache: 'force-cache' });
+  const res = await fetch(url, { cache: 'default' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
   await loadFromJSONText(text);
@@ -169,57 +176,95 @@ export async function loadFromUrl(url) {
 async function loadFromSplitFiles(baseUrl, manifest) {
   const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
   setProgress(0, `Loading ${totalFiles} split files...`);
-  // Concurrency-limited loader (browser typically limits to ~6 per host)
-  const concurrency = computeFetchConcurrency();
+
+  // Increased concurrency for better performance
+  const concurrency = Math.max(computeFetchConcurrency(), 8); // Minimum 8 concurrent requests
   let completed = 0;
+  let failed = 0;
+  const maxRetries = 3;
   const results = new Array(manifest.files.length);
-  let inFlight = 0;
-  let nextIndex = 0;
+  const retryQueue = [];
+
+  const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
+    const fileUrl = baseUrl + fileInfo.filename;
+    try {
+      const res = await fetch(fileUrl, {
+        cache: 'default',
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+
+      if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+      const chunk = await res.json();
+      results[index] = { index, chunk, fileInfo };
+      completed++;
+
+      // Update progress more frequently for better UX
+      if (completed % Math.max(1, Math.floor(totalFiles / 20)) === 0 || completed === totalFiles) {
+        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
+      }
+
+      return true;
+    } catch (err) {
+      if (retryCount < maxRetries) {
+        // Exponential backoff for retries
+        const delay = Math.pow(2, retryCount) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return loadFileWithRetry(fileInfo, index, retryCount + 1);
+      } else {
+        failed++;
+        console.error(`Failed to load ${fileUrl} after ${maxRetries} retries:`, err);
+        return false;
+      }
+    }
+  };
+
+  // Parallel loading with controlled concurrency
   await new Promise((resolve, reject) => {
+    let inFlight = 0;
+    let nextIndex = 0;
+
     const startNext = () => {
       while (inFlight < concurrency && nextIndex < manifest.files.length) {
         const i = nextIndex++;
         inFlight++;
         const fileInfo = manifest.files[i];
-        const fileUrl = baseUrl + fileInfo.filename;
-        fetch(fileUrl, { cache: 'force-cache' })
-          .then(res => {
-            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-            return res.json();
-          })
-          .then(chunk => {
-            results[i] = { index: i, chunk, fileInfo };
-            completed++;
-            if (completed % 2 === 0 || completed === totalFiles) {
-              setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
+
+        loadFileWithRetry(fileInfo, i).finally(() => {
+          inFlight--;
+          if (completed + failed === totalFiles) {
+            if (failed > 0) {
+              console.warn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
             }
-          })
-          .then(() => {
-            inFlight--;
-            if (completed === totalFiles) resolve();
-            else startNext();
-          })
-          .catch(err => reject(err));
+            resolve();
+          } else {
+            startNext();
+          }
+        });
       }
     };
+
     startNext();
   });
-  
+
+  // Filter out failed loads
+  const validResults = results.filter(r => r !== undefined);
+
   setProgress(0.95, 'Merging tree data...');
-  
+
   // Sort by index to maintain order
-  results.sort((a, b) => a.index - b.index);
+  validResults.sort((a, b) => a.index - b.index);
 
   // Determine schema type: structured nodes vs nested map
   const isStructuredNode = obj => obj && typeof obj === 'object' && (Object.prototype.hasOwnProperty.call(obj, 'children') || Object.prototype.hasOwnProperty.call(obj, 'name'));
 
-  const anyStructured = results.some(r => isStructuredNode(r.chunk));
+  const anyStructured = validResults.some(r => isStructuredNode(r.chunk));
 
   let mergedTree;
   if (anyStructured) {
     // Structured nodes: collect children
     mergedTree = { name: 'Life', level: 0, children: [] };
-    for (const { chunk } of results) {
+    for (const { chunk } of validResults) {
       if (chunk && Array.isArray(chunk.children)) {
         mergedTree.children.push(...chunk.children);
       } else if (isStructuredNode(chunk)) {
@@ -241,7 +286,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
       return target;
     };
     const mergedMap = {};
-    for (const { chunk } of results) deepMerge(mergedMap, chunk);
+    for (const { chunk } of validResults) deepMerge(mergedMap, chunk);
     // Normalize will convert nested map to structured nodes
     const normalizedTree = normalizeTree(mergedMap);
     await indexTreeProgressive(normalizedTree);

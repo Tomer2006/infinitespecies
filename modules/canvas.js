@@ -16,6 +16,11 @@ let lastFpsUpdate = 0;
 let framesSinceFps = 0;
 let lastCam = { x: 0, y: 0, k: 1 };
 
+// Frame rate limiting
+let lastRenderTime = 0;
+let targetFrameTime = 1000 / 60; // Target 60 FPS
+let adaptiveFrameRate = true;
+
 export function getContext() {
   return ctx;
 }
@@ -53,8 +58,23 @@ function ensureRAF() {
 
 function loop() {
   rafId = null;
-  if (!needRender) return; // skip if nothing requested
+
+  const now = performance.now();
+  const timeSinceLastRender = now - lastRenderTime;
+
+  // Frame rate limiting: skip frames if we're rendering too fast
+  if (adaptiveFrameRate && timeSinceLastRender < targetFrameTime) {
+    ensureRAF(); // Schedule next frame
+    return;
+  }
+
+  if (!needRender) {
+    ensureRAF(); // Continue the loop even when not rendering to maintain timing
+    return;
+  }
+
   needRender = false;
+  lastRenderTime = now;
 
   // Avoid redraw if camera hasn't changed and no one requested a draw
   const cam = state.camera;
@@ -67,8 +87,8 @@ function loop() {
   }
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;
+
   // Update FPS text ~8 times/sec to reduce layout cost
-  const now = performance.now();
   framesSinceFps++;
   if (fpsEl && now - lastFpsUpdate >= 125) {
     const sec = (now - lastFpsUpdate) / 1000;
@@ -77,6 +97,9 @@ function loop() {
     lastFpsUpdate = now;
     framesSinceFps = 0;
   }
+
+  // Always schedule next frame to maintain consistent timing
+  ensureRAF();
 }
 
 export function registerDrawCallback(cb) {
