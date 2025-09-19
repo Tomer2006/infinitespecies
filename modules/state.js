@@ -19,6 +19,9 @@ export const state = {
   // cached orders for performance
   drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
+
+  // layout change tracking
+  layoutChanged: false,
 };
 
 export function clearIndex() {

@@ -5,7 +5,7 @@ import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
-import { setBreadcrumbs } from './navigation.js';
+import { setBreadcrumbs, updateNavigation } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
 
@@ -309,14 +309,8 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
-  state.current = state.DATA_ROOT;
-  state.layout = layoutFor(state.current);
-  rebuildNodeMap();
-  setBreadcrumbs(state.current);
-  state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-  state.camera.x = 0;
-  state.camera.y = 0;
-  requestRender();
+  // Use centralized navigation update for initial setup
+  updateNavigation(state.DATA_ROOT, false);
 }
 
 function jumpToPreferredStart() {
@@ -325,8 +319,7 @@ function jumpToPreferredStart() {
   const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
   if (preferred) {
     // Jump without animation to avoid initial lag
-    goToNode(preferred, false);
-    // No canvas re-render needed - highlight is now CSS-based
+    updateNavigation(preferred, false);
   }
 }
 

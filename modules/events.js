@@ -222,8 +222,7 @@ export function initEvents() {
   });
 
   fitBtn?.addEventListener('click', () => {
-    const target = state.hoverNode || state.current;
-    if (target) fitNodeInView(target);
+    if (state.DATA_ROOT) fitNodeInView(state.DATA_ROOT);
   });
 
   surpriseBtn?.addEventListener('click', () => {
@@ -236,7 +235,7 @@ export function initEvents() {
     if (!leaves.length) return;
     const pick = leaves[Math.floor(Math.random() * leaves.length)];
     state.current = pick;
-    goToNode(state.current, false);
+    fitNodeInView(state.current);
     // No canvas re-render needed - highlight is now CSS-based
   });
 

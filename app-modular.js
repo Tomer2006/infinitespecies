@@ -7,7 +7,7 @@ import { initEvents } from './modules/events.js';
 import { showLoading, hideLoading } from './modules/loading.js';
 import { loadFromUrl } from './modules/data.js';
 import { decodePath, findNodeByPath } from './modules/deeplink.js';
-import { goToNode } from './modules/navigation.js';
+import { updateNavigation } from './modules/navigation.js';
 import { state } from './modules/state.js';
 import { initLandingPage, showLandingPage } from './modules/landing.js';
 
@@ -17,7 +17,7 @@ function initDeepLinks() {
     const hash = decodePath(location.hash.slice(1));
     if (!hash || !state.DATA_ROOT) return;
     const node = findNodeByPath(hash);
-    if (node) goToNode(node, true);
+    if (node) updateNavigation(node, true);
   });
 
   // On first load, apply hash if present (no-op until data exists)
@@ -25,7 +25,7 @@ function initDeepLinks() {
     const hash = decodePath(location.hash.slice(1));
     if (hash && state.DATA_ROOT) {
       const node = findNodeByPath(hash);
-      if (node) goToNode(node, true);
+      if (node) updateNavigation(node, true);
     }
   }, 0);
 }

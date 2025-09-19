@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { requestRender, worldToScreen } from './canvas.js';
-import { goToNode } from './navigation.js';
+import { updateNavigation } from './navigation.js';
 import { searchResultsEl } from './dom.js';
 import { getNodePath } from './deeplink.js';
 
@@ -116,8 +116,7 @@ function renderResults(nodes, q) {
       const d = state.nodeLayoutMap.get(id);
       const node = d?.data;
       if (!node) return;
-      state.current = node;
-      goToNode(state.current, false);
+      updateNavigation(node, false);
       pulseAtNode(state.current);
       // No canvas re-render needed - highlight is now CSS-based
       hideResults();
@@ -149,8 +148,7 @@ export function handleSearch(progressLabelEl) {
   }
   if (matches.length === 1) {
     const node = matches[0];
-    state.current = node;
-    goToNode(state.current, false);
+    updateNavigation(node, false);
     pulseAtNode(state.current);
     // No canvas re-render needed - highlight is now CSS-based
     hideResults();
