@@ -2,6 +2,8 @@ import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
+import { shouldAutoLoad, requestAutoLoad } from './data-lazy.js';
+import { logInfo, logWarn, logError, logDebug, logTrace } from './logger.js';
 
 let ctx;
 let W = 0;
@@ -31,15 +33,19 @@ export function getSize() {
 
 export function resizeCanvas() {
   const bb = stage.getBoundingClientRect();
+  const oldW = W, oldH = H;
   DPR = Math.max(1, Math.min(perf.canvas.maxDevicePixelRatio, window.devicePixelRatio || 1));
   W = Math.floor(bb.width);
   H = Math.floor(bb.height);
+
   canvas.width = W * DPR;
   canvas.height = H * DPR;
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   ctx = canvas.getContext('2d', { desynchronized: true, alpha: false });
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  logDebug(`Canvas resized: ${oldW}x${oldH} → ${W}x${H} (DPR: ${DPR})`);
 }
 
 export function requestRender() {
@@ -62,13 +68,17 @@ function loop() {
   const now = performance.now();
   const timeSinceLastRender = now - lastRenderTime;
 
+  logTrace(`Frame loop started - time since last: ${timeSinceLastRender.toFixed(2)}ms`);
+
   // Frame rate limiting: skip frames if we're rendering too fast
   if (adaptiveFrameRate && timeSinceLastRender < targetFrameTime) {
+    logTrace(`Frame skipped - too fast (${timeSinceLastRender.toFixed(2)}ms < ${targetFrameTime.toFixed(2)}ms)`);
     ensureRAF(); // Schedule next frame
     return;
   }
 
   if (!needRender) {
+    logTrace('Frame skipped - no render needed');
     ensureRAF(); // Continue the loop even when not rendering to maintain timing
     return;
   }
@@ -82,8 +92,10 @@ function loop() {
   const layoutChanged = state.layoutChanged;
 
   if (!drawCallback || (sameCam && !layoutChanged)) {
+    logTrace('Frame skipped - no changes detected');
     // Still update FPS box timing even when skipping draw
   } else {
+    logTrace(`Rendering frame - camera: (${cam.x.toFixed(2)}, ${cam.y.toFixed(2)}, ${cam.k.toFixed(4)}), layout changed: ${layoutChanged}`);
     if (drawCallback) drawCallback();
     lastCam = { x: cam.x, y: cam.y, k: cam.k };
     // Reset layout changed flag after drawing
@@ -102,8 +114,38 @@ function loop() {
     framesSinceFps = 0;
   }
 
+  // Check for automatic subtree loading
+  if (state.layout && state.loadMode !== 'eager') {
+    checkAutoLoad();
+  }
+
   // Always schedule next frame to maintain consistent timing
   ensureRAF();
+}
+
+// Check for nodes that should auto-load based on zoom level
+function checkAutoLoad() {
+  if (!state.layout?.root || state.loadMode === 'eager') {
+    logTrace('Auto-load check skipped - no layout root or eager mode');
+    return;
+  }
+
+  logTrace('Checking for auto-load candidates...');
+  const autoLoadResult = requestAutoLoad();
+  if (!autoLoadResult?.length) {
+    logTrace('No auto-load candidates found');
+    return;
+  }
+
+  logInfo(`Auto-loading ${autoLoadResult.length} subtrees`);
+  autoLoadResult.forEach(info => {
+    const { node, status } = info;
+    if (status === 'loading') {
+      logInfo(`Auto-loading subtree: ${node.name} (descendants: ${node.descendants?.()?.length || 0})`);
+    } else if (status === 'pending') {
+      logDebug(`Subtree already loading: ${node.name}`);
+    }
+  });
 }
 
 export function registerDrawCallback(cb) {

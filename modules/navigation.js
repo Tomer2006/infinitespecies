@@ -4,6 +4,9 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
+import { loadSubtree, isLazyNode } from './data-lazy.js';
+import { showLoading, hideLoading } from './loading.js';
+import { logInfo, logWarn, logDebug, logTrace } from './logger.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -41,9 +44,36 @@ export function fitNodeInView(node) {
 }
 
 // Centralized navigation update function - handles all navigation changes and canvas updates
-export function updateNavigation(node, animate = true) {
+export async function updateNavigation(node, animate = true) {
+  const startTime = performance.now();
+
+  logInfo(`Starting navigation to "${node.name}" (animate=${animate})`);
+
+  // Check if node is lazy and needs loading
+  if (isLazyNode(node)) {
+    logDebug(`Node "${node.name}" is lazy - loading subtree`);
+    try {
+      showLoading('Loading subtree…');
+      await loadSubtree(node);
+      hideLoading();
+      logInfo(`Successfully loaded lazy subtree for "${node.name}"`);
+    } catch (error) {
+      hideLoading();
+      logError(`Failed to load lazy subtree for "${node.name}"`, error);
+      // Continue with navigation even if loading fails
+    }
+  }
+
+  logDebug(`Setting current node to "${node.name}"`);
   state.current = node;
+
+  logTrace('Computing layout for current node');
   state.layout = layoutFor(state.current);
+
+  if (state.layout) {
+    logDebug(`Layout computed: ${state.layout.root?.descendants()?.length || 0} nodes, diameter=${state.layout.diameter}px`);
+  }
+
   rebuildNodeMap();
   setBreadcrumbs(state.current);
 
@@ -52,18 +82,24 @@ export function updateNavigation(node, animate = true) {
 
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+    logDebug(`Starting camera animation: zoom to ${targetK.toFixed(4)}`);
     animateToCam(0, 0, targetK);
   } else {
     state.camera.x = 0;
     state.camera.y = 0;
     state.camera.k = Math.min(W, H) / state.layout.diameter;
+    logDebug(`Camera set instantly: zoom to ${state.camera.k.toFixed(4)}`);
   }
+
   requestRender();
+
+  const endTime = performance.now();
+  logInfo(`Navigation completed: ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
 }
 
 // Legacy function for backward compatibility
-export function goToNode(node, animate = true) {
-  updateNavigation(node, animate);
+export async function goToNode(node, animate = true) {
+  return updateNavigation(node, animate);
 }
 
 

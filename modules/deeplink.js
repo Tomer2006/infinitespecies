@@ -30,7 +30,7 @@ export function updateDeepLinkFromNode(node) {
   }
 }
 
-export function findNodeByPath(pathStr) {
+export async function findNodeByPath(pathStr) {
   const parts = pathStr.split('/').filter(Boolean);
   if (!parts.length || !state.DATA_ROOT) return state.DATA_ROOT;
   let node = state.DATA_ROOT;
@@ -38,6 +38,19 @@ export function findNodeByPath(pathStr) {
     const name = parts[i];
     const child = (node.children || []).find(c => String(c.name) === name);
     if (!child) break;
+
+    // If child is lazy, load it before proceeding
+    if (child.lazy === true) {
+      try {
+        // Import loadSubtree here to avoid circular dependency
+        const { loadSubtree } = await import('./data-lazy.js');
+        await loadSubtree(child);
+      } catch (error) {
+        console.warn(`Failed to load lazy subtree for ${child.name}:`, error);
+        break;
+      }
+    }
+
     node = child;
   }
   return node;

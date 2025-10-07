@@ -13,18 +13,18 @@ import { initLandingPage, showLandingPage } from './modules/landing.js';
 
 function initDeepLinks() {
   // Navigate when hash changes
-  window.addEventListener('hashchange', () => {
+  window.addEventListener('hashchange', async () => {
     const hash = decodePath(location.hash.slice(1));
     if (!hash || !state.DATA_ROOT) return;
-    const node = findNodeByPath(hash);
+    const node = await findNodeByPath(hash);
     if (node) updateNavigation(node, true);
   });
 
   // On first load, apply hash if present (no-op until data exists)
-  setTimeout(() => {
+  setTimeout(async () => {
     const hash = decodePath(location.hash.slice(1));
     if (hash && state.DATA_ROOT) {
-      const node = findNodeByPath(hash);
+      const node = await findNodeByPath(hash);
       if (node) updateNavigation(node, true);
     }
   }, 0);
@@ -34,13 +34,12 @@ async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
   
-  // Priority order: URL param, split data/, then single files
+  // Only load lazy-enabled files, no split file loading
   const candidates = [
     qUrl,
-    'data/manifest.json',  // Check for split files first
-    'tree.json', 
-    'taxonomy.json', 
-    'data.json'
+    'data/tree.json',      // Lazy-enabled tree
+    'data/taxonomy.json',  // Lazy-enabled taxonomy
+    'data/data.json'       // Lazy-enabled data
   ].filter(Boolean);
 
   for (const url of candidates) {

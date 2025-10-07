@@ -1,5 +1,6 @@
-// Removed LEVELS import - now using numeric levels directly
-import { clearIndex, registerNode, state } from './state.js';
+// Regular/eager data loading functionality
+// Lazy loading is separated into data-lazy.js
+import { clearIndex, registerNode, state, clearLazyCache } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
 import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
@@ -8,6 +9,8 @@ import { requestRender, W, H } from './canvas.js';
 import { setBreadcrumbs, updateNavigation } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
+import { logInfo, logWarn, logError, logDebug } from './logger.js';
+import { loadFromLazyManifest } from './data-lazy.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -46,6 +49,17 @@ export function normalizeTree(rootLike) {
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
   rootLike.name = 'Life';
+  // Preserve lazy and id properties for lazy loading
+  if (rootLike.children) {
+    rootLike.children.forEach(child => {
+      if (child && typeof child === 'object') {
+        // Ensure lazy nodes have proper structure
+        if (child.lazy === true && child.id) {
+          child.children = []; // Lazy nodes start with empty children
+        }
+      }
+    });
+  }
   return rootLike;
 }
 
@@ -110,7 +124,8 @@ export async function indexTreeProgressive(root, options = {}) {
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
 
     // Aggressive memory optimization: drop all non-essential properties
-    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves']);
+    // Preserve lazy-loading metadata ('lazy', 'id') so navigation can fetch subtrees on demand
+    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves', 'lazy', 'id']);
     for (const k of Object.keys(node)) {
       if (!essentialKeys.has(k)) {
         delete node[k];
@@ -137,44 +152,120 @@ export async function indexTreeProgressive(root, options = {}) {
 export async function loadFromJSONText(text) {
   let parsed;
   try {
+    logInfo('Parsing JSON text…');
     parsed = JSON.parse(text);
   } catch (e) {
+    logError('Invalid JSON during loadFromJSONText', e);
     throw new Error('Invalid JSON: ' + e.message);
   }
+  logDebug('Normalizing parsed JSON tree');
   const nroot = normalizeTree(parsed);
   await indexTreeProgressive(nroot);
   setDataRoot(nroot);
-  // Try to move user to Homo sapiens for light initial view
-  jumpToPreferredStart();
+  logInfo('JSON data loaded successfully, initialized root');
+  await jumpToPreferredStart();
 }
 
-export async function loadFromUrl(url) {
+// Eager loading: loads everything at once
+export async function loadEager(url) {
   if (!url) throw new Error('No URL provided');
-  
+
+  state.loadMode = 'eager';
+  logInfo(`Loading data eagerly from ${url}`);
+
   // Check if this is a split dataset by looking for manifest.json
   const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
-  
+  const baseUrl = url.replace(/[^/]*$/, '');
+
   try {
+    logDebug(`Attempting to fetch manifest from ${manifestUrl}`);
     const manifestRes = await fetch(manifestUrl, { cache: 'default' });
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
-      if (manifest.version && manifest.files) {
-        return await loadFromSplitFiles(url.replace(/[^/]*$/, ''), manifest);
+
+      // If it's a lazy manifest, warn and fall back to single file
+      if (manifest.children && Array.isArray(manifest.children) && manifest.children.some(c => c.lazy)) {
+        logWarn('Lazy manifest found but eager mode requested; falling back to single file loading');
+      } else if (manifest.version && manifest.files) {
+        logInfo('Split-file manifest detected, loading eagerly');
+        return await loadFromSplitFiles(baseUrl, manifest);
       }
+    } else {
+      logDebug(`No manifest found at ${manifestUrl}`);
     }
   } catch (e) {
-    // No manifest found, try loading as single file
+    logWarn(`Manifest fetch failed at ${manifestUrl}: ${e.message}`);
   }
-  
-  // Single file loading
+
+  // Single file loading (fallback/default for eager mode)
+  logInfo(`Loading single JSON file eagerly from ${url}`);
   const res = await fetch(url, { cache: 'default' });
   if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
   const text = await res.text();
   await loadFromJSONText(text);
 }
 
+// Lazy loading: loads manifest first, then subtrees on demand
+export async function loadLazy(url) {
+  if (!url) throw new Error('No URL provided');
+
+  const mode = 'lazy'; // Always lazy for this function
+  state.loadMode = mode;
+  logInfo(`Loading data lazily from ${url}`);
+
+  // Check if this is a lazy dataset by looking for manifest.json
+  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
+  const baseUrl = url.replace(/[^/]*$/, '');
+
+  try {
+    logDebug(`Attempting to fetch manifest from ${manifestUrl}`);
+    const manifestRes = await fetch(manifestUrl, { cache: 'default' });
+    if (manifestRes.ok) {
+      const manifest = await manifestRes.json();
+
+      // Check if it's a lazy manifest (has children with lazy flags)
+      if (manifest.children && Array.isArray(manifest.children) && manifest.children.some(c => c.lazy)) {
+        logInfo('Lazy manifest detected, loading with lazy mode');
+        return await loadFromLazyManifest(baseUrl, manifest, mode);
+      } else if (manifest.version && manifest.files) {
+        logWarn('Split files manifest found but lazy mode requested; split files don\'t support lazy loading, falling back to single file');
+      }
+    } else {
+      logDebug(`No manifest found at ${manifestUrl}`);
+    }
+  } catch (e) {
+    logWarn(`Manifest fetch failed at ${manifestUrl}: ${e.message}`);
+  }
+
+  // Fallback: if no lazy manifest found, throw error since lazy mode requires lazy-compatible data
+  throw new Error('Lazy loading requires a lazy-compatible manifest.json file. Use eager mode for single files or split files.');
+}
+
+export async function loadFromUrl(url, options = {}) {
+  if (!url) throw new Error('No URL provided');
+
+  const mode = options.mode || 'auto';
+
+  if (mode === 'eager') {
+    return await loadEager(url);
+  } else if (mode === 'lazy') {
+    return await loadLazy(url);
+  } else if (mode === 'auto') {
+    // Auto mode: try lazy first, fall back to eager
+    try {
+      return await loadLazy(url);
+    } catch (e) {
+      logWarn(`Lazy loading failed, falling back to eager: ${e.message}`);
+      return await loadEager(url);
+    }
+  } else {
+    throw new Error(`Unknown loading mode: ${mode}. Use 'eager', 'lazy', or 'auto'.`);
+  }
+}
+
 async function loadFromSplitFiles(baseUrl, manifest) {
   const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
+  logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
   setProgress(0, `Loading ${totalFiles} split files...`);
 
   // Increased concurrency for better performance
@@ -186,8 +277,9 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const retryQueue = [];
 
   const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
-    const fileUrl = baseUrl + fileInfo.filename;
+    const fileUrl = baseUrl + fileInfo.file;
     try {
+      logDebug(`Fetching split file ${fileUrl} (attempt ${retryCount + 1})`);
       const res = await fetch(fileUrl, {
         cache: 'default',
         // Add timeout to prevent hanging requests
@@ -207,13 +299,14 @@ async function loadFromSplitFiles(baseUrl, manifest) {
       return true;
     } catch (err) {
       if (retryCount < maxRetries) {
+        logWarn(`Retrying ${fileUrl} after error: ${err.message}`);
         // Exponential backoff for retries
         const delay = Math.pow(2, retryCount) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         return loadFileWithRetry(fileInfo, index, retryCount + 1);
       } else {
         failed++;
-        console.error(`Failed to load ${fileUrl} after ${maxRetries} retries:`, err);
+        logError(`Failed to load ${fileUrl} after ${maxRetries} retries`, err);
         return false;
       }
     }
@@ -234,7 +327,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
           inFlight--;
           if (completed + failed === totalFiles) {
             if (failed > 0) {
-              console.warn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
+              logWarn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
             }
             resolve();
           } else {
@@ -248,6 +341,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   });
 
   // Filter out failed loads
+  logInfo(`Merging ${results.filter(Boolean).length} loaded split files`);
   const validResults = results.filter(r => r !== undefined);
 
   setProgress(0.95, 'Merging tree data...');
@@ -263,6 +357,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   let mergedTree;
   if (anyStructured) {
     // Structured nodes: collect children
+    logDebug('Split files contained structured nodes; merging children arrays');
     mergedTree = { name: 'Life', level: 0, children: [] };
     for (const { chunk } of validResults) {
       if (chunk && Array.isArray(chunk.children)) {
@@ -273,6 +368,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     }
   } else {
     // Nested key map: deep-merge all object chunks
+    logDebug('Split files contained nested maps; performing deep merge');
     const deepMerge = (target, source) => {
       if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
       for (const [k, v] of Object.entries(source)) {
@@ -291,7 +387,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     const normalizedTree = normalizeTree(mergedMap);
     await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
-    jumpToPreferredStart();
+    await jumpToPreferredStart();
     setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
     return;
   }
@@ -302,22 +398,36 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const normalizedTree = normalizeTree(mergedTree);
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
-  jumpToPreferredStart();
+  await jumpToPreferredStart();
   const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
+  logInfo(`Split dataset loaded with ${nodeCount} nodes`);
 }
 
 export function setDataRoot(root) {
+  // Clear lazy loading cache when loading new data
+  clearLazyCache();
   state.DATA_ROOT = root;
   // Use centralized navigation update for initial setup
   updateNavigation(state.DATA_ROOT, false);
 }
 
-function jumpToPreferredStart() {
+export async function jumpToPreferredStart() {
   // Respect deep links; only jump if no hash present
   if (location.hash && location.hash.length > 1) return;
+
   const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
   if (preferred) {
+    // If the preferred node is lazy, load it first
+    if (preferred.lazy === true) {
+      try {
+        const { loadSubtree } = await import('./data-lazy.js');
+        await loadSubtree(preferred);
+      } catch (error) {
+        logWarn(`Failed to load preferred start node ${preferred.name}:`, error);
+        return;
+      }
+    }
     // Jump without animation to avoid initial lag
     updateNavigation(preferred, false);
   }

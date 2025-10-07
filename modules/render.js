@@ -3,6 +3,7 @@ import { state } from './state.js';
 import { getNodeColor } from './constants.js';
 import { perf } from './performance.js';
 import { nodeInView } from './picking.js';
+import { logInfo, logWarn, logError, logDebug, logTrace } from './logger.js';
 
 // Optimized text measurement cache with size limits and hit tracking
 const measureCache = new Map();
@@ -60,8 +61,14 @@ function getGridPattern(ctx) {
 }
 
 export function draw() {
+  const startTime = performance.now();
   const ctx = getContext();
-  if (!ctx || !state.layout) return;
+  if (!ctx || !state.layout) {
+    logTrace('Draw skipped - no context or layout');
+    return;
+  }
+
+  logTrace(`Starting draw: camera=(${state.camera.x.toFixed(2)}, ${state.camera.y.toFixed(2)}, ${state.camera.k.toFixed(4)}), current_node="${state.current?.name || 'none'}"`);
 
   // Periodic memory cleanup
   performMemoryCleanup();
@@ -385,6 +392,10 @@ export function draw() {
       }
     }
   }
+
+  const endTime = performance.now();
+  const duration = endTime - startTime;
+  logTrace(`Draw completed: ${duration.toFixed(2)}ms`);
 
   // Highlight ring removed - now handled by CSS overlay for better performance
 }

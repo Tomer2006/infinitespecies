@@ -28,6 +28,7 @@ import { pickNodeAt } from './picking.js';
 import { showLandingPage } from './landing.js';
 import { state } from './state.js';
 import { updateTooltip } from './tooltip.js';
+import { logInfo, logDebug, logTrace } from './logger.js';
 import { openProviderSearch } from './providers.js';
 import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
@@ -86,30 +87,50 @@ export function initEvents() {
   });
 
   canvas.addEventListener('mousedown', ev => {
+    logTrace(`Mouse down: button=${ev.button}, position=(${ev.clientX}, ${ev.clientY})`);
     if (ev.button === 1) {
       isMiddlePanning = true;
       const rect = canvas.getBoundingClientRect();
       lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      logDebug('Middle mouse pan started');
       ev.preventDefault();
     }
   });
   window.addEventListener('mouseup', () => {
+    if (isMiddlePanning) {
+      logDebug('Middle mouse pan ended');
+    }
     isMiddlePanning = false;
     lastPan = null;
   });
 
-  canvas.addEventListener('contextmenu', ev => {
+  canvas.addEventListener('contextmenu', async ev => {
     ev.preventDefault();
-    if (state.current && state.current.parent) goToNode(state.current.parent, true);
+    if (state.current && state.current.parent) await goToNode(state.current.parent, true);
   });
 
-  canvas.addEventListener('click', ev => {
+  canvas.addEventListener('click', async ev => {
     if (ev.button !== 0) return;
     const rect = canvas.getBoundingClientRect();
-    const n = pickNodeAt(ev.clientX - rect.left, ev.clientY - rect.top);
-    if (!n) return;
-    if (n === state.current) fitNodeInView(n);
-    else goToNode(n, true);
+    const screenX = ev.clientX - rect.left;
+    const screenY = ev.clientY - rect.top;
+
+    logTrace(`Canvas click: screen=(${screenX}, ${screenY}), canvas_rect=(${rect.left}, ${rect.top}, ${rect.width}, ${rect.height})`);
+
+    const n = pickNodeAt(screenX, screenY);
+    if (!n) {
+      logDebug('Click missed any node');
+      return;
+    }
+
+    logInfo(`Node clicked: "${n.name}" (id: ${n._id || 'unknown'})`);
+    if (n === state.current) {
+      logDebug('Fitting current node in view');
+      fitNodeInView(n);
+    } else {
+      logDebug('Navigating to new node');
+      await goToNode(n, true);
+    }
   });
 
   canvas.addEventListener(
@@ -120,9 +141,17 @@ export function initEvents() {
       const mx = ev.clientX - rect.left,
         my = ev.clientY - rect.top;
       const [wx, wy] = screenToWorld(mx, my);
+
+      const oldK = state.camera.k;
+      const oldX = state.camera.x;
+      const oldY = state.camera.y;
+
       state.camera.k *= scale;
       state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
       state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
+
+      logTrace(`Zoom: deltaY=${ev.deltaY}, scale=${scale.toFixed(4)}, zoom=${oldK.toFixed(4)}→${state.camera.k.toFixed(4)}, pan=(${oldX.toFixed(2)}, ${oldY.toFixed(2)})→(${state.camera.x.toFixed(2)}, ${state.camera.y.toFixed(2)})`);
+
       requestRender();
       ev.preventDefault();
     },
@@ -150,7 +179,7 @@ export function initEvents() {
     if (isTyping) return;
 
     if (e.code === 'KeyR') {
-      if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
+      if (state.DATA_ROOT) (async () => await goToNode(state.DATA_ROOT, true))();
       e.preventDefault();
     } else if (e.code === 'KeyF') {
       const target = state.hoverNode || state.current;
@@ -216,8 +245,8 @@ export function initEvents() {
     if (r) { r.style.display = 'none'; r.innerHTML = ''; }
   });
 
-  resetBtn?.addEventListener('click', () => {
-    if (state.DATA_ROOT) goToNode(state.DATA_ROOT, true);
+  resetBtn?.addEventListener('click', async () => {
+    if (state.DATA_ROOT) await goToNode(state.DATA_ROOT, true);
     // No canvas re-render needed - highlight is now CSS-based
   });
 

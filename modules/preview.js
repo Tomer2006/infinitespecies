@@ -1,5 +1,6 @@
 import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom.js';
 import { state } from './state.js';
+import { logInfo, logWarn, logError, logDebug } from './logger.js';
 
 const thumbCache = new Map();
 const MAX_THUMBS = 300; // cap to prevent runaway memory
@@ -36,7 +37,7 @@ export async function fetchWikipediaThumb(title) {
         description: wikiData?.extract || null
       };
     } catch (_e) {
-      console.log('Error fetching Wikipedia data:', _e);
+      logError('Error fetching Wikipedia data', _e);
       return null;
     }
   })();
@@ -89,11 +90,11 @@ async function getTaxonomicRankFromWikidata(wikidataId) {
     const rankLabel = bindings[0]?.rankLabel?.value;
     if (!rankLabel) return null;
 
-    console.log('Found Wikidata rank:', rankLabel);
+    logDebug('Found Wikidata rank', { rank: rankLabel });
     return rankLabel;
 
   } catch (error) {
-    console.log('Error fetching Wikidata rank:', error);
+    logWarn('Error fetching Wikidata rank', error);
     return null;
   }
 }

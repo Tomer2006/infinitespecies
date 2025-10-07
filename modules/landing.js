@@ -2,11 +2,12 @@
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
-import { loadFromUrl } from './data.js';
+import { loadFromUrl, loadEager, loadLazy } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
 import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
 import { tick } from './canvas.js';
+import { logWarn } from './logger.js';
 
 export function showLandingPage() {
   const landingPage = document.getElementById('landingPage');
@@ -37,18 +38,18 @@ export async function initDataAndDeepLinks() {
 
 function initDeepLinks() {
   // Navigate when hash changes
-  window.addEventListener('hashchange', () => {
+  window.addEventListener('hashchange', async () => {
     const hash = decodePath(location.hash.slice(1));
     if (!hash || !state.DATA_ROOT) return;
-    const node = findNodeByPath(hash);
+    const node = await findNodeByPath(hash);
     if (node) updateNavigation(node, true);
   });
 
   // On first load, apply hash if present (no-op until data exists)
-  setTimeout(() => {
+  setTimeout(async () => {
     const hash = decodePath(location.hash.slice(1));
     if (hash && state.DATA_ROOT) {
-      const node = findNodeByPath(hash);
+      const node = await findNodeByPath(hash);
       if (node) updateNavigation(node, true);
     }
   }, 0);
@@ -58,24 +59,42 @@ async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
 
-  // Priority order: URL param, split data/, then single files
-  const candidates = [
-    qUrl,
-    'data/manifest.json',  // Check for split files first
-    'tree.json',
-    'taxonomy.json',
-    'data.json'
-  ].filter(Boolean);
+  // Determine loading mode from checkbox - now explicit eager vs lazy
+  const lazyModeCheckbox = document.getElementById('lazyLoadingMode');
+  const useLazy = lazyModeCheckbox && lazyModeCheckbox.checked;
+  const mode = useLazy ? 'lazy' : 'eager';
 
+  // Prepare candidate URLs based on mode
+  const candidates = [];
+  if (qUrl) candidates.push(qUrl);
+
+  // Add default data sources based on mode
+  if (useLazy) {
+    // Lazy mode: look for lazy-compatible manifest
+    candidates.push('data/life_e7f04593.json'); // Lazy manifest
+    candidates.push('data/manifest.json');     // Fallback lazy manifest
+  } else {
+    // Eager mode: look for single files or split files
+    candidates.push('data/tree.json');         // Single tree file
+  }
+
+  // Try each candidate with the appropriate loading function
   for (const url of candidates) {
     try {
-      showLoading(`Loading ${url}…`);
-      await loadFromUrl(url);
+      showLoading(`Loading ${url} (${mode} mode)…`);
+
+      if (useLazy) {
+        await loadLazy(url);
+      } else {
+        await loadEager(url);
+      }
+
       hideLoading();
       tick();
       return;
-    } catch (_err) {
-      // try next
+    } catch (err) {
+      logWarn(`Failed to load ${url}: ${err.message}`);
+      // try next candidate
     }
   }
 

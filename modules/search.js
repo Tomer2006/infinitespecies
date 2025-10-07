@@ -7,14 +7,14 @@ import { getNodePath } from './deeplink.js';
 export function findByQuery(q) {
   if (!q) return null;
   q = q.trim().toLowerCase();
-  if (!q || !state.layout?.root) return null;
-  // Simple on-demand scan of current hierarchy to reduce memory
-  const stack = [state.layout.root];
+  if (!q || !state.DATA_ROOT) return null;
+  // Search entire loaded tree, not just current layout
+  const stack = [state.DATA_ROOT];
   while (stack.length) {
-    const d = stack.pop();
-    const name = (d.data?.name || '').toLowerCase();
-    if (name.includes(q)) return d.data;
-    const ch = d.children || [];
+    const node = stack.pop();
+    const name = (node?.name || '').toLowerCase();
+    if (name.includes(q)) return node;
+    const ch = node.children || [];
     for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
   }
   return null;
