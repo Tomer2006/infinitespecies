@@ -19,7 +19,7 @@ export function setBreadcrumbs(node) {
     el.className = 'crumb';
     el.textContent = n.name;
     el.title = `Go to ${n.name}`;
-    el.addEventListener('click', () => goToNode(n, true));
+    el.addEventListener('click', () => updateNavigation(n, true));
     breadcrumbsEl.appendChild(el);
     if (i < path.length - 1) {
       const sep = document.createElement('div');
@@ -40,11 +40,16 @@ export function fitNodeInView(node) {
   animateToCam(d._vx, d._vy, k);
 }
 
-export function goToNode(node, animate = true) {
+// Centralized navigation update function - handles all navigation changes and canvas updates
+export function updateNavigation(node, animate = true) {
   state.current = node;
   state.layout = layoutFor(state.current);
   rebuildNodeMap();
   setBreadcrumbs(state.current);
+
+  // Mark that layout has changed for canvas rendering
+  state.layoutChanged = true;
+
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
     animateToCam(0, 0, targetK);
@@ -54,6 +59,11 @@ export function goToNode(node, animate = true) {
     state.camera.k = Math.min(W, H) / state.layout.diameter;
   }
   requestRender();
+}
+
+// Legacy function for backward compatibility
+export function goToNode(node, animate = true) {
+  updateNavigation(node, animate);
 }
 
 

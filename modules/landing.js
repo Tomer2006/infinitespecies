@@ -4,7 +4,7 @@
 import { showLoading, hideLoading } from './loading.js';
 import { loadFromUrl } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
-import { goToNode } from './navigation.js';
+import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
 import { tick } from './canvas.js';
 
@@ -41,7 +41,7 @@ function initDeepLinks() {
     const hash = decodePath(location.hash.slice(1));
     if (!hash || !state.DATA_ROOT) return;
     const node = findNodeByPath(hash);
-    if (node) goToNode(node, true);
+    if (node) updateNavigation(node, true);
   });
 
   // On first load, apply hash if present (no-op until data exists)
@@ -49,7 +49,7 @@ function initDeepLinks() {
     const hash = decodePath(location.hash.slice(1));
     if (hash && state.DATA_ROOT) {
       const node = findNodeByPath(hash);
-      if (node) goToNode(node, true);
+      if (node) updateNavigation(node, true);
     }
   }, 0);
 }

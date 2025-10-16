@@ -76,14 +76,18 @@ function loop() {
   needRender = false;
   lastRenderTime = now;
 
-  // Avoid redraw if camera hasn't changed and no one requested a draw
+  // Avoid redraw if camera and layout haven't changed and no one requested a draw
   const cam = state.camera;
   const sameCam = cam.x === lastCam.x && cam.y === lastCam.y && cam.k === lastCam.k;
-  if (!drawCallback || sameCam) {
+  const layoutChanged = state.layoutChanged;
+
+  if (!drawCallback || (sameCam && !layoutChanged)) {
     // Still update FPS box timing even when skipping draw
   } else {
     if (drawCallback) drawCallback();
     lastCam = { x: cam.x, y: cam.y, k: cam.k };
+    // Reset layout changed flag after drawing
+    state.layoutChanged = false;
   }
   if (needRender) ensureRAF(); // draw requested during draw()
   frameCounter++;

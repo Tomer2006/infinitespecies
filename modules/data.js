@@ -5,7 +5,7 @@ import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 import { requestRender, W, H } from './canvas.js';
-import { setBreadcrumbs } from './navigation.js';
+import { setBreadcrumbs, updateNavigation } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
 
@@ -144,8 +144,6 @@ export async function loadFromJSONText(text) {
   const nroot = normalizeTree(parsed);
   await indexTreeProgressive(nroot);
   setDataRoot(nroot);
-  // Try to move user to Homo sapiens for light initial view
-  jumpToPreferredStart();
 }
 
 export async function loadFromUrl(url) {
@@ -291,7 +289,6 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     const normalizedTree = normalizeTree(mergedMap);
     await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
-    jumpToPreferredStart();
     setProgress(1, `Loaded ${manifest.total_nodes?.toLocaleString() || 'many'} nodes from ${manifest.total_files} files`);
     return;
   }
@@ -302,32 +299,15 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const normalizedTree = normalizeTree(mergedTree);
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
-  jumpToPreferredStart();
   const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
 }
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
-  state.current = state.DATA_ROOT;
-  state.layout = layoutFor(state.current);
-  rebuildNodeMap();
-  setBreadcrumbs(state.current);
-  state.camera.k = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-  state.camera.x = 0;
-  state.camera.y = 0;
-  requestRender();
+  // Use centralized navigation update for initial setup
+  updateNavigation(state.DATA_ROOT, false);
 }
 
-function jumpToPreferredStart() {
-  // Respect deep links; only jump if no hash present
-  if (location.hash && location.hash.length > 1) return;
-  const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
-  if (preferred) {
-    // Jump without animation to avoid initial lag
-    goToNode(preferred, false);
-    // No canvas re-render needed - highlight is now CSS-based
-  }
-}
 
 
