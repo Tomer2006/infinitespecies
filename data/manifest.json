@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "description": "Split taxonomy tree from tree_deduped.json",
+  "total_files": 5,
+  "total_nodes": 4209161,
+  "files": [
+    {
+      "filename": "tree_deduped_part_001.json",
+      "size_mb": 15.663820266723633,
+      "size_bytes": 16424706,
+      "keys_count": 1
+    },
+    {
+      "filename": "tree_deduped_part_002.json",
+      "size_mb": 22.810962677001953,
+      "size_bytes": 23919028,
+      "keys_count": 1
+    },
+    {
+      "filename": "tree_deduped_part_003.json",
+      "size_mb": 22.971168518066406,
+      "size_bytes": 24087016,
+      "keys_count": 1
+    },
+    {
+      "filename": "tree_deduped_part_004.json",
+      "size_mb": 24.5473051071167,
+      "size_bytes": 25739715,
+      "keys_count": 1
+    },
+    {
+      "filename": "tree_deduped_part_005.json",
+      "size_mb": 24.955201148986816,
+      "size_bytes": 26167425,
+      "keys_count": 1
+    }
+  ],
+  "created_at": "2025-10-17T16:31:30.234Z",
+  "source_file": "tree big fie data/tree_deduped.json",
+  "source_size_mb": 304.99739265441895
+}
