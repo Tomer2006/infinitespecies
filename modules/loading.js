@@ -1,0 +1,25 @@
+import { loadingEl, progressFill, progressLabel, progressPct, stage, topbarEl } from './dom.js';
+
+export function showLoading(title = 'Loading…') {
+  document.getElementById('loadingTitle').textContent = title;
+  loadingEl.style.display = 'flex';
+  stage.setAttribute('aria-busy', 'true');
+  setProgress(0, 'Starting…');
+  if (topbarEl) topbarEl.style.visibility = 'hidden';
+}
+
+export function hideLoading() {
+  loadingEl.style.display = 'none';
+  stage.setAttribute('aria-busy', 'false');
+  if (topbarEl) topbarEl.style.visibility = 'visible';
+}
+
+export function setProgress(ratio, label = '') {
+  const pct = Math.max(0, Math.min(1, ratio));
+  progressFill.style.width = (pct * 100).toFixed(1) + '%';
+  progressPct.textContent = Math.round(pct * 100) + '%';
+  // Keep operation details private by not updating the user-facing label
+  // if (label && !document.hidden) progressLabel.textContent = label;
+}
+
+
