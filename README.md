@@ -16,7 +16,7 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - [🎯 Use Cases](#-use-cases)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
-26567
+
 ## 🌐 Live Demo
 - **Production**: [biozoom.netlify.app](https://biozoom.netlify.app/) 🚀
 - Features real NCBI taxonomy data with millions of organisms 📊
