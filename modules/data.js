@@ -1,5 +1,6 @@
-// Regular data loading functionality
-import { clearIndex, registerNode, state } from './state.js';
+// Regular/eager data loading functionality
+// Lazy loading is separated into data-lazy.js
+import { clearIndex, registerNode, state, clearLazyCache } from './state.js';
 import { setProgress, showLoading, hideLoading } from './loading.js';
 import { perf, computeFetchConcurrency } from './performance.js';
 import { layoutFor } from './layout.js';
@@ -9,6 +10,7 @@ import { setBreadcrumbs, updateNavigation } from './navigation.js';
 import { findByQuery } from './search.js';
 import { goToNode } from './navigation.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';
+import { loadFromLazyManifest } from './data-lazy.js';
 
 function inferLevelByDepth(depth) {
   return depth;
@@ -47,6 +49,17 @@ export function normalizeTree(rootLike) {
   }
   if (!Array.isArray(rootLike.children)) rootLike.children = rootLike.children ? [].concat(rootLike.children) : [];
   rootLike.name = 'Life';
+  // Preserve lazy and id properties for lazy loading
+  if (rootLike.children) {
+    rootLike.children.forEach(child => {
+      if (child && typeof child === 'object') {
+        // Ensure lazy nodes have proper structure
+        if (child.lazy === true && child.id) {
+          child.children = []; // Lazy nodes start with empty children
+        }
+      }
+    });
+  }
   return rootLike;
 }
 
@@ -111,7 +124,8 @@ export async function indexTreeProgressive(root, options = {}) {
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
 
     // Aggressive memory optimization: drop all non-essential properties
-    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves', 'id']);
+    // Preserve lazy-loading metadata ('lazy', 'id') so navigation can fetch subtrees on demand
+    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves', 'lazy', 'id']);
     for (const k of Object.keys(node)) {
       if (!essentialKeys.has(k)) {
         delete node[k];
@@ -156,6 +170,7 @@ export async function loadFromJSONText(text) {
 export async function loadEager(url) {
   if (!url) throw new Error('No URL provided');
 
+  state.loadMode = 'eager';
   logInfo(`Loading data eagerly from ${url}`);
 
   // Check if this is a split dataset by looking for manifest.json
@@ -168,7 +183,10 @@ export async function loadEager(url) {
     if (manifestRes.ok) {
       const manifest = await manifestRes.json();
 
-      if (manifest.version && manifest.files) {
+      // If it's a lazy manifest, warn and fall back to single file
+      if (manifest.children && Array.isArray(manifest.children) && manifest.children.some(c => c.lazy)) {
+        logWarn('Lazy manifest found but eager mode requested; falling back to single file loading');
+      } else if (manifest.version && manifest.files) {
         logInfo('Split-file manifest detected, loading eagerly');
         return await loadFromSplitFiles(baseUrl, manifest);
       }
@@ -187,16 +205,62 @@ export async function loadEager(url) {
   await loadFromJSONText(text);
 }
 
+// Lazy loading: loads manifest first, then subtrees on demand
+export async function loadLazy(url) {
+  if (!url) throw new Error('No URL provided');
+
+  const mode = 'lazy'; // Always lazy for this function
+  state.loadMode = mode;
+  logInfo(`Loading data lazily from ${url}`);
+
+  // Check if this is a lazy dataset by looking for manifest.json
+  const manifestUrl = url.replace(/[^/]*$/, 'manifest.json');
+  const baseUrl = url.replace(/[^/]*$/, '');
+
+  try {
+    logDebug(`Attempting to fetch manifest from ${manifestUrl}`);
+    const manifestRes = await fetch(manifestUrl, { cache: 'default' });
+    if (manifestRes.ok) {
+      const manifest = await manifestRes.json();
+
+      // Check if it's a lazy manifest (has children with lazy flags)
+      if (manifest.children && Array.isArray(manifest.children) && manifest.children.some(c => c.lazy)) {
+        logInfo('Lazy manifest detected, loading with lazy mode');
+        return await loadFromLazyManifest(baseUrl, manifest, mode);
+      } else if (manifest.version && manifest.files) {
+        logWarn('Split files manifest found but lazy mode requested; split files don\'t support lazy loading, falling back to single file');
+      }
+    } else {
+      logDebug(`No manifest found at ${manifestUrl}`);
+    }
+  } catch (e) {
+    logWarn(`Manifest fetch failed at ${manifestUrl}: ${e.message}`);
+  }
+
+  // Fallback: if no lazy manifest found, throw error since lazy mode requires lazy-compatible data
+  throw new Error('Lazy loading requires a lazy-compatible manifest.json file. Use eager mode for single files or split files.');
+}
+
 export async function loadFromUrl(url, options = {}) {
   if (!url) throw new Error('No URL provided');
 
   const mode = options.mode || 'auto';
 
-  if (mode && mode !== 'eager' && mode !== 'auto') {
-    logWarn(`Unsupported loading mode "${mode}" requested. Falling back to eager loading.`);
+  if (mode === 'eager') {
+    return await loadEager(url);
+  } else if (mode === 'lazy') {
+    return await loadLazy(url);
+  } else if (mode === 'auto') {
+    // Auto mode: try lazy first, fall back to eager
+    try {
+      return await loadLazy(url);
+    } catch (e) {
+      logWarn(`Lazy loading failed, falling back to eager: ${e.message}`);
+      return await loadEager(url);
+    }
+  } else {
+    throw new Error(`Unknown loading mode: ${mode}. Use 'eager', 'lazy', or 'auto'.`);
   }
-
-  return await loadEager(url);
 }
 
 async function loadFromSplitFiles(baseUrl, manifest) {
@@ -341,6 +405,8 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 }
 
 export function setDataRoot(root) {
+  // Clear lazy loading cache when loading new data
+  clearLazyCache();
   state.DATA_ROOT = root;
   // Use centralized navigation update for initial setup
   updateNavigation(state.DATA_ROOT, false);
@@ -352,6 +418,16 @@ export async function jumpToPreferredStart() {
 
   const preferred = findByQuery('Homo sapiens') || findByQuery('Homo');
   if (preferred) {
+    // If the preferred node is lazy, load it first
+    if (preferred.lazy === true) {
+      try {
+        const { loadSubtree } = await import('./data-lazy.js');
+        await loadSubtree(preferred);
+      } catch (error) {
+        logWarn(`Failed to load preferred start node ${preferred.name}:`, error);
+        return;
+      }
+    }
     // Jump without animation to avoid initial lag
     updateNavigation(preferred, false);
   }

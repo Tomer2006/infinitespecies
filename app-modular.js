@@ -34,10 +34,12 @@ async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
   
+  // Only load lazy-enabled files, no split file loading
   const candidates = [
     qUrl,
-    'data/manifest.json',
-    'data/tree.json'
+    'data/tree.json',      // Lazy-enabled tree
+    'data/taxonomy.json',  // Lazy-enabled taxonomy
+    'data/data.json'       // Lazy-enabled data
   ].filter(Boolean);
 
   for (const url of candidates) {
