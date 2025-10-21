@@ -30,7 +30,7 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - 📱 **Responsive Design**: Works on desktop and mobile devices
 - 🔗 **Deep Linking**: Share exact views via URL - every navigation state is preserved
-- ⚡ **Performance Optimized**: Lazy loading and efficient rendering for massive datasets
+- ⚡ **Performance Optimized**: Split-file manifests, progressive indexing, and efficient rendering for massive datasets
 
 ### 🚀 Quick Start
 
@@ -130,10 +130,10 @@ npx http-server -p 8080
 
 #### 🚀 Large Dataset Handling (Production-Ready)
 
-This application is optimized for **massive taxonomy datasets** 📊 (millions of nodes). The current deployment uses **75 split files** 📦 totaling several hundred MB of NCBI taxonomy data. 🧬
+This application is optimized for **massive taxonomy datasets** 📊 (millions of nodes). The current deployment uses **5 split files** 📦 totaling several hundred MB of NCBI taxonomy data. 🧬
 
 **Current Split Configuration:** ⚙️
-- 📄 **75 files** ranging from 0.01MB to 15.32MB each
+- 📄 **5 files** ranging from ~15MB to ~25MB each
 - 🧠 **Intelligent splitting** by taxonomic depth and size
 - ⚡ **Parallel loading** with progress tracking
 - 🔗 **Seamless merging** - appears as single dataset to user
@@ -141,7 +141,7 @@ This application is optimized for **massive taxonomy datasets** 📊 (millions o
 **Technical Details:** 🔧
 - 📏 **Max file size**: 5-15MB per chunk (optimal for web delivery)
 - 🛣️ **Path-based splitting**: Files split along natural taxonomy boundaries
-- 💤 **Lazy loading ready**: Architecture supports on-demand subtree loading
+- 📦 **Streamed ingestion**: Split-file manifests merge seamlessly without loading the entire dataset at once
 - ☁️ **CDN optimized**: Perfect for Netlify, GitHub Pages, or similar platforms
 
 **Benefits:** 🎉
