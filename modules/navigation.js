@@ -4,9 +4,7 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { loadSubtree, isLazyNode } from './data-lazy.js';
-import { showLoading, hideLoading } from './loading.js';
-import { logInfo, logWarn, logDebug, logTrace } from './logger.js';
+import { logInfo, logDebug, logTrace } from './logger.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -48,21 +46,6 @@ export async function updateNavigation(node, animate = true) {
   const startTime = performance.now();
 
   logInfo(`Starting navigation to "${node.name}" (animate=${animate})`);
-
-  // Check if node is lazy and needs loading
-  if (isLazyNode(node)) {
-    logDebug(`Node "${node.name}" is lazy - loading subtree`);
-    try {
-      showLoading('Loading subtree…');
-      await loadSubtree(node);
-      hideLoading();
-      logInfo(`Successfully loaded lazy subtree for "${node.name}"`);
-    } catch (error) {
-      hideLoading();
-      logError(`Failed to load lazy subtree for "${node.name}"`, error);
-      // Continue with navigation even if loading fails
-    }
-  }
 
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;

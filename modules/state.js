@@ -22,12 +22,6 @@ export const state = {
 
   // layout change tracking
   layoutChanged: false,
-
-  // lazy loading cache and metadata
-  subtreeCache: new Map(), // Cache for loaded subtrees by filename/id
-  dataBaseUrl: '', // Base URL for dataset files
-  loadMode: 'auto', // 'auto', 'lazy', or 'eager'
-  autoLoadThreshold: 50, // Minimum screen radius (px) to trigger auto-loading
 };
 
 export function clearIndex() {
@@ -36,10 +30,6 @@ export function clearIndex() {
 
 export function registerNode(node) {
   // Minimal registration retained for id assignment only
-}
-
-export function clearLazyCache() {
-  state.subtreeCache.clear();
 }
 
 export function rebuildNodeMap() {

@@ -2,7 +2,7 @@
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
-import { loadFromUrl, loadEager, loadLazy } from './data.js';
+import { loadFromUrl, loadEager } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
 import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
@@ -16,7 +16,7 @@ export function showLandingPage() {
     landingPage.setAttribute('aria-hidden', 'false');
   }
 }
-
+ 
 export function hideLandingPage() {
   const landingPage = document.getElementById('landingPage');
   if (landingPage) {
@@ -59,35 +59,19 @@ async function initData() {
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
 
-  // Determine loading mode from checkbox - now explicit eager vs lazy
-  const lazyModeCheckbox = document.getElementById('lazyLoadingMode');
-  const useLazy = lazyModeCheckbox && lazyModeCheckbox.checked;
-  const mode = useLazy ? 'lazy' : 'eager';
+  const mode = 'eager';
 
-  // Prepare candidate URLs based on mode
   const candidates = [];
   if (qUrl) candidates.push(qUrl);
-
-  // Add default data sources based on mode
-  if (useLazy) {
-    // Lazy mode: look for lazy-compatible manifest
-    candidates.push('data/life_e7f04593.json'); // Lazy manifest
-    candidates.push('data/manifest.json');     // Fallback lazy manifest
-  } else {
-    // Eager mode: look for single files or split files
-    candidates.push('data/tree.json');         // Single tree file
-  }
+  candidates.push('data/manifest.json');
+  candidates.push('data/tree.json');
 
   // Try each candidate with the appropriate loading function
   for (const url of candidates) {
     try {
       showLoading(`Loading ${url} (${mode} mode)…`);
 
-      if (useLazy) {
-        await loadLazy(url);
-      } else {
-        await loadEager(url);
-      }
+      await loadEager(url);
 
       hideLoading();
       tick();

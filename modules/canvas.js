@@ -2,7 +2,6 @@ import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
-import { shouldAutoLoad, requestAutoLoad } from './data-lazy.js';
 import { logInfo, logWarn, logError, logDebug, logTrace } from './logger.js';
 
 let ctx;
@@ -114,38 +113,8 @@ function loop() {
     framesSinceFps = 0;
   }
 
-  // Check for automatic subtree loading
-  if (state.layout && state.loadMode !== 'eager') {
-    checkAutoLoad();
-  }
-
   // Always schedule next frame to maintain consistent timing
   ensureRAF();
-}
-
-// Check for nodes that should auto-load based on zoom level
-function checkAutoLoad() {
-  if (!state.layout?.root || state.loadMode === 'eager') {
-    logTrace('Auto-load check skipped - no layout root or eager mode');
-    return;
-  }
-
-  logTrace('Checking for auto-load candidates...');
-  const autoLoadResult = requestAutoLoad();
-  if (!autoLoadResult?.length) {
-    logTrace('No auto-load candidates found');
-    return;
-  }
-
-  logInfo(`Auto-loading ${autoLoadResult.length} subtrees`);
-  autoLoadResult.forEach(info => {
-    const { node, status } = info;
-    if (status === 'loading') {
-      logInfo(`Auto-loading subtree: ${node.name} (descendants: ${node.descendants?.()?.length || 0})`);
-    } else if (status === 'pending') {
-      logDebug(`Subtree already loading: ${node.name}`);
-    }
-  });
 }
 
 export function registerDrawCallback(cb) {

@@ -22,14 +22,13 @@ function buildTreeFromNestedMap(map) {
 
 async function loadTreeJson() {
   // Try the tree of life root file first for proper hierarchy, then manifest.json, then tree.json
-  const candidates = ['data/life_e7f04593.json', 'data/manifest.json', 'data/tree.json'];
+  const candidates = ['data/manifest.json', 'data/tree.json'];
 
   for (const url of candidates) {
     try {
       const res = await fetch(url, { cache: 'no-cache' });
       if (!res.ok) continue; // Try next candidate
       const text = await res.text();
-      // Use the proper data loading system that handles lazy loading
       await loadFromJSONText(text);
       return true; // Successfully loaded
     } catch (error) {
