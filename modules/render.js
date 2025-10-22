@@ -396,8 +396,6 @@ export function draw() {
   const endTime = performance.now();
   const duration = endTime - startTime;
   logTrace(`Draw completed: ${duration.toFixed(2)}ms`);
-
-  // Highlight ring removed - now handled by CSS overlay for better performance
 }
 
 

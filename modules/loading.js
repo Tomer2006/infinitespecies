@@ -33,5 +33,3 @@ export function setProgress(ratio, label = '') {
   // Keep operation details private by not updating the user-facing label
   // if (label && !document.hidden) progressLabel.textContent = label;
 }
-
-

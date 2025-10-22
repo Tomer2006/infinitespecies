@@ -59,6 +59,3 @@ export function updateTooltip(n, px, py) {
   }
   // No canvas redraw here; tooltip DOM updates don't need a frame
 }
-
-
-

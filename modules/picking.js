@@ -33,5 +33,3 @@ export function pickNodeAt(px, py) {
   }
   return null;
 }
-
-

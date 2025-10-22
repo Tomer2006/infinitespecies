@@ -393,8 +393,6 @@ export function initEvents() {
     }
   });
 
-  // Demo button removed
-
   // Help modal close button
   helpCloseBtn?.addEventListener('click', () => {
     if (!helpModal) return;

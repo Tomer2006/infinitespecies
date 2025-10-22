@@ -47,5 +47,3 @@ export const clearBtn = document.getElementById('clearBtn');
 export const searchBtn = document.getElementById('searchBtn');
 export const surpriseBtn = document.getElementById('surpriseBtn');
 export const resetBtn = document.getElementById('resetBtn');
-
-

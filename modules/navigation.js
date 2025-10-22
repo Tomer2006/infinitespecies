@@ -86,4 +86,3 @@ export async function goToNode(node, animate = true) {
   return updateNavigation(node, animate);
 }
 
-

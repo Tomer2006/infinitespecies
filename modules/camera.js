@@ -42,4 +42,3 @@ export function animateToCam(nx, ny, nk, dur = perf.animation.cameraAnimationMs)
   requestAnimationFrame(step);
 }
 
-

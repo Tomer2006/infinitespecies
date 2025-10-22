@@ -30,5 +30,3 @@ export function openProviderSearch(forNode) {
   const url = providerUrl(provider, forNode.name);
   window.open(url, '_blank', 'noopener,noreferrer');
 }
-
-

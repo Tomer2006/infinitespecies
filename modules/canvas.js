@@ -144,4 +144,3 @@ export function getFrameCounter() {
   return frameCounter;
 }
 
-
