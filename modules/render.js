@@ -1,4 +1,4 @@
-import { getContext, W, H, worldToScreen, nodeVertInView, circleInViewportWorld } from './canvas.js';
+import { getContext, W, H, worldToScreen } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor } from './constants.js';
 import { perf } from './performance.js';

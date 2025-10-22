@@ -32,7 +32,7 @@ import { logInfo, logDebug, logTrace } from './logger.js';
 import { openProviderSearch } from './providers.js';
 import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
-import { showLoading, hideLoading } from './loading.js';
+import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
 import { getNodePath } from './deeplink.js';
 import { showBigFor, hideBigPreview } from './preview.js';
@@ -106,11 +106,32 @@ export function initEvents() {
 
   canvas.addEventListener('contextmenu', async ev => {
     ev.preventDefault();
+
+    // Prevent right-clicks during loading to avoid bugs
+    if (isCurrentlyLoading()) {
+      console.log('🚫 [EVENTS] Right-click ignored - currently loading data');
+      logDebug('Right-click ignored during loading');
+      return;
+    }
+
     if (state.current && state.current.parent) await goToNode(state.current.parent, true);
   });
 
   canvas.addEventListener('click', async ev => {
     if (ev.button !== 0) return;
+
+    // Prevent clicks during loading to avoid bugs
+    if (isCurrentlyLoading()) {
+      console.log('🚫 [EVENTS] Click ignored - currently loading data');
+      logDebug('Click ignored during loading');
+      // Visual feedback - briefly change cursor to indicate disabled state
+      canvas.style.cursor = 'not-allowed';
+      setTimeout(() => {
+        canvas.style.cursor = '';
+      }, 200);
+      return;
+    }
+
     const rect = canvas.getBoundingClientRect();
     const screenX = ev.clientX - rect.left;
     const screenY = ev.clientY - rect.top;
@@ -246,15 +267,27 @@ export function initEvents() {
   });
 
   resetBtn?.addEventListener('click', async () => {
+    if (isCurrentlyLoading()) {
+      console.log('🚫 [EVENTS] Reset button ignored - currently loading data');
+      return;
+    }
     if (state.DATA_ROOT) await goToNode(state.DATA_ROOT, true);
     // No canvas re-render needed - highlight is now CSS-based
   });
 
   fitBtn?.addEventListener('click', () => {
+    if (isCurrentlyLoading()) {
+      console.log('🚫 [EVENTS] Fit button ignored - currently loading data');
+      return;
+    }
     if (state.DATA_ROOT) fitNodeInView(state.DATA_ROOT);
   });
 
   surpriseBtn?.addEventListener('click', () => {
+    if (isCurrentlyLoading()) {
+      console.log('🚫 [EVENTS] Surprise button ignored - currently loading data');
+      return;
+    }
     // Pick a random visible leaf by walking the current layout subtree
     if (!state.layout?.root) return;
     const leaves = [];

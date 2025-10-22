@@ -2,7 +2,7 @@
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
-import { loadFromUrl, loadEager, loadLazy } from './data.js';
+import { loadFromUrl, loadEager } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
 import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
@@ -56,57 +56,88 @@ function initDeepLinks() {
 }
 
 async function initData() {
+  console.log('🚀 [LANDING] Starting data initialization process');
+  const startTime = performance.now();
+
   const params = new URLSearchParams(location.search);
   const qUrl = params.get('data');
 
-  // Determine loading mode from checkbox - now explicit eager vs lazy
-  const lazyModeCheckbox = document.getElementById('lazyLoadingMode');
-  const useLazy = lazyModeCheckbox && lazyModeCheckbox.checked;
-  const mode = useLazy ? 'lazy' : 'eager';
+  console.log('📋 [LANDING] URL parameters:', { qUrl, search: location.search });
 
-  // Prepare candidate URLs based on mode
+  // Always use eager loading mode for split files
+  const mode = 'eager';
+  console.log('⚡ [LANDING] Using eager loading mode for optimal performance');
+
+  // Prepare candidate URLs - always look for split files first
   const candidates = [];
-  if (qUrl) candidates.push(qUrl);
-
-  // Add default data sources based on mode
-  if (useLazy) {
-    // Lazy mode: look for lazy-compatible manifest
-    candidates.push('data/life_e7f04593.json'); // Lazy manifest
-    candidates.push('data/manifest.json');     // Fallback lazy manifest
-  } else {
-    // Eager mode: look for single files or split files
-    candidates.push('data/tree.json');         // Single tree file
+  if (qUrl) {
+    candidates.push(qUrl);
+    console.log('🔗 [LANDING] Adding query URL to candidates:', qUrl);
   }
 
-  // Try each candidate with the appropriate loading function
+  // Add default data sources - split files in data folder
+  candidates.push('data/manifest.json');  // Split files manifest
+  console.log('📁 [LANDING] Candidate URLs prepared:', candidates);
+
+  let attemptCount = 0;
+
+  // Try each candidate with eager loading
   for (const url of candidates) {
+    attemptCount++;
+    const attemptStartTime = performance.now();
+
     try {
-      showLoading(`Loading ${url} (${mode} mode)…`);
+      console.log(`🎯 [LANDING] Attempt ${attemptCount}/${candidates.length}: Loading ${url}`);
+      console.log('⏳ [LANDING] Showing loading screen...');
+      showLoading(`Loading ${url} (eager mode)…`);
 
-      if (useLazy) {
-        await loadLazy(url);
-      } else {
-        await loadEager(url);
-      }
+      console.log('📊 [LANDING] Calling loadEager with URL:', url);
+      await loadEager(url);
 
+      const attemptDuration = performance.now() - attemptStartTime;
+      console.log(`✅ [LANDING] SUCCESS: ${url} loaded in ${attemptDuration.toFixed(2)}ms`);
+      console.log('🔄 [LANDING] Hiding loading screen...');
       hideLoading();
+
+      console.log('🎨 [LANDING] Triggering initial render...');
       tick();
+
+      const totalDuration = performance.now() - startTime;
+      console.log(`🎉 [LANDING] Data loading completed successfully in ${totalDuration.toFixed(2)}ms`);
       return;
     } catch (err) {
+      const attemptDuration = performance.now() - attemptStartTime;
+      console.error(`❌ [LANDING] FAILED: Attempt ${attemptCount} for ${url} failed after ${attemptDuration.toFixed(2)}ms`);
+      console.error('🔍 [LANDING] Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+
       logWarn(`Failed to load ${url}: ${err.message}`);
+      console.log('🔄 [LANDING] Trying next candidate...');
       // try next candidate
     }
   }
+
+  console.error('💥 [LANDING] ALL CANDIDATES FAILED: No data sources could be loaded');
+  console.log('📝 [LANDING] Falling back to manual JSON loading prompt');
 
   // If all else fails, prompt user to load their own JSON
   hideLoading();
   const modal = document.getElementById('jsonModal');
   if (modal) {
+    console.log('🪟 [LANDING] Showing JSON modal for manual upload');
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
   }
   const label = document.getElementById('progressLabel');
-  if (label) label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
+  if (label) {
+    label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
+  }
+
+  const totalDuration = performance.now() - startTime;
+  console.error(`⏰ [LANDING] Total initialization time: ${totalDuration.toFixed(2)}ms - FAILED`);
 }
 
 export function initLandingPage() {

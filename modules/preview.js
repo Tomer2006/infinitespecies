@@ -7,9 +7,7 @@ const MAX_THUMBS = 300; // cap to prevent runaway memory
 let lastThumbNodeId = null;
 let previewReqToken = 0;
 
-export const THUMB_SIZE = 96;
-
-export async function fetchWikipediaThumb(title) {
+async function fetchWikipediaThumb(title) {
   const key = title.toLowerCase();
   const existing = thumbCache.get(key);
   if (existing && typeof existing === 'object' && existing !== null && !existing.then) {
@@ -141,12 +139,11 @@ export async function showBigFor(node) {
   }
 }
 
-export function showBigPreview(src, caption) {
+function showBigPreview(src, caption) {
   if (!bigPreview) return;
   const myToken = ++previewReqToken;
   bigPreviewCap.textContent = caption || '';
   bigPreviewImg.alt = caption || '';
-  bigPreviewImg.setAttribute('loading', 'lazy');
   bigPreviewImg.removeAttribute('src');
   if (bigPreviewEmpty) {
     bigPreviewEmpty.style.display = 'none';

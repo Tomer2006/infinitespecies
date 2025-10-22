@@ -1,24 +1,8 @@
 import { state } from './state.js';
-import { requestRender, worldToScreen } from './canvas.js';
+import { worldToScreen } from './canvas.js';
 import { updateNavigation } from './navigation.js';
 import { searchResultsEl } from './dom.js';
 import { getNodePath } from './deeplink.js';
-
-export function findByQuery(q) {
-  if (!q) return null;
-  q = q.trim().toLowerCase();
-  if (!q || !state.DATA_ROOT) return null;
-  // Search entire loaded tree, not just current layout
-  const stack = [state.DATA_ROOT];
-  while (stack.length) {
-    const node = stack.pop();
-    const name = (node?.name || '').toLowerCase();
-    if (name.includes(q)) return node;
-    const ch = node.children || [];
-    for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
-  }
-  return null;
-}
 
 export function findAllByQuery(q, limit = 50) {
   if (!q) return [];

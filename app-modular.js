@@ -1,69 +1,10 @@
 // Entry point for the modular Taxonomy Explorer
 // Loads modules, initializes canvas sizing, data, events, deeplinks, and render loop
 
-import { resizeCanvas, registerDrawCallback, requestRender, tick } from './modules/canvas.js';
+import { resizeCanvas, registerDrawCallback } from './modules/canvas.js';
 import { draw } from './modules/render.js';
 import { initEvents } from './modules/events.js';
-import { showLoading, hideLoading } from './modules/loading.js';
-import { loadFromUrl } from './modules/data.js';
-import { decodePath, findNodeByPath } from './modules/deeplink.js';
-import { updateNavigation } from './modules/navigation.js';
-import { state } from './modules/state.js';
 import { initLandingPage, showLandingPage } from './modules/landing.js';
-
-function initDeepLinks() {
-  // Navigate when hash changes
-  window.addEventListener('hashchange', async () => {
-    const hash = decodePath(location.hash.slice(1));
-    if (!hash || !state.DATA_ROOT) return;
-    const node = await findNodeByPath(hash);
-    if (node) updateNavigation(node, true);
-  });
-
-  // On first load, apply hash if present (no-op until data exists)
-  setTimeout(async () => {
-    const hash = decodePath(location.hash.slice(1));
-    if (hash && state.DATA_ROOT) {
-      const node = await findNodeByPath(hash);
-      if (node) updateNavigation(node, true);
-    }
-  }, 0);
-}
-
-async function initData() {
-  const params = new URLSearchParams(location.search);
-  const qUrl = params.get('data');
-  
-  // Only load lazy-enabled files, no split file loading
-  const candidates = [
-    qUrl,
-    'data/tree.json',      // Lazy-enabled tree
-    'data/taxonomy.json',  // Lazy-enabled taxonomy
-    'data/data.json'       // Lazy-enabled data
-  ].filter(Boolean);
-
-  for (const url of candidates) {
-    try {
-      showLoading(`Loading ${url}…`);
-      await loadFromUrl(url);
-      hideLoading();
-      tick();
-      return;
-    } catch (_err) {
-      // try next
-    }
-  }
-  
-  // If all else fails, prompt user to load their own JSON
-  hideLoading();
-  const modal = document.getElementById('jsonModal');
-  if (modal) {
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-  }
-  const label = document.getElementById('progressLabel');
-  if (label) label.textContent = 'No data found. Use Load JSON to import your taxonomy.';
-}
 
 (function init() {
   // Canvas and render bootstrap

@@ -1,10 +1,8 @@
 // Constants (non-performance) and tunables
 
-// Removed hardcoded level names - now using numeric indices directly
-
 // Original Tableau 10 color palette - level-based assignment
 // Colors cycle based on node level (0=Blue, 1=Orange, 2=Red, etc.)
-export const TABLEAU_COLORS = [
+const TABLEAU_COLORS = [
   '#1f77b4', // Blue
   '#ff7f0e', // Orange
   '#d62728', // Red

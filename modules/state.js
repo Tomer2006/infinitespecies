@@ -17,43 +17,21 @@ export const state = {
   // layout map
   nodeLayoutMap: new Map(),
   // cached orders for performance
-  drawOrder: [], // hierarchy nodes sorted by radius for drawing
   pickOrder: [],  // hierarchy nodes sorted by depth for picking (deepest first)
 
   // layout change tracking
   layoutChanged: false,
 
-  // lazy loading cache and metadata
-  subtreeCache: new Map(), // Cache for loaded subtrees by filename/id
-  dataBaseUrl: '', // Base URL for dataset files
-  loadMode: 'auto', // 'auto', 'lazy', or 'eager'
-  autoLoadThreshold: 50, // Minimum screen radius (px) to trigger auto-loading
+  // data loading state
+  loadMode: 'eager', // Always eager loading
 };
-
-export function clearIndex() {
-  state.globalId = 1;
-}
-
-export function registerNode(node) {
-  // Minimal registration retained for id assignment only
-}
-
-export function clearLazyCache() {
-  state.subtreeCache.clear();
-}
 
 export function rebuildNodeMap() {
   state.nodeLayoutMap.clear();
   if (!state.layout?.root) return;
   const desc = state.layout.root.descendants();
   desc.forEach(d => state.nodeLayoutMap.set(d.data._id, d));
-  // Precompute orders
-  // Draw largest circles first, then smaller on top for clarity
-  // Draw larger circles first for background fill, then smaller on top.
-  // For root-level performance, pre-filter out very tiny nodes that would not be drawn.
-  state.drawOrder = desc
-    .slice()
-    .sort((a, b) => b._vr - a._vr);
+  // Precompute pick order: deepest nodes first for accurate picking
   state.pickOrder = desc.slice().sort((a, b) => b.depth - a.depth);
 }
 
