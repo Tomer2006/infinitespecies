@@ -1,4 +1,4 @@
-# 🌿 BioZoom - Taxonomy Explorer
+# 🌿 biozoom
 
 Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
 

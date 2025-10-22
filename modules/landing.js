@@ -1,4 +1,4 @@
-// Landing page module for Taxonomy Explorer
+// Landing page module for biozoom
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
@@ -230,7 +230,7 @@ function createAboutModal() {
   modal.innerHTML = `
     <div class="modal-card">
       <div class="modal-head">
-        <div class="modal-title">About Taxonomy Explorer</div>
+        <div class="modal-title">About biozoom</div>
         <div style="display:flex;gap:.5rem">
           <button class="btn secondary" id="aboutCloseBtn" title="Close about">Close</button>
         </div>
@@ -238,7 +238,7 @@ function createAboutModal() {
       <div class="modal-body" style="grid-template-columns:1fr">
         <div class="side">
           <h4>About This Application</h4>
-          <p>Taxonomy Explorer is an interactive web application for exploring the Tree of Life. It provides a zoomable, interactive visualization of taxonomic relationships across millions of organisms.</p>
+          <p>biozoom is an interactive web application for exploring the Tree of Life. It provides a zoomable, interactive visualization of taxonomic relationships across millions of organisms.</p>
 
           <h4 style="margin-top:1rem">Features</h4>
           <ul style="margin:.2rem 0; padding-left:1.2rem">

@@ -1,4 +1,4 @@
-// Entry point for the modular Taxonomy Explorer
+// Entry point for the modular biozoom
 // Loads modules, initializes canvas sizing, data, events, deeplinks, and render loop
 
 import { resizeCanvas, registerDrawCallback } from './modules/canvas.js';
