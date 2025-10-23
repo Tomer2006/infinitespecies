@@ -18,42 +18,34 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - [📄 License](#-license)
 
 ## 🌐 Live Demo
-- **Production**: [biozoom.netlify.app](https://biozoom.netlify.app/) 🚀
-- Features real NCBI taxonomy data with millions of organisms 📊
+- **Local Development**: Run `python -m http.server 8000` and visit `http://localhost:8000` 🚀
+- Features interactive taxonomy visualization with custom data loading 📊
 
 ## ✨ Key Features
 
-- 🔍 **Zoomable Interface**: Smooth circle-packing visualization from Life down to Species level
-- 🚀 **Large Dataset Support**: Handles millions of taxonomy nodes via intelligent data splitting
-- 🔎 **Smart Search**: Multi-result dropdown with quick navigation and pulse indicator
-- 🧭 **Informative Tooltips**: Name + Level, plus metadata: Level, Descendants (leaves), Children, ID
+- 🌍 **Landing Page**: Choose between starting exploration or loading custom data
+- 🔍 **Zoomable Interface**: Smooth circle-packing visualization with mouse and keyboard controls
+- 🔎 **Smart Search**: Real-time search with multi-result dropdown and navigation
+- 🖼️ **Image Previews**: Wikipedia thumbnails for hovered organisms
+- 🧭 **Informative Tooltips**: Shows name, level, descendants, children, and ID
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
-- 📱 **Responsive Design**: Works on desktop and mobile devices
-- 🔗 **Deep Linking**: Share exact views via URL - every navigation state is preserved
-- ⚡ **Performance Optimized**: Efficient rendering for massive datasets
+- 🔗 **Deep Linking**: Share exact views via URL hash - every navigation state is preserved
+- 📊 **Custom Data Support**: Load your own JSON taxonomy data
 
 ### 🚀 Quick Start
 
-**Option 1 - Direct File Access:** 📁
+**Quick Start:** 🖥️
 ```bash
-# Open index.html directly in browser, then use "Load JSON" for custom data
-```
+# Start a local web server
+python -m http.server 8000
 
-**Option 2 - Local Server (Recommended):** 🖥️
-```bash
-# Python 3 🐍
-python -m http.server 8080
-
-# Node.js 📦
-npx http-server -p 8080
-
-# Then visit: http://localhost:8080/ 🌐
+# Then visit: http://localhost:8000/ 🌐
 ```
 
 **Windows (PowerShell) note:** 💡
 - If you see "The token '&&' is not a valid statement" error, run commands on separate lines:
   - First: `cd C:\Users\<you>\Documents\biozoom` 📂
-  - Then: `python -m http.server 8080` ▶️
+  - Then: `python -m http.server 8000` ▶️
 
 ### 🎮 Controls
 
@@ -61,11 +53,17 @@ npx http-server -p 8080
 - **🖱️ Right Click**: Zoom to parent ⬆️
 - **🖱️ Mouse Wheel**: Smooth zoom 🔄
 - **🖱️ Middle Drag**: Pan 📍
+- **⌨️ S**: Web search for hovered/current organism
+- **⌨️ R**: Reset to root view
+- **⌨️ F**: Fit current node in view
+- **⌨️ ?**: Toggle help overlay
 
 ### 🖥️ UI Overview
 
-- **📋 Top bar**:
-  - `📤 Load JSON`: paste or upload a JSON file
+- **🌍 Landing Page**: Choose between "Start Exploration" (loads default data) or "Load Custom Data"
+- **📋 Top bar** (after starting):
+  - `🏠 Menu`: Return to landing page
+  - `📤 Load JSON`: paste or upload custom JSON taxonomy data
   - `🔗 Provider select + 🌐 Web Search`: open selected provider for hovered/current node
   - `🔍 Search field`: find by name (supports partial matches)
   - `🎲 Surprise Me`: jump to a random deepest leaf
@@ -73,7 +71,7 @@ npx http-server -p 8080
   - `📋 Copy Link`: copy a deep link to the current view (URL hash)
   - `🔄 Reset`: back to root
 - **🍞 Breadcrumbs**: click any crumb to navigate up (also updates the URL hash for deep linking)
-- **💬 Tooltip**: shows `🏷️ Level`, `📊 Descendants` (leaf count), `👨‍👩‍👧‍👦 Children` (direct), and `🆔 ID`
+- **💬 Tooltip**: shows organism name, level, descendants count, children count, and ID
 
 ### 📊 Data Loading & Management
 
@@ -128,27 +126,21 @@ npx http-server -p 8080
 - 🌐 **URL loading**: `index.html?data=https%3A%2F%2Fexample.com%2Ftaxonomy.json`
 - ✅ **Real-time validation**: Immediate feedback on JSON structure and format issues
 
-#### 🚀 Large Dataset Handling (Production-Ready)
+#### 🚀 Large Dataset Handling
 
-This application is optimized for **massive taxonomy datasets** 📊 (millions of nodes). The current deployment uses **75 split files** 📦 totaling several hundred MB of NCBI taxonomy data. 🧬
+This application supports **large taxonomy datasets** 📊 through intelligent data splitting and progressive loading. The current demo uses **5 split files** 📦 totaling ~110MB of taxonomy data. 🧬
 
 **Current Split Configuration:** ⚙️
-- 📄 **75 files** ranging from 0.01MB to 15.32MB each
-- 🧠 **Intelligent splitting** by taxonomic depth and size
+- 📄 **5 files** ranging from 15-25MB each
+- 🧠 **Taxonomic splitting** by data size and structure
 - ⚡ **Parallel loading** with progress tracking
 - 🔗 **Seamless merging** - appears as single dataset to user
 
 **Technical Details:** 🔧
-- 📏 **Max file size**: 5-15MB per chunk (optimal for web delivery)
-- 🛣️ **Path-based splitting**: Files split along natural taxonomy boundaries
-- 📊 **Progressive loading**: Handles massive datasets with efficient memory usage
-- ☁️ **CDN optimized**: Perfect for Netlify, GitHub Pages, or similar platforms
-
-**Benefits:** 🎉
-- ✅ **No browser memory limits**: Handles datasets that crash single-file approaches
-- ✅ **Fast initial load**: Progressive loading with visual feedback
-- ✅ **Git-friendly**: No large files that break repository limits
-- ✅ **Bandwidth efficient**: Only loads needed data chunks
+- 📏 **Chunk size**: 15-25MB per file (optimal for web delivery)
+- 📊 **Progressive indexing**: Background processing with memory management
+- 💾 **Efficient memory usage**: Optimized data structures and cleanup
+- ☁️ **Web-ready**: Suitable for static hosting platforms
 
 ### 🔧 Technical Architecture
 
@@ -161,49 +153,51 @@ This application is optimized for **massive taxonomy datasets** 📊 (millions o
 **Performance Optimizations:** ⚡
 - 🌳 **Subtree Pruning**: Hierarchical traversal skips entire subtrees when nodes are too small on screen
 - 👁️ **Viewport Culling**: Whole circles culled when off-screen
-- 📏 **Level-of-Detail**: Labels only render when circles are large enough
-- 🎨 **Canvas-Based Rendering**: Direct 2D canvas with opaque context to reduce compositing
+- 📏 **Level-of-Detail**: Three-tier LOD system (detail/medium/simple/skip) based on screen size
+- 🎨 **Canvas-Based Rendering**: Direct 2D canvas with optimized state management
 - 🔒 **DPR Clamp**: Caps devicePixelRatio for stability on HiDPI screens
-- ⏱️ **Work Caps**: Hard caps on max nodes per frame and max labels per frame
-- 💬 **Zero-Redraw Tooltips/Preview**: Tooltip and big preview are DOM-only and do not trigger canvas re-renders
-- 🚫 **No Hover Ring**: Hover highlight circles were removed to avoid unnecessary redraws
+- ⏱️ **Work Caps**: Hard caps on max nodes per frame (9000) and max labels per frame (180)
+- 💬 **Zero-Redraw UI**: Tooltip and big preview are DOM-only and don't trigger canvas re-renders
+- 🧠 **Memory Management**: Progressive cleanup and text cache optimization
 
 ### 📁 Project Structure
 
 ```
 biozoom/
-├── 🌐 index.html              # Main application entry point
-├── 🎨 styles.css              # Global styles and theme
+├── 🌐 index.html              # Main application entry point with landing page
+├── 🎨 styles.css              # Global styles and dark theme
 ├── 🚀 app-modular.js          # Application bootstrap (ES modules)
-├── 📊 data/                   # Dataset files (75 split JSON files)
+├── 📊 data/                   # Dataset files (split JSON files)
 │   ├── 📋 manifest.json       # Split file metadata and loading order
-│   └── 🌳 tree_part_*.json    # Taxonomy data chunks (0.01MB - 15MB each)
+│   └── 🌳 tree_deduped_part_*.json  # Taxonomy data chunks (~15-25MB each)
 └── 🧩 modules/                # Modular JavaScript architecture
-    ├── ⚙️ constants.js        # Configuration, color palettes, thresholds
-    ├── 🗃️ state.js           # Central state management and node indexing
-    ├── 📥 data.js            # Data loading, parsing, and transformation
-    ├── 🎨 canvas.js          # Canvas setup, sizing, and rendering context
-    ├── 📐 layout.js          # D3 pack layout and coordinate calculations
-    ├── 📷 camera.js          # Pan/zoom camera system with animations
-    ├── 🖼️ render.js          # Main rendering engine (circles, labels)
-    ├── 👆 picking.js         # Mouse interaction and hit detection
-    ├── 🧭 navigation.js      # Breadcrumbs, navigation, and view management
-    ├── 🔍 search.js          # Local search with result list and pulse indicator
-    ├── 🔗 deeplink.js        # URL state management and sharing
-    ├── 🌐 providers.js       # External service integration (Wikipedia, NCBI, etc.)
-    ├── 🖼️ preview.js         # Image previews and thumbnails
-    ├── 💬 tooltip.js         # Interactive tooltips and hover effects
-    ├── ⏳ loading.js         # Progress tracking and loading states
-    ├── ⌨️ events.js          # Input handling (mouse, keyboard, touch)
-    ├── 🖼️ images.js          # Image loading and caching
-    ├── ❓ help.js            # Help system and user guidance
-    └── 🌐 dom.js             # DOM element references and utilities
+    ├── ⚙️ constants.js        # Configuration and color palettes
+    ├── 🗃️ state.js            # Central state management and node indexing
+    ├── 📥 data.js             # Data loading, parsing, and transformation
+    ├── 🎨 canvas.js           # Canvas setup, sizing, and rendering context
+    ├── 📐 layout.js           # D3 pack layout and coordinate calculations
+    ├── 📷 camera.js           # Pan/zoom camera system with animations
+    ├── 🖼️ render.js           # Main rendering engine (circles, labels, LOD)
+    ├── 👆 picking.js          # Mouse interaction and hit detection
+    ├── 🧭 navigation.js       # Breadcrumbs, navigation, and view management
+    ├── 🔍 search.js           # Local search with result list and pulse indicator
+    ├── 🔗 deeplink.js         # URL state management and sharing
+    ├── 🌐 providers.js        # External service integration (Wikipedia, NCBI, etc.)
+    ├── 🖼️ preview.js          # Image previews and thumbnails
+    ├── 💬 tooltip.js          # Interactive tooltips and hover effects
+    ├── ⏳ loading.js          # Progress tracking and loading states
+    ├── ⌨️ events.js           # Input handling (mouse, keyboard, touch)
+    ├── 📊 metrics.js          # Runtime performance monitoring
+    ├── ⚡ performance.js      # Performance settings and memory management
+    ├── 📝 logger.js           # Structured logging system
+    └── 🌐 dom.js              # DOM element references and utilities
 ```
 
 **Key Design Principles:** 🏗️
 - 🧩 **Modular Architecture**: Each feature is a self-contained ES module
 - 🎯 **Separation of Concerns**: Clear boundaries between data, rendering, and interaction
-- ⚡ **Performance First**: Optimized for large datasets and smooth interactions
+- ⚡ **Performance First**: Optimized for large datasets with LOD and memory management
+- 🌑 **Dark UI Theme**: Consistent dark mode interface for better user experience
 - 📱 **Progressive Enhancement**: Works on all devices with graceful degradation
 
 ### 🔗 Deep Linking & Sharing
@@ -252,12 +246,13 @@ The application automatically tracks your navigation state in the URL for seamle
 
 ### 🤝 Contributing
 
-BioZoom follows modern web development practices: 💻
+biozoom follows modern web development practices: 💻
 
-- 📦 **ES Modules**: Clean, modular architecture
+- 📦 **ES Modules**: Clean, modular architecture without build tools
 - 🟨 **Vanilla JavaScript**: No heavy frameworks - just D3.js for visualization
-- 📈 **Progressive Enhancement**: Works without JavaScript for basic functionality
-- ♿ **Accessibility**: Keyboard navigation and screen reader support
+- 📊 **Performance Monitoring**: Built-in FPS and memory metrics
+- ♿ **Accessibility**: Keyboard navigation and semantic HTML
+- 🎨 **Dark Theme**: Consistent dark UI design throughout
 
 ### 📄 License
 
@@ -265,4 +260,4 @@ MIT License - feel free to use, modify, and distribute. 📜
 
 ---
 
-**Built with ❤️ for the scientific community** 🧬
+**Built with ❤️ using modern web technologies** 🧬
