@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "type": "lazy-tree-preserve-structure",
+  "rootFile": "root.json",
+  "nodesDir": "nodes/",
+  "totalNodes": 9,
+  "totalFiles": 4,
+  "minChildrenThreshold": 2,
+  "maxDepth": 2,
+  "description": "Lazy-loadable tree structure with 1:1 preservation of depth and ordering",
+  "originalFormat": "structured"
+}

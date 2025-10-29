@@ -23,7 +23,12 @@ export const state = {
   layoutChanged: false,
 
   // data loading state
-  loadMode: 'eager', // Always eager loading
+  loadMode: 'eager', // 'eager' or 'lazy'
+  
+  // lazy loading state
+  lazyManifest: null,
+  loadedChunks: new Map(), // filename -> chunk data
+  lazyBaseUrl: 'data lazy',
 };
 
 export function rebuildNodeMap() {

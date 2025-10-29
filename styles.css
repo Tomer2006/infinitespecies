@@ -119,7 +119,7 @@ canvas.loading{pointer-events:none;opacity:0.7}
   -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:.5rem}
 .landing-tagline{color:#9aa3c7;font-size:1.1rem;margin:0;font-weight:400}
 .landing-menu{display:flex;flex-direction:column;gap:1rem;margin-bottom:3rem}
-.landing-btn{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:1rem 2rem;
+.landing-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;padding:1rem 2rem;
   border:none;border-radius:16px;font-size:1.1rem;font-weight:600;cursor:pointer;
   transition:all .2s ease;min-height:60px;text-decoration:none}
 .landing-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0f1220;
@@ -129,6 +129,9 @@ canvas.loading{pointer-events:none;opacity:0.7}
 .landing-btn.secondary:hover{background:#1a214a;border-color:#314193;transform:translateY(-1px)}
 .btn-icon{font-size:1.5rem}
 .btn-text{white-space:nowrap}
+.btn-hint{font-size:0.75rem;opacity:0.8;font-weight:400;color:rgba(15,18,32,0.7)}
+.landing-btn.primary .btn-hint{color:rgba(15,18,32,0.6)}
+.landing-btn.secondary .btn-hint{color:rgba(234,240,255,0.6)}
 .landing-footer{color:#9aa3c7;font-size:.9rem;margin-top:2rem}
 .landing-footer kbd{background:#151935;border:1px solid #2a316d;border-radius:4px;padding:.2rem .4rem;
   font-size:.8rem;color:#c8d2ff;margin:0 .2rem}

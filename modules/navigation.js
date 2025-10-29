@@ -6,6 +6,7 @@ import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
 import { showLoading, hideLoading } from './loading.js';
 import { logInfo, logWarn, logDebug, logTrace } from './logger.js';
+import { isStubNode, loadNodeData } from './data.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -47,6 +48,19 @@ export async function updateNavigation(node, animate = true) {
   const startTime = performance.now();
 
   logInfo(`Starting navigation to "${node.name}" (animate=${animate})`);
+
+  // Load stub node data if in lazy mode
+  if (state.loadMode === 'lazy' && isStubNode(node)) {
+    logDebug(`Detected stub node: "${node.name}", loading chunk data...`);
+    showLoading('Loading node data...');
+    try {
+      await loadNodeData(node);
+      logInfo(`Successfully loaded data for stub node: "${node.name}"`);
+    } catch (err) {
+      logWarn(`Failed to load chunk data for stub node: "${node.name}": ${err.message}`);
+    }
+    hideLoading();
+  }
 
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;

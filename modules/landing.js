@@ -2,7 +2,7 @@
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
-import { loadFromUrl, loadEager } from './data.js';
+import { loadFromUrl, loadEager, loadLazy } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
 import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
@@ -29,8 +29,19 @@ export async function initDataAndDeepLinks() {
   // Initialize deep links
   initDeepLinks();
 
-  // Load data
+  // Load data (eager mode)
   await initData();
+
+  // After data load completes, attempt a jump to a lightweight start node
+  // Note: jump is triggered inside setDataRoot after layout/indexing
+}
+
+export async function initDataAndDeepLinksLazy() {
+  // Initialize deep links
+  initDeepLinks();
+
+  // Load data in lazy mode
+  await initDataLazy();
 
   // After data load completes, attempt a jump to a lightweight start node
   // Note: jump is triggered inside setDataRoot after layout/indexing
@@ -140,13 +151,60 @@ async function initData() {
   console.error(`⏰ [LANDING] Total initialization time: ${totalDuration.toFixed(2)}ms - FAILED`);
 }
 
+async function initDataLazy() {
+  console.log('🚀 [LANDING] Starting lazy data initialization');
+  const startTime = performance.now();
+
+  try {
+    console.log('⚡ [LANDING] Using lazy loading mode');
+    showLoading('Loading tree skeleton (lazy mode)…');
+
+    console.log('📊 [LANDING] Calling loadLazy');
+    await loadLazy('data lazy');
+
+    const totalDuration = performance.now() - startTime;
+    console.log(`✅ [LANDING] Lazy loading completed successfully in ${totalDuration.toFixed(2)}ms`);
+    console.log('🔄 [LANDING] Hiding loading screen...');
+    hideLoading();
+
+    console.log('🎨 [LANDING] Triggering initial render...');
+    tick();
+
+    return;
+  } catch (err) {
+    const totalDuration = performance.now() - startTime;
+    console.error(`❌ [LANDING] Lazy loading failed after ${totalDuration.toFixed(2)}ms`);
+    console.error('🔍 [LANDING] Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+
+    logWarn(`Failed to load lazy data: ${err.message}`);
+    
+    // Fall back to manual JSON loading prompt
+    hideLoading();
+    const modal = document.getElementById('jsonModal');
+    if (modal) {
+      console.log('🪟 [LANDING] Showing JSON modal for manual upload');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    const label = document.getElementById('progressLabel');
+    if (label) {
+      label.textContent = 'Lazy loading failed. Use Load JSON to import your taxonomy.';
+    }
+  }
+}
+
 export function initLandingPage() {
   const startExplorationBtn = document.getElementById('startExplorationBtn');
+  const startLazyBtn = document.getElementById('startLazyBtn');
   const loadDataBtn = document.getElementById('loadDataBtn');
   const helpBtn = document.getElementById('helpBtn');
   const aboutBtn = document.getElementById('aboutBtn');
 
-  // Start Exploration - Load data and start exploration
+  // Start Exploration (Eager) - Load all data at once from data/ folder
   if (startExplorationBtn) {
     startExplorationBtn.addEventListener('click', async () => {
       hideLandingPage();
@@ -156,8 +214,23 @@ export function initLandingPage() {
         topbar.style.visibility = 'visible';
       }
 
-      // Load data and initialize deep links
+      // Load data and initialize deep links (eager mode)
       await initDataAndDeepLinks();
+    });
+  }
+
+  // Start Exploration (Lazy) - Load skeleton first from data lazy/ folder
+  if (startLazyBtn) {
+    startLazyBtn.addEventListener('click', async () => {
+      hideLandingPage();
+      // Make sure the topbar is visible
+      const topbar = document.querySelector('.topbar');
+      if (topbar) {
+        topbar.style.visibility = 'visible';
+      }
+
+      // Load data in lazy mode
+      await initDataAndDeepLinksLazy();
     });
   }
 
@@ -286,3 +359,4 @@ function createAboutModal() {
 
   return modal;
 }
+

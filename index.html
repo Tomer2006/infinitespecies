@@ -12,6 +12,9 @@
   <link rel="modulepreload" href="modules/render.js">
   <link rel="modulepreload" href="modules/events.js">
   <link rel="modulepreload" href="modules/data.js">
+  <link rel="modulepreload" href="modules/data-common.js">
+  <link rel="modulepreload" href="modules/data-eager.js">
+  <link rel="modulepreload" href="modules/data-lazy.js">
   <link rel="modulepreload" href="modules/layout.js">
   <link rel="modulepreload" href="modules/performance.js">
   <link rel="modulepreload" href="modules/state.js">
@@ -130,14 +133,20 @@
       <div class="landing-menu">
         <button class="landing-btn primary" id="startExplorationBtn">
           <span class="btn-icon">🌍</span>
-          <span class="btn-text">Start Exploration</span>
+          <span class="btn-text">Start Exploration (Eager)</span>
+          <span class="btn-hint">Load all data at once (data/)</span>
+        </button>
+
+        <button class="landing-btn primary" id="startLazyBtn">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">Start Exploration (Lazy)</span>
+          <span class="btn-hint">Fast start, load on-demand (data lazy/)</span>
         </button>
 
         <button class="landing-btn secondary" id="loadDataBtn">
           <span class="btn-icon">📁</span>
           <span class="btn-text">Load Custom Data</span>
         </button>
-
 
         <button class="landing-btn secondary" id="helpBtn">
           <span class="btn-icon">❓</span>
@@ -152,6 +161,9 @@
 
       <div class="landing-footer">
         <p>Navigate with mouse and keyboard. Press <kbd>?</kbd> for controls.</p>
+        <p style="margin-top:0.5rem; font-size:0.9em; color:#9aa3c7;">
+          💡 <b>Lazy loading</b> starts instantly (108KB) vs <b>Eager</b> loads all data (111MB)
+        </p>
       </div>
     </div>
   </div>
