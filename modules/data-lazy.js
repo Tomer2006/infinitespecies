@@ -1,12 +1,16 @@
-// Lazy loading functionality for taxonomy tree data
+// data-lazy-hybrid.js
+// Hybrid lazy loading: same data as eager, loaded on-demand with intelligent preloading
+
 import { state } from './state.js';
-import { setProgress } from './loading.js';
-import { logInfo, logError, logDebug, logWarn } from './logger.js';
 import { perf } from './performance.js';
+import { logInfo, logWarn, logError, logDebug } from './logger.js';
+import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
+import { computeFetchConcurrency } from './performance.js';
+import { W, H } from './canvas.js';
 
 // ============================================================================
-// COMMON DATA LOADING FUNCTIONS (formerly in data-common.js)
+// CORE DATA LOADING FUNCTIONS (shared with eager)
 // ============================================================================
 
 function inferLevelByDepth(depth) {
@@ -49,9 +53,70 @@ export function normalizeTree(rootLike) {
   return rootLike;
 }
 
+export function isStubNode(node) {
+  return node && node._stub === true;
+}
+
+function composePath(parentPath, name) {
+  const trimmedName = String(name ?? '').trim();
+  if (!trimmedName) return parentPath || '';
+  return parentPath ? `${parentPath} > ${trimmedName}` : trimmedName;
+}
+
+function buildLazyChunkLookup(manifest) {
+  state.lazyPathToChunk.clear();
+  if (!manifest || !Array.isArray(manifest.files)) return;
+  for (const file of manifest.files) {
+    if (!file || !file.path || !file.filename) continue;
+    state.lazyPathToChunk.set(file.path.trim(), file.filename);
+  }
+}
+
+function updateChunkMetadataForChildren(parentNode, parentPath) {
+  if (!parentNode || !Array.isArray(parentNode.children) || parentNode.children.length === 0) return 0;
+  const stack = [];
+  for (let i = parentNode.children.length - 1; i >= 0; i--) {
+    const child = parentNode.children[i];
+    if (!child || typeof child !== 'object') continue;
+    stack.push({ node: child, path: composePath(parentPath, child.name) });
+  }
+  let updated = 0;
+  while (stack.length) {
+    const { node, path } = stack.pop();
+    node._chunkPath = path;
+    const chunkFile = state.lazyPathToChunk.get(path);
+    if (chunkFile) node._chunkFile = chunkFile;
+    updated++;
+    if (Array.isArray(node.children) && node.children.length) {
+      for (let i = node.children.length - 1; i >= 0; i--) {
+        const child = node.children[i];
+        if (!child || typeof child !== 'object') continue;
+        stack.push({ node: child, path: composePath(path, child.name) });
+      }
+    }
+  }
+  return updated;
+}
+
+function getNodeMetrics(node) {
+  if (!node) return { x: 0, y: 0, r: 10 };
+  const layoutNode = state.nodeLayoutMap?.get(node._id);
+  if (layoutNode) {
+    return {
+      x: layoutNode._vx ?? layoutNode.x ?? 0,
+      y: layoutNode._vy ?? layoutNode.y ?? 0,
+      r: layoutNode._vr ?? layoutNode.r ?? 10
+    };
+  }
+  return {
+    x: node._vx ?? 0,
+    y: node._vy ?? 0,
+    r: node._vr ?? 10
+  };
+}
+
 function countNodes(root) {
-  let c = 0,
-    stack = [root];
+  let c = 0, stack = [root];
   while (stack.length) {
     const n = stack.pop();
     c++;
@@ -62,7 +127,6 @@ function countNodes(root) {
 }
 
 function computeDescendantCountsIter(root) {
-  // Post-order traversal without recursion
   const stack = [root];
   const post = [];
   while (stack.length) {
@@ -86,516 +150,559 @@ function computeDescendantCountsIter(root) {
 export async function indexTreeProgressive(root, options = {}) {
   const chunkMs = typeof options.chunkMs === 'number' ? options.chunkMs : perf.indexing.chunkMs;
   const progressEvery = typeof options.progressEvery === 'number' ? options.progressEvery : perf.indexing.progressEvery;
-  state.globalId = 1; // Reset ID counter
+  const resetGlobalId = options.resetGlobalId !== false;
+  const startParent = options.parent ?? null;
+  const startDepth =
+    typeof options.startDepth === 'number'
+      ? options.startDepth
+      : startParent && typeof startParent.level === 'number'
+      ? startParent.level + 1
+      : 0;
+  const showProgress = options.showProgress ?? resetGlobalId;
+
+  if (resetGlobalId) state.globalId = 1;
+  else if (typeof state.globalId !== 'number' || !Number.isFinite(state.globalId) || state.globalId < 1) state.globalId = 1;
+
+  const essentialKeys =
+    options.essentialKeys instanceof Set
+      ? options.essentialKeys
+      : new Set([
+          'name',
+          'children',
+          'level',
+          'parent',
+          '_id',
+          '_vx',
+          '_vy',
+          '_vr',
+          '_leaves',
+          '_stub',
+          '_chunkPath',
+          '_chunkFile',
+          '_loading'
+        ]);
+
   let processed = 0;
   const total = Math.max(1, countNodes(root));
-  const stack = [{ node: root, parent: null, depth: 0 }];
+  const stack = [{ node: root, parent: startParent, depth: startDepth }];
   let lastYield = performance.now();
+
   while (stack.length) {
     const now = performance.now();
-    // Do not yield in background tabs (timers are heavily throttled there);
-    // continue processing to avoid stalling loading when switching tabs.
     if (!document.hidden && now - lastYield >= chunkMs) {
       await new Promise(r => setTimeout(r, 0));
       lastYield = performance.now();
     }
     const { node, parent, depth } = stack.pop();
     if (node == null || typeof node !== 'object') continue;
-    // Normalize and trim strings in-place to reduce memory
+
     node.name = String(node.name ?? 'Unnamed');
     if (node.name.length > 100) node.name = node.name.slice(0, 100);
-    node.level = node.level || inferLevelByDepth(depth);
+    node.level = inferLevelByDepth(depth);
     node.parent = parent;
+
     node._id = state.globalId++;
+
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
 
-    // Aggressive memory optimization: drop all non-essential properties
-    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves', '_stub']); // Keep _stub
     for (const k of Object.keys(node)) {
       if (!essentialKeys.has(k)) {
         delete node[k];
       }
     }
 
-    // Further optimize: use shorter property names where possible
-    if (node.children && node.children.length === 0) {
-      node.children = []; // Ensure consistent empty array
+    if (node.children.length === 0) {
+      node.children = [];
     }
-    for (let i = node.children.length - 1; i >= 0; i--)
+    for (let i = node.children.length - 1; i >= 0; i--) {
       stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
+    }
     processed++;
-    if (processed % progressEvery === 0) {
-      setProgress(processed / total, `Indexing… ${processed.toLocaleString()}/${total.toLocaleString()}`);
+    if (showProgress && !document.hidden && processed % progressEvery === 0) {
+      setProgress(processed / total, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`);
     }
   }
-  if (!document.hidden) setProgress(0.95, 'Computing descendant counts…');
+  if (showProgress && !document.hidden) setProgress(0.95, 'Computing descendant counts...');
   computeDescendantCountsIter(root);
-  if (!document.hidden) setProgress(1, 'Done');
+  if (showProgress && !document.hidden) setProgress(1, 'Done');
 }
 
 export async function loadFromJSONText(text) {
-  console.log('🚀 [JSON] loadFromJSONText called with text length:', text.length);
-  const jsonStartTime = performance.now();
-
   let parsed;
   try {
-    console.log('📋 [JSON] Starting JSON parse...');
-    const parseStartTime = performance.now();
-    logInfo('Parsing JSON text…');
     parsed = JSON.parse(text);
-    const parseDuration = performance.now() - parseStartTime;
-    console.log(`✅ [JSON] JSON parsed successfully in ${parseDuration.toFixed(2)}ms, type:`, typeof parsed, Array.isArray(parsed) ? 'array' : 'object');
   } catch (e) {
-    console.error('💥 [JSON] JSON parsing failed:', e);
-    console.error('🔍 [JSON] Error details:', {
-      message: e.message,
-      stack: e.stack,
-      name: e.name
-    });
     logError('Invalid JSON during loadFromJSONText', e);
     throw new Error('Invalid JSON: ' + e.message);
   }
-
-  console.log('🔄 [JSON] Normalizing parsed tree structure...');
-  logDebug('Normalizing parsed JSON tree');
-  const normalizeStartTime = performance.now();
   const nroot = normalizeTree(parsed);
-  const normalizeDuration = performance.now() - normalizeStartTime;
-  console.log(`🧬 [JSON] Tree normalized in ${normalizeDuration.toFixed(2)}ms`);
-
-  console.log('🔍 [JSON] Starting tree indexing...');
-  const indexStartTime = performance.now();
   await indexTreeProgressive(nroot);
-  const indexDuration = performance.now() - indexStartTime;
-  console.log(`📊 [JSON] Tree indexed in ${indexDuration.toFixed(2)}ms`);
-
-  console.log('💾 [JSON] Setting data root...');
   setDataRoot(nroot);
-
-  const totalDuration = performance.now() - jsonStartTime;
-  console.log(`🎉 [JSON] loadFromJSONText completed successfully in ${totalDuration.toFixed(2)}ms`);
   logInfo('JSON data loaded successfully, initialized root');
 }
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
-  // Use centralized navigation update for initial setup
   updateNavigation(state.DATA_ROOT, false);
 }
 
 // ============================================================================
-// LAZY LOADING FUNCTIONS
+// HYBRID LAZY LOADING SYSTEM
 // ============================================================================
 
-/**
- * Check if a node is a stub (not fully loaded)
- */
-export function isStubNode(node) {
-  return node && node._stub === true;
-}
+// Build skeleton from manifest (same as eager data source)
+function buildSkeletonFromManifest(manifest) {
+  if (!manifest || !manifest.files) {
+    throw new Error('Invalid manifest: missing files array');
+  }
 
-/**
- * Build complete tree structure from manifest chunk paths
- * Each node is a stub that will load its children on-demand
- */
-function buildTreeFromManifest(manifest) {
-  console.log('🏗️ [LAZY] Building tree structure from manifest paths...');
-  const root = { name: 'Life', level: 0, children: [] };
-  const nodeMap = new Map(); // Map of path string to node for quick lookup
-  nodeMap.set('Life', root);
-  
-  // Process each chunk to extract all unique paths
-  const allPaths = new Set();
-  for (const fileInfo of manifest.files) {
-    // Add the chunk's own path
-    allPaths.add(fileInfo.path);
-    
-    // Also add parent paths to ensure complete tree
-    const pathParts = fileInfo.path.split(' > ').filter(p => p.length > 0);
-    for (let i = 2; i < pathParts.length; i++) {
-      allPaths.add(pathParts.slice(0, i).join(' > '));
-    }
+  const rootName = manifest.root_name || 'Life';
+  const root = { name: rootName, children: [] };
+  root._chunkPath = rootName;
+  const rootChunk = state.lazyPathToChunk.get(root._chunkPath);
+  if (rootChunk) {
+    root._chunkFile = rootChunk;
+    root._stub = true;
   }
-  
-  console.log(`📊 [LAZY] Found ${allPaths.size} unique node paths`);
-  
-  // Sort paths by depth to ensure parents exist before children
-  const sortedPaths = Array.from(allPaths).sort((a, b) => {
-    const depthA = a.split(' > ').length;
-    const depthB = b.split(' > ').length;
-    return depthA - depthB;
-  });
-  
-  // Build tree by navigating/creating nodes for each path
-  let createdCount = 0;
-  for (const pathStr of sortedPaths) {
-    const pathParts = pathStr.split(' > ').filter(p => p.length > 0);
-    let current = root;
-    
-    // Navigate/create path from root to target node
-    for (let i = 1; i < pathParts.length; i++) {
-      const part = pathParts[i];
-      
-      // Initialize children if needed
-      if (!current.children) current.children = [];
-      
-      // Find or create child node
-      let found = null;
-      for (const child of current.children) {
-        if (child.name === part) {
-          found = child;
-          break;
-        }
+
+  const pathMap = new Map();
+  pathMap.set(root._chunkPath, root);
+
+  for (const file of manifest.files) {
+    if (!file || !file.path) continue;
+
+    const parts = file.path.split(' > ').map(p => p.trim()).filter(Boolean);
+    if (!parts.length) continue;
+
+    let parentNode = root;
+    let currentPath = root._chunkPath;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === 0 && part === root.name) {
+        currentPath = root._chunkPath;
+        parentNode = root;
+        continue;
       }
-      
-      if (!found) {
-        // Create new node - it will be a stub for lazy loading
-        found = {
+
+      currentPath = composePath(currentPath, part);
+      let node = pathMap.get(currentPath);
+
+      if (!node) {
+        node = {
           name: part,
-          level: i,
-          children: [],
-          _stub: true, // Mark as needing data
-          _leaves: 1   // Give stub minimal leaves for layout
+          _stub: true,
+          _chunkPath: currentPath,
+          _chunkFile: file.filename,
+          children: []
         };
-        current.children.push(found);
-        nodeMap.set(pathStr.split(' > ').slice(0, i + 1).join(' > '), found);
-        createdCount++;
+
+        if (!Array.isArray(parentNode.children)) parentNode.children = [];
+        parentNode.children.push(node);
+        pathMap.set(currentPath, node);
+      } else {
+        node._stub = true;
+        node._chunkPath = currentPath;
+        node._chunkFile = file.filename;
       }
-      
-      current = found;
+
+      parentNode = node;
     }
   }
-  
-  console.log(`✅ [LAZY] Created ${createdCount} nodes from manifest paths`);
+
   return root;
 }
 
-/**
- * Load tree skeleton for lazy loading - NOW builds from manifest paths
- */
-export async function loadLazy(baseUrl = 'data lazy') {
-  console.log('🚀 [LAZY] Starting lazy loading mode (true lazy with dynamic loading)');
-  const startTime = performance.now();
-
-  state.loadMode = 'lazy';
-  state.lazyBaseUrl = baseUrl;
+// Fetch chunk with progress and retry logic
+async function fetchChunk(filename, baseUrl, retryCount = 0) {
+  const url = `${baseUrl}/${filename}`;
+  const maxRetries = 3;
+  const delay = Math.pow(2, retryCount) * 1000;
 
   try {
-    // Load manifest only (no skeleton needed!)
-    console.log('📋 [LAZY] Loading manifest...');
-    setProgress(0.2, 'Loading manifest...');
-    const manifestUrl = `${baseUrl}/manifest.json`;
-    const manifestRes = await fetch(manifestUrl, { cache: 'default' });
-
-    if (!manifestRes.ok) {
-      throw new Error(`Failed to fetch manifest: ${manifestRes.status}`);
+    if (retryCount > 0) {
+      logDebug(`Fetching chunk ${filename} (attempt ${retryCount + 1})`);
     }
 
-    state.lazyManifest = await manifestRes.json();
-    console.log(`✅ [LAZY] Manifest loaded: ${state.lazyManifest.total_files} chunks`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // Build complete tree skeleton from manifest paths
-    console.log('🏗️ [LAZY] Building tree skeleton from manifest...');
-    setProgress(0.4, 'Building tree skeleton...');
-    const skeletonRoot = buildTreeFromManifest(state.lazyManifest);
+    const res = await fetch(url, {
+      cache: 'default',
+      signal: controller.signal
+    });
 
-    // Load the actual root chunk data to replace the skeleton
-    console.log('📦 [LAZY] Loading root chunk data...');
-    setProgress(0.6, 'Loading root chunk...');
-    const rootChunkInfo = state.lazyManifest.files.find(f => f.path === state.lazyManifest.root_name);
-    if (!rootChunkInfo) {
-      throw new Error('Could not find root chunk in manifest');
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
-    const rootChunkData = await loadChunk(rootChunkInfo.filename);
-    console.log(`✅ [LAZY] Root chunk loaded: ${rootChunkInfo.filename}`);
 
-    // Use the actual root chunk data, but it should already have stub nodes from the splitting
-    const nroot = rootChunkData;
-
-    console.log('🔍 [LAZY] Indexing tree...');
-    setProgress(0.8, 'Indexing tree...');
-    // We pass `indexTreeProgressive` which will compute initial _leaves
-    // based on the skeleton, which is fine.
-    await indexTreeProgressive(nroot); 
-
-    setProgress(0.95, 'Finalizing...');
-    setDataRoot(nroot);
-
-    const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
-    console.log(`🎉 [LAZY] Lazy loading complete in ${totalTime}s`);
-    console.log(`📊 [LAZY] Tree ready: ${state.lazyManifest.total_files} chunks available for on-demand loading`);
-    setProgress(1, `Ready! (Lazy mode: ${state.lazyManifest.total_files} chunks)`);
-
-    return nroot;
+    const text = await res.text();
+    return JSON.parse(text);
   } catch (err) {
-    console.error('💥 [LAZY] Lazy loading failed:', err);
-    logError('Lazy loading failed', err);
+    if (retryCount < maxRetries) {
+      logWarn(`Retrying ${filename} after error: ${err.message}`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchChunk(filename, baseUrl, retryCount + 1);
+    }
     throw err;
   }
 }
 
-/**
- * Load a specific chunk by filename
- */
+// Load and process a chunk
 export async function loadChunk(filename) {
   // Check cache first
   if (state.loadedChunks.has(filename)) {
-    console.log(`📦 [LAZY] Chunk ${filename} already loaded (cached)`);
+    logDebug(`Chunk ${filename} already loaded (cached)`);
     return state.loadedChunks.get(filename);
   }
 
-  console.log(`📥 [LAZY] Loading chunk: ${filename}`);
-  const chunkUrl = `${state.lazyBaseUrl}/${filename}`;
+  if (!state.lazyBaseUrl) {
+    throw new Error('Base URL not set for lazy loading');
+  }
 
+  logInfo(`Loading chunk: ${filename}`);
+  
   try {
-    const res = await fetch(chunkUrl, { cache: 'default' });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch chunk ${filename}: ${res.status}`);
+    setProgress(0.1, `Loading ${filename}...`);
+    const data = await fetchChunk(filename, state.lazyBaseUrl);
+    state.loadedChunks.set(filename, data);
+    logInfo(`✅ Chunk loaded: ${filename}`);
+    return data;
+  } catch (e) {
+    logError(`Failed to load chunk ${filename}`, e);
+    throw e;
+  }
+}
+
+// Initialize hybrid lazy loading
+export async function loadLazy(baseUrl = 'data') {
+  state.loadMode = 'lazy';
+  state.lazyBaseUrl = baseUrl;
+  logInfo(`Starting hybrid lazy load from ${baseUrl}`);
+
+  // Clear cache from previous loads
+  state.loadedChunks.clear();
+
+  // Load manifest (same as eager)
+  setProgress(0, 'Loading manifest...');
+  try {
+    const manifestUrl = `${baseUrl}/manifest.json`;
+    logDebug(`Fetching manifest from ${manifestUrl}`);
+    state.lazyManifest = await (await fetch(manifestUrl)).json();
+    buildLazyChunkLookup(state.lazyManifest);
+    logInfo('Manifest loaded', { files: state.lazyManifest.files?.length });
+  } catch (e) {
+    logError('Failed to load manifest', e);
+    throw new Error(`Could not load manifest.json from ${baseUrl}: ${e.message}`);
+  }
+
+  // Build skeleton from manifest
+  setProgress(0.3, 'Building skeleton...');
+  try {
+    const root = buildSkeletonFromManifest(state.lazyManifest);
+    const assigned = updateChunkMetadataForChildren(root, root._chunkPath);
+    await indexTreeProgressive(root);
+    setDataRoot(root);
+    logInfo(`Skeleton created with ${countNodes(root)} stub nodes`);
+    logDebug(`Applied chunk metadata to ${assigned} node(s) from manifest lookup`);
+    setProgress(1, 'Ready');
+  } catch (e) {
+    logError('Failed to build skeleton', e);
+    throw e;
+  }
+}
+
+// Get viewport bounds using camera state (faster than DOM queries)
+function getViewportBounds() {
+  const { camera } = state;
+  const halfW = W / (2 * camera.k);
+  const halfH = H / (2 * camera.k);
+  
+  return {
+    left: camera.x - halfW,
+    right: camera.x + halfW,
+    top: camera.y - halfH,
+    bottom: camera.y + halfH,
+    width: W / camera.k,
+    height: H / camera.k
+  };
+}
+
+// Check if node is visible with margin for preloading
+function isNodeInViewport(node, bounds, margin = 1.5) {
+  if (!node || !bounds) return false;
+  
+  // Use visual position if available
+  const { x, y, r } = getNodeMetrics(node);
+
+  // Expand bounds by margin factor
+  const expandedMargin = (margin - 1) / 2;
+  const expandedLeft = bounds.left - bounds.width * expandedMargin;
+  const expandedRight = bounds.right + bounds.width * expandedMargin;
+  const expandedTop = bounds.top - bounds.height * expandedMargin;
+  const expandedBottom = bounds.bottom + bounds.height * expandedMargin;
+
+  return (
+    x + r >= expandedLeft &&
+    x - r <= expandedRight &&
+    y + r >= expandedTop &&
+    y - r <= expandedBottom
+  );
+}
+
+// Find all visible stubs that need loading, sorted by priority
+function findVisibleStubs(bounds) {
+  if (!state.DATA_ROOT || !bounds) return [];
+  
+  const stubs = [];
+  const stack = [state.DATA_ROOT];
+  
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node) continue;
+
+    // If node is a stub and visible, add it
+    if (isStubNode(node) && isNodeInViewport(node, bounds, 1.5)) {
+      stubs.push(node);
+      continue; // Don't traverse into stubs
     }
 
-    const chunkData = await res.json();
+    // Traverse children if they might be visible (pre-load margin)
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        if (isNodeInViewport(child, bounds, 2.5)) {
+          stack.push(child);
+        }
+      }
+    }
+  }
+  
+  // Sort by distance from viewport center (load center-first)
+  const centerX = bounds.left + bounds.width / 2;
+  const centerY = bounds.top + bounds.height / 2;
+  stubs.sort((a, b) => {
+    const aMetrics = getNodeMetrics(a);
+    const bMetrics = getNodeMetrics(b);
+    const distA = Math.hypot(aMetrics.x - centerX, aMetrics.y - centerY);
+    const distB = Math.hypot(bMetrics.x - centerX, bMetrics.y - centerY);
+    return distA - distB;
+  });
+  
+  return stubs;
+}
 
-    // Cache it
-    state.loadedChunks.set(filename, chunkData);
-    console.log(`✅ [LAZY] Chunk ${filename} loaded and cached`);
+// Replace stub with loaded data and maintain tree structure
+async function replaceStubWithData(stub) {
+  if (!stub._chunkFile) {
+    logWarn(`Stub "${stub.name}" has no chunk file reference`);
+    return false;
+  }
 
-    return chunkData;
+  // Skip if already being loaded
+  if (stub._loading) {
+    logDebug(`Stub "${stub.name}" already being loaded`);
+    return false;
+  }
+
+  stub._loading = true;
+
+  try {
+    logDebug(`Replacing stub "${stub.name}" with chunk ${stub._chunkFile}`);
+    const chunkData = await loadChunk(stub._chunkFile);
+    
+    // Find stub in parent's children
+    const parent = stub.parent;
+    if (parent) {
+      const index = parent.children.findIndex(c => c === stub);
+      if (index === -1) {
+        logWarn(`Stub "${stub.name}" not found in parent's children`);
+        return false;
+      }
+    }
+
+    const stubPath = stub._chunkPath || getNodePath(stub).join(' > ');
+    const startDepth = parent && typeof parent.level === 'number' ? parent.level + 1 : 0;
+
+    Object.assign(stub, chunkData);
+    delete stub._stub;
+    delete stub._chunkFile;
+
+    stub._chunkPath = stubPath;
+    stub.parent = parent ?? null;
+
+    const metadataAssigned = updateChunkMetadataForChildren(stub, stubPath);
+    if (metadataAssigned > 0) {
+      logDebug(`Updated lazy metadata for ${metadataAssigned} descendant(s) of "${stub.name}"`);
+    }
+
+    await indexTreeProgressive(stub, {
+      chunkMs: 50,
+      parent,
+      startDepth,
+      resetGlobalId: false,
+      showProgress: false
+    });
+    
+    // Update descendant counts upward
+    let current = parent;
+    while (current) {
+      computeDescendantCountsIter(current);
+      current = current.parent;
+    }
+
+    logInfo(`✅ Replaced stub "${stub.name}" with loaded data`);
+    return true;
+  } catch (e) {
+    logError(`Failed to replace stub "${stub.name}"`, e);
+    return false;
+  } finally {
+    delete stub._loading;
+  }
+}
+
+// ============================================================================
+// AUTOMATIC VIEWPORT LOADING WITH SMART PRELOADING
+// ============================================================================
+
+let loadInProgress = false;
+let viewportCheckTimer = null;
+let lastViewport = null;
+
+// Main function: automatically load chunks based on viewport
+export async function autoLoadVisibleChunks() {
+  if (loadInProgress || state.loadMode !== 'lazy') return;
+  if (!state.DATA_ROOT) return;
+
+  const bounds = getViewportBounds();
+  if (!bounds) return;
+
+  // Check if viewport changed significantly
+  if (lastViewport) {
+    const dx = Math.abs(bounds.left - lastViewport.left);
+    const dy = Math.abs(bounds.top - lastViewport.top);
+    const dw = Math.abs(bounds.width - lastViewport.width);
+    const changeThreshold = Math.max(bounds.width, bounds.height) * 0.15;
+    
+    if (dx < changeThreshold && dy < changeThreshold && dw < changeThreshold) {
+      logDebug('Viewport change too small, skipping load');
+      return;
+    }
+  }
+
+  lastViewport = bounds;
+  loadInProgress = true;
+
+  try {
+    const stubs = findVisibleStubs(bounds);
+    
+    if (stubs.length === 0) {
+      logDebug('No visible stubs to load');
+      return;
+    }
+
+    logInfo(`Found ${stubs.length} visible stub(s) to load`);
+
+    // Load with controlled concurrency (respect system limits)
+    const concurrency = Math.max(computeFetchConcurrency(), 3);
+    const queue = [...stubs];
+    let activePromises = [];
+    let loadedCount = 0;
+
+    const trackPromise = promise => {
+      activePromises.push(promise);
+      promise.finally(() => {
+        activePromises = activePromises.filter(p => p !== promise);
+      });
+    };
+
+    while (queue.length > 0 || activePromises.length > 0) {
+      while (activePromises.length < concurrency && queue.length > 0) {
+        const stub = queue.shift();
+        if (!stub || stub._loading || !stub._chunkFile) continue;
+
+        const promise = (async () => {
+          try {
+            const success = await replaceStubWithData(stub);
+            if (success) {
+              loadedCount++;
+              state.layoutChanged = true;
+            }
+          } catch (err) {
+            logWarn('Lazy chunk load failed', err);
+          }
+        })();
+
+        trackPromise(promise);
+      }
+
+      if (activePromises.length > 0) {
+        try {
+          await Promise.race(activePromises);
+        } catch (err) {
+          logWarn('One lazy load promise rejected', err);
+        }
+      }
+    }
+
+    if (loadedCount > 0 && state.current) {
+      try {
+        await updateNavigation(state.current, false);
+      } catch (navErr) {
+        logWarn('Viewport refresh failed after lazy chunk batch', navErr);
+      }
+    }
+    
   } catch (err) {
-    console.error(`💥 [LAZY] Failed to load chunk ${filename}:`, err);
-    throw err;
+    logError('Auto-load failed', err);
+  } finally {
+    loadInProgress = false;
+    scheduleViewportCheck();
   }
 }
 
-/**
- * Find which chunk contains a specific node path
- */
-export function findChunkForPath(nodePath) {
-  if (!state.lazyManifest) {
-    console.warn('[LAZY] No manifest loaded');
-    return null;
+// Schedule viewport check with debouncing
+function scheduleViewportCheck() {
+  if (viewportCheckTimer) {
+    clearTimeout(viewportCheckTimer);
   }
-
-  // Find the chunk that matches this path
-  const chunkInfo = state.lazyManifest.files.find(f =>
-    f.path === nodePath || nodePath.startsWith(f.path + ' > ')
-  );
-
-  return chunkInfo;
+  
+  viewportCheckTimer = setTimeout(() => {
+    autoLoadVisibleChunks();
+  }, perf.indexing.chunkMs * 2); // Check after indexing yield time
 }
 
-/**
- * Get the full path of a node as a string
- */
+// Hook into camera updates
+export function onViewportChange() {
+  if (state.loadMode !== 'lazy') return;
+  scheduleViewportCheck();
+}
+
+// Start automatic loading system
+export function startAutoLoading() {
+  if (state.loadMode !== 'lazy') return;
+  
+  logInfo('🚀 Starting hybrid lazy loading system');
+  
+  // Initial load
+  autoLoadVisibleChunks();
+  
+  // Set up periodic checks (fallback)
+  setInterval(() => {
+    if (!loadInProgress) {
+      autoLoadVisibleChunks();
+    }
+  }, 3000);
+}
+
+// Get node path for deep linking (backward compatibility)
 export function getNodePath(node) {
   const path = [];
   let current = node;
-
   while (current) {
     path.unshift(current.name);
     current = current.parent;
   }
-
-  return path.join(' > ');
-}
-
-
-// *** NEW HELPER FUNCTIONS ***
-
-/**
- * Helper to recursively index a new chunk attached to a parent.
- * This function processes *only* the new nodes, assigning IDs, levels,
- * and parent pointers without touching the rest of the tree.
- * It returns the total number of leaves in the newly indexed branch.
- */
-async function indexNewChunk(parentNode, newChildren) {
-  const chunkMs = perf.indexing.chunkMs;
-  const progressEvery = perf.indexing.progressEvery;
-  let processed = 0;
-  const stack = [];
-  
-  // Initialize stack with new children
-  for (let i = newChildren.length - 1; i >= 0; i--) {
-    stack.push({ node: newChildren[i], parent: parentNode, depth: parentNode.level + 1 });
-  }
-
-  let lastYield = performance.now();
-
-  const postOrderStack = []; // For processing leaves
-  
-  // Iterative DFS for indexing (similar to indexTreeProgressive)
-  while (stack.length) {
-    const now = performance.now();
-    if (!document.hidden && now - lastYield >= chunkMs) {
-      await new Promise(r => setTimeout(r, 0));
-      lastYield = performance.now();
-    }
-
-    const { node, parent, depth } = stack.pop();
-    if (node == null || typeof node !== 'object') continue;
-    
-    // Push to post-order stack *before* processing children
-    postOrderStack.push(node);
-
-    node.name = String(node.name ?? 'Unnamed');
-    if (node.name.length > 100) node.name = node.name.slice(0, 100);
-    node.level = node.level || inferLevelByDepth(depth);
-    node.parent = parent;
-    node._id = state.globalId++; // Use existing globalId, don't reset
-    
-    if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
-
-    // Essential keys check
-    const essentialKeys = new Set(['name', 'children', 'level', 'parent', '_id', '_vx', '_vy', '_vr', '_leaves', '_stub']); // Keep _stub
-    for (const k of Object.keys(node)) {
-      if (!essentialKeys.has(k)) {
-        delete node[k];
-      }
-    }
-    
-    if (node.children && node.children.length === 0) {
-      node.children = [];
-    }
-
-    // Add children to stack for processing
-    for (let i = node.children.length - 1; i >= 0; i--) {
-      stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
-    }
-    
-    processed++;
-    // We can't show progress % here as we don't know total chunk size
-    if (processed % progressEvery === 0) {
-      // Don't use setProgress, just log
-      logDebug(`Indexing chunk… ${processed.toLocaleString()} nodes`);
-    }
-  }
-  
-  // Now compute descendant counts for the new nodes (post-order traversal)
-  while (postOrderStack.length) {
-    const n = postOrderStack.pop();
-    const ch = n.children || [];
-    
-    if (ch.length === 0) {
-      // A leaf node in the new chunk
-      // If it's *not* a stub, it's a true leaf.
-      if (!isStubNode(n)) {
-        n._leaves = 1;
-      } else {
-        // If it *is* a stub, we use its existing _leaves count
-        // (which was set during buildTreeFromManifest) or default to 1.
-        n._leaves = n._leaves || 1; 
-      }
-    } else {
-      // An internal node in the new chunk
-      let sum = 0;
-      for (let j = 0; j < ch.length; j++) {
-        sum += ch[j]._leaves || 1; // Child's leaves
-      }
-      n._leaves = sum;
-    }
-  }
-  
-  // The total leaves of the parent is the sum of its new children's leaves
-  const totalNewLeaves = newChildren.reduce((acc, child) => acc + (child._leaves || 1), 0);
-  return totalNewLeaves;
-}
-
-/**
- * Helper to walk up the tree and update leaf counts.
- */
-function updateAncestorLeaves(startNode, leavesDiff) {
-  if (leavesDiff === 0) return;
-  
-  let current = startNode;
-  while (current) {
-    current._leaves = (current._leaves || 0) + leavesDiff;
-    current = current.parent;
-  }
-}
-
-
-// *** END NEW HELPER FUNCTIONS ***
-
-
-/**
- * Load data for a stub node
- * THIS IS THE MODIFIED, EFFICIENT VERSION
- */
-export async function loadNodeData(node) {
-  if (!isStubNode(node)) {
-    console.log('[LAZY] Node is not a stub, no loading needed');
-    return node;
-  }
-
-  const nodePath = getNodePath(node);
-  console.log(`🔍 [LAZY] Loading data for stub node: ${nodePath}`);
-
-  const chunkInfo = findChunkForPath(nodePath);
-  if (!chunkInfo) {
-    console.warn(`[LAZY] No chunk found for path: ${nodePath}`);
-    // Remove stub flag so we don't try again
-    delete node._stub;
-    return node;
-  }
-
-  // Load the chunk
-  const chunkData = await loadChunk(chunkInfo.filename);
-        
-  // Merge chunk data into the node
-  if (chunkData && chunkData.children && chunkData.children.length > 0) {
-    console.log(`🔗 [LAZY] Merging ${chunkData.children.length} children into node ${node.name}`);
-    
-    // *** START REPLACEMENT ***
-    // Old way (very slow):
-    // node.children = chunkData.children;
-    // await indexTreeProgressive(state.DATA_ROOT);
-    
-    // New efficient way:
-    const newChildren = chunkData.children;
-    
-    // 1. Index *only* the new chunk, attaching it to the current node
-    // This will assign IDs, parents, levels, and compute _leaves for the new nodes
-    // It returns the total number of leaves in this new branch.
-    const newLeaves = await indexNewChunk(node, newChildren);
-    
-    // 2. Attach the fully indexed children
-    node.children = newChildren;
-    
-    // 3. The stub node itself is no longer a stub
-    delete node._stub;
-    
-    // 4. Update ancestor leaf counts
-    // The old _leaves count for the stub was likely 1 (or whatever was set).
-    // The new _leaves count is `newLeaves`.
-    // The difference needs to be propagated up.
-    const oldLeaves = node._leaves || 1; // Get the stub's old leaf count
-    const leavesDiff = newLeaves - oldLeaves;
-    
-    // Set the node's new leaf count
-    node._leaves = newLeaves;
-    
-    // Propagate the difference up the ancestor chain
-    if (node.parent) {
-      updateAncestorLeaves(node.parent, leavesDiff);
-    }
-    
-    logInfo(`✅ [LAZY] Efficiently merged ${newChildren.length} children and ${newLeaves} leaves. Propagated diff of ${leavesDiff}.`);
-    // *** END REPLACEMENT ***
-    
-  } else {
-    // No children found, or empty chunk
-    logDebug(`[LAZY] Chunk for ${node.name} was empty or had no children.`);
-    delete node._stub;
-    node.children = [];
-    
-    // Update leaf counts
-    const oldLeaves = node._leaves || 1;
-    const newLeaves = 1; // It's now a true leaf
-    const leavesDiff = newLeaves - oldLeaves;
-    node._leaves = newLeaves;
-    if (node.parent && leavesDiff !== 0) {
-      updateAncestorLeaves(node.parent, leavesDiff);
-    }
-  }
-
-  return node;
+  return path;
 }

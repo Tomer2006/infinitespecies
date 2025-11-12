@@ -1,0 +1,28 @@
+{
+  "Life": {
+    "name": "Life",
+    "level": 0,
+    "children": [
+      {
+        "name": "Bacteria",
+        "_stub": true,
+        "_childCount": 2
+      },
+      {
+        "name": "Eukaryota",
+        "children": [
+          {
+            "name": "Animalia",
+            "_stub": true,
+            "_childCount": 2
+          },
+          {
+            "name": "Plantae",
+            "_stub": true,
+            "_childCount": 2
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -35,6 +35,7 @@ export function layoutFor(subtree) {
     const cx = diameter / 2,
       cy = diameter / 2;
 
+
     let nodeCount = 0;
     h.each(d => {
       d._vx = d.x - cx;

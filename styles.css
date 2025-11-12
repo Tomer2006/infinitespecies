@@ -127,9 +127,9 @@ canvas.loading{pointer-events:none;opacity:0.7}
 .landing-btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(106,166,255,.4)}
 .landing-btn.secondary{background:#151935;border:2px solid #2a316d;color:#eaf0ff}
 .landing-btn.secondary:hover{background:#1a214a;border-color:#314193;transform:translateY(-1px)}
-.btn-icon{font-size:1.5rem}
-.btn-text{white-space:nowrap}
-.btn-hint{font-size:0.75rem;opacity:0.8;font-weight:400;color:rgba(15,18,32,0.7)}
+.btn-icon{font-size:1.5rem;pointer-events:none}
+.btn-text{white-space:nowrap;pointer-events:none}
+.btn-hint{font-size:0.75rem;opacity:0.8;font-weight:400;color:rgba(15,18,32,0.7);pointer-events:none}
 .landing-btn.primary .btn-hint{color:rgba(15,18,32,0.6)}
 .landing-btn.secondary .btn-hint{color:rgba(234,240,255,0.6)}
 .landing-footer{color:#9aa3c7;font-size:.9rem;margin-top:2rem}

@@ -2,8 +2,6 @@ import { getContext, W, H, worldToScreen } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor } from './constants.js';
 import { perf } from './performance.js';
-import { nodeInView } from './picking.js';
-import { logInfo, logWarn, logError, logDebug, logTrace } from './logger.js';
 
 // Optimized text measurement cache with size limits and hit tracking
 const measureCache = new Map();
@@ -61,14 +59,10 @@ function getGridPattern(ctx) {
 }
 
 export function draw() {
-  const startTime = performance.now();
   const ctx = getContext();
   if (!ctx || !state.layout) {
-    logTrace('Draw skipped - no context or layout');
     return;
   }
-
-  logTrace(`Starting draw: camera=(${state.camera.x.toFixed(2)}, ${state.camera.y.toFixed(2)}, ${state.camera.k.toFixed(4)}), current_node="${state.current?.name || 'none'}"`);
 
   // Periodic memory cleanup
   performMemoryCleanup();
@@ -314,13 +308,6 @@ export function draw() {
       const cell = perf.rendering.labelGridCellPx;
 
       // Pre-compute cell keys to avoid repeated calculations
-      const keyCache = new Map();
-
-      const getKey = (x, y) => {
-        const key = `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
-        return key;
-      };
-
       const cellsForRect = r => {
         const cells = [];
         const x1 = Math.floor(r.x1 / cell);
@@ -392,10 +379,6 @@ export function draw() {
       }
     }
   }
-
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-  logTrace(`Draw completed: ${duration.toFixed(2)}ms`);
 }
 
 

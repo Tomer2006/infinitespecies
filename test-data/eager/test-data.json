@@ -1,0 +1,45 @@
+{
+  "name": "Life",
+  "level": 0,
+  "children": [
+    {
+      "name": "Bacteria",
+      "level": 1,
+      "children": [
+        {
+          "name": "Proteobacteria",
+          "level": 2,
+          "children": [
+            {"name": "Escherichia coli", "level": 3}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Eukaryota",
+      "level": 1,
+      "children": [
+        {
+          "name": "Animalia",
+          "level": 2,
+          "children": [
+            {
+              "name": "Chordata",
+              "level": 3,
+              "children": [
+                {"name": "Homo sapiens", "level": 4}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plantae",
+          "level": 2,
+          "children": [
+            {"name": "Arabidopsis thaliana", "level": 3}
+          ]
+        }
+      ]
+    }
+  ]
+}

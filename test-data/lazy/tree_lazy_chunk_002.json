@@ -1,0 +1,24 @@
+{
+  "Animalia": {
+    "name": "Animalia",
+    "level": 2,
+    "children": [
+      {
+        "name": "Chordata",
+        "level": 3,
+        "children": [
+          {"name": "Homo sapiens", "level": 4},
+          {"name": "Mus musculus", "level": 4}
+        ]
+      },
+      {
+        "name": "Arthropoda",
+        "level": 3,
+        "children": [
+          {"name": "Drosophila melanogaster", "level": 4},
+          {"name": "Apis mellifera", "level": 4}
+        ]
+      }
+    ]
+  }
+}

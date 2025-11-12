@@ -161,6 +161,29 @@ const manifestPath = path.join(OUTPUT_DIR, 'manifest.json');
 fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
 console.log(`✅ Manifest created`);
 
+// Create skeleton (first 2 levels)
+console.log('\n🦴 Creating skeleton...');
+function createSkeleton(node, depth = 0) {
+  const skeleton = { name: node.name };
+  if (depth < 2 && node.children && node.children.length > 0) {
+    skeleton.children = node.children.map(c => createSkeleton(c, depth + 1));
+  } else if (node.children && node.children.length > 0) {
+    skeleton._hasChildren = true;
+    skeleton._childCount = node.children.length;
+  }
+  return skeleton;
+}
+
+const skeletonRoot = {
+  name: 'Life',
+  children: rootChildren.slice(0, Math.min(100, rootChildren.length)).map(c => createSkeleton(c, 1))
+};
+
+const skeletonPath = path.join(OUTPUT_DIR, 'tree_skeleton.json');
+fs.writeFileSync(skeletonPath, JSON.stringify(skeletonRoot, null, 2), 'utf8');
+const skeletonSize = fs.statSync(skeletonPath).size;
+console.log(`✅ Skeleton created: ${(skeletonSize / 1024).toFixed(2)}KB`);
+
 // Summary
 console.log('\n' + '='.repeat(60));
 console.log('🎉 BALANCED SPLITTING COMPLETE!');

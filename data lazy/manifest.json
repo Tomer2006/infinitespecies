@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "type": "lazy_loading_optimized",
-  "created": "2025-10-29T11:45:19.901Z",
-  "source_file": "./tree big fie data/tree_deduped.json",
+  "created": "2025-11-02T12:50:29.166Z",
+  "source_file": "./full data/tree_deduped.json",
   "target_chunk_mb": 10,
   "total_files": 46,
   "total_size_bytes": 144797675,

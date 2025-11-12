@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const INPUT_FILE = './tree big fie data/tree_deduped.json';
+const INPUT_FILE = './full data/tree_deduped.json';
 const OUTPUT_DIR = './data lazy';
 const TARGET_CHUNK_MB = 10; // Target size for each chunk
 const TARGET_CHUNK_BYTES = TARGET_CHUNK_MB * 1024 * 1024;
@@ -204,6 +204,99 @@ const manifest = {
 const manifestPath = path.join(OUTPUT_DIR, 'manifest.json');
 fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
 console.log(`\n📋 Manifest: ${manifestPath}`);
+
+// Create skeleton (first 2 levels only, with stubs for nodes that have chunks)
+// Build a set of paths that have chunks
+const chunkPaths = new Set(chunks.map(c => c.path));
+
+// Helper to check if a node is significant (has chunks or has many children)
+function isSignificantNode(node, nodePathStr, depth) {
+  // If it has a chunk, it's significant
+  if (chunkPaths.has(nodePathStr)) return true;
+  
+  // At depth 1 (under Life), only show major branches
+  if (depth === 1) {
+    // Major known branches
+    const majorBranches = ['cellular organisms', 'Bacteria', 'Eukaryota', 'Archaea', 'Viruses'];
+    if (majorBranches.some(branch => node.name.toLowerCase().includes(branch.toLowerCase()))) return true;
+    // Or if it has many children (indicating it's a major branch)
+    const childCount = node.children?.length || 0;
+    if (childCount > 100) return true;
+    return false;
+  }
+  
+  // For other depths, check if it has many children (major branch)
+  const childCount = node.children?.length || 0;
+  if (childCount > 10) return true;
+  
+  return false;
+}
+
+function createSkeleton(node, depth = 0, maxDepth = 2, parentPath = []) {
+  const nodePath = [...parentPath, node.name];
+  const nodePathStr = nodePath.join(' > ');
+  
+  // At root level (depth 0), only include significant children
+  if (depth === 0) {
+    const skeleton = { name: node.name };
+    if (node.children && node.children.length > 0) {
+      // Filter to only significant children
+      const significantChildren = node.children.filter(child => {
+        const childPath = [node.name, child.name].join(' > ');
+        return isSignificantNode(child, childPath, depth);
+      });
+      
+      // If no significant children, include all (fallback)
+      const childrenToInclude = significantChildren.length > 0 ? significantChildren : node.children.slice(0, 10);
+      
+      skeleton.children = childrenToInclude.map(child => createSkeleton(child, depth + 1, maxDepth, nodePath));
+    }
+    return skeleton;
+  }
+  
+  // If this node has a corresponding chunk, mark it as a stub
+  if (depth >= maxDepth && chunkPaths.has(nodePathStr)) {
+    return {
+      name: node.name,
+      _stub: true,
+      _childCount: node.children?.length || 0
+    };
+  }
+  
+  // If at max depth but no chunk, include the node normally (it's in a parent chunk)
+  if (depth >= maxDepth) {
+    const skeleton = { name: node.name };
+    // Don't include children at max depth if no chunk exists
+    return skeleton;
+  }
+  
+  // At depth 1 (under major branches), also filter to significant children
+  if (depth === 1) {
+    const skeleton = { name: node.name };
+    if (node.children && node.children.length > 0) {
+      // Filter to only significant children
+      const significantChildren = node.children.filter(child => {
+        const childPathStr = [...nodePath, child.name].join(' > ');
+        return isSignificantNode(child, childPathStr, depth + 1);
+      });
+      
+      // If no significant children found, include all (fallback)
+      const childrenToInclude = significantChildren.length > 0 ? significantChildren : node.children;
+      skeleton.children = childrenToInclude.map(child => createSkeleton(child, depth + 1, maxDepth, nodePath));
+    }
+    return skeleton;
+  }
+  
+  // Otherwise, recurse into children
+  const skeleton = { name: node.name };
+  if (node.children && node.children.length > 0) {
+    skeleton.children = node.children.map(child => createSkeleton(child, depth + 1, maxDepth, nodePath));
+  }
+  return skeleton;
+}
+
+// No longer generating skeleton file - structure is generated on-the-fly from manifest
+console.log(`✅ Skeleton generation skipped - will be generated from manifest at runtime`);
 
 // Summary
 const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);

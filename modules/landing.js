@@ -2,7 +2,7 @@
 // Handles the initial start menu and navigation to different app sections
 
 import { showLoading, hideLoading } from './loading.js';
-import { loadFromUrl, loadEager, loadLazy } from './data.js';
+import { loadEager, loadLazy, startAutoLoading } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
 import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
@@ -15,6 +15,10 @@ export function showLandingPage() {
     landingPage.style.display = 'flex';
     landingPage.setAttribute('aria-hidden', 'false');
   }
+  const canvas = document.getElementById('view');
+  if (canvas) {
+    canvas.style.pointerEvents = 'none';
+  }
 }
 
 export function hideLandingPage() {
@@ -22,6 +26,10 @@ export function hideLandingPage() {
   if (landingPage) {
     landingPage.style.display = 'none';
     landingPage.setAttribute('aria-hidden', 'true');
+  }
+  const canvas = document.getElementById('view');
+  if (canvas) {
+    canvas.style.pointerEvents = 'auto';
   }
 }
 
@@ -170,6 +178,10 @@ async function initDataLazy() {
     console.log('🎨 [LANDING] Triggering initial render...');
     tick();
 
+    // Start automatic viewport-based loading
+    console.log('🚀 [LANDING] Starting automatic viewport-based loading system');
+    startAutoLoading();
+
     return;
   } catch (err) {
     const totalDuration = performance.now() - startTime;
@@ -197,88 +209,335 @@ async function initDataLazy() {
   }
 }
 
+export async function initTestDataAndDeepLinks() {
+  // Initialize deep links
+  initDeepLinks();
+
+  // Load test data (eager mode)
+  await initTestData();
+
+  // After data load completes, attempt a jump to a lightweight start node
+  // Note: jump is triggered inside setDataRoot after layout/indexing
+}
+
+export async function initTestDataAndDeepLinksLazy() {
+  // Initialize deep links
+  initDeepLinks();
+
+  // Load test data in lazy mode
+  await initTestDataLazy();
+
+  // After data load completes, attempt a jump to a lightweight start node
+  // Note: jump is triggered inside setDataRoot after layout/indexing
+}
+
+async function initTestData() {
+  console.log('🚀 [LANDING] Starting test data initialization process');
+  const startTime = performance.now();
+
+  try {
+    console.log('⚡ [LANDING] Using lazy loading mode for test data');
+    showLoading('Loading test data skeleton…');
+
+    console.log('📊 [LANDING] Calling loadLazy with test data lazy directory');
+    await loadLazy('test-data/lazy');
+
+    const totalDuration = performance.now() - startTime;
+    console.log(`✅ [LANDING] Test data loaded successfully in ${totalDuration.toFixed(2)}ms`);
+    console.log('🔄 [LANDING] Hiding loading screen...');
+    hideLoading();
+
+    console.log('🎨 [LANDING] Triggering initial render...');
+    tick();
+
+    // Start automatic viewport-based loading
+    console.log('🚀 [LANDING] Starting automatic viewport-based loading system');
+    startAutoLoading();
+
+    return;
+  } catch (err) {
+    const totalDuration = performance.now() - startTime;
+    console.error(`❌ [LANDING] Test data loading failed after ${totalDuration.toFixed(2)}ms`);
+    console.error('🔍 [LANDING] Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+
+    logWarn(`Failed to load test data: ${err.message}`);
+
+    // Fall back to manual JSON loading prompt
+    hideLoading();
+    const modal = document.getElementById('jsonModal');
+    if (modal) {
+      console.log('🪟 [LANDING] Showing JSON modal for manual upload');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    const label = document.getElementById('progressLabel');
+    if (label) {
+      label.textContent = 'Test data failed to load. Use Load JSON to import your taxonomy.';
+    }
+  }
+}
+
+async function initTestDataLazy() {
+  console.log('🚀 [LANDING] Starting test data lazy initialization');
+  const startTime = performance.now();
+
+  try {
+    console.log('⚡ [LANDING] Using lazy loading mode for test data');
+    showLoading('Loading test data skeleton…');
+
+    console.log('📊 [LANDING] Calling loadLazy with test data lazy directory');
+    await loadLazy('test-data/lazy');
+
+    const totalDuration = performance.now() - startTime;
+    console.log(`✅ [LANDING] Test data lazy loading completed successfully in ${totalDuration.toFixed(2)}ms`);
+    console.log('🔄 [LANDING] Hiding loading screen...');
+    hideLoading();
+
+    console.log('🎨 [LANDING] Triggering initial render...');
+    tick();
+
+    // Start automatic viewport-based loading
+    console.log('🚀 [LANDING] Starting automatic viewport-based loading system');
+    startAutoLoading();
+
+    return;
+  } catch (err) {
+    const totalDuration = performance.now() - startTime;
+    console.error(`❌ [LANDING] Test data lazy loading failed after ${totalDuration.toFixed(2)}ms`);
+    console.error('🔍 [LANDING] Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+
+    logWarn(`Failed to load test data lazy: ${err.message}`);
+
+    // Fall back to manual JSON loading prompt
+    hideLoading();
+    const modal = document.getElementById('jsonModal');
+    if (modal) {
+      console.log('🪟 [LANDING] Showing JSON modal for manual upload');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    const label = document.getElementById('progressLabel');
+    if (label) {
+      label.textContent = 'Test data lazy loading failed. Use Load JSON to import your taxonomy.';
+    }
+  }
+}
+
 export function initLandingPage() {
-  const startExplorationBtn = document.getElementById('startExplorationBtn');
-  const startLazyBtn = document.getElementById('startLazyBtn');
-  const loadDataBtn = document.getElementById('loadDataBtn');
-  const helpBtn = document.getElementById('helpBtn');
-  const aboutBtn = document.getElementById('aboutBtn');
+  console.log('🎯 [LANDING] Initializing landing page buttons...');
 
-  // Start Exploration (Eager) - Load all data at once from data/ folder
-  if (startExplorationBtn) {
-    startExplorationBtn.addEventListener('click', async () => {
-      hideLandingPage();
-      // Make sure the topbar is visible
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        topbar.style.visibility = 'visible';
-      }
+  try {
+    const startExplorationBtn = document.getElementById('startExplorationBtn');
+    const startLazyBtn = document.getElementById('startLazyBtn');
+    const loadDataBtn = document.getElementById('loadDataBtn');
+    const helpBtn = document.getElementById('helpBtn');
+    const aboutBtn = document.getElementById('aboutBtn');
+    const testDataBtn = document.getElementById('testDataBtn');
+    const testDataLazyBtn = document.getElementById('testDataLazyBtn');
 
-      // Load data and initialize deep links (eager mode)
-      await initDataAndDeepLinks();
-    });
-  }
+    // Start Exploration (Eager) - Load all data at once from data/ folder
+    try {
+      if (startExplorationBtn) {
+        startExplorationBtn.addEventListener('click', async () => {
+          try {
+            hideLandingPage();
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
 
-  // Start Exploration (Lazy) - Load skeleton first from data lazy/ folder
-  if (startLazyBtn) {
-    startLazyBtn.addEventListener('click', async () => {
-      hideLandingPage();
-      // Make sure the topbar is visible
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        topbar.style.visibility = 'visible';
+            // Load data and initialize deep links (eager mode)
+            await initDataAndDeepLinks();
+          } catch (error) {
+            console.error('❌ [LANDING] Error in startExplorationBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] startExplorationBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] startExplorationBtn not found');
       }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize startExplorationBtn:', error);
+    }
 
-      // Load data in lazy mode
-      await initDataAndDeepLinksLazy();
-    });
-  }
+    // Start Exploration (Lazy) - Load skeleton first from data lazy/ folder
+    try {
+      if (startLazyBtn) {
+        startLazyBtn.addEventListener('click', async () => {
+          try {
+            hideLandingPage();
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
 
-  // Load Custom Data - Open the JSON modal
-  if (loadDataBtn) {
-    loadDataBtn.addEventListener('click', () => {
-      hideLandingPage();
-      const jsonModal = document.getElementById('jsonModal');
-      if (jsonModal) {
-        jsonModal.classList.add('open');
-        jsonModal.setAttribute('aria-hidden', 'false');
+            // Load data in lazy mode
+            await initDataAndDeepLinksLazy();
+          } catch (error) {
+            console.error('❌ [LANDING] Error in startLazyBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] startLazyBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] startLazyBtn not found');
       }
-      // Make sure the topbar is visible
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        topbar.style.visibility = 'visible';
-      }
-    });
-  }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize startLazyBtn:', error);
+    }
 
-  // Help - Open the help modal
-  if (helpBtn) {
-    helpBtn.addEventListener('click', () => {
-      hideLandingPage();
-      const helpModal = document.getElementById('helpModal');
-      if (helpModal) {
-        helpModal.classList.add('open');
-        helpModal.setAttribute('aria-hidden', 'false');
+    // Load Custom Data - Open the JSON modal
+    try {
+      if (loadDataBtn) {
+        loadDataBtn.addEventListener('click', () => {
+          try {
+            hideLandingPage();
+            const jsonModal = document.getElementById('jsonModal');
+            if (jsonModal) {
+              jsonModal.classList.add('open');
+              jsonModal.setAttribute('aria-hidden', 'false');
+            }
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
+          } catch (error) {
+            console.error('❌ [LANDING] Error in loadDataBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] loadDataBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] loadDataBtn not found');
       }
-      // Make sure the topbar is visible
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        topbar.style.visibility = 'visible';
-      }
-    });
-  }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize loadDataBtn:', error);
+    }
 
-  // About - Open the about modal
-  if (aboutBtn) {
-    aboutBtn.addEventListener('click', () => {
-      hideLandingPage();
-      showAboutModal();
-      // Make sure the topbar is visible
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        topbar.style.visibility = 'visible';
+    // Help - Open the help modal
+    try {
+      if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+          try {
+            hideLandingPage();
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal) {
+              helpModal.classList.add('open');
+              helpModal.setAttribute('aria-hidden', 'false');
+            }
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
+          } catch (error) {
+            console.error('❌ [LANDING] Error in helpBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] helpBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] helpBtn not found');
       }
-    });
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize helpBtn:', error);
+    }
+
+    // About - Open the about modal
+    try {
+      if (aboutBtn) {
+        aboutBtn.addEventListener('click', () => {
+          try {
+            hideLandingPage();
+            showAboutModal();
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
+          } catch (error) {
+            console.error('❌ [LANDING] Error in aboutBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] aboutBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] aboutBtn not found');
+      }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize aboutBtn:', error);
+    }
+
+    // Test Data (Eager) - Load simple test data
+    try {
+      if (testDataBtn) {
+        testDataBtn.addEventListener('click', async () => {
+          try {
+            hideLandingPage();
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
+
+            // Load test data in eager mode
+            await initTestDataAndDeepLinks();
+          } catch (error) {
+            console.error('❌ [LANDING] Error in testDataBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] testDataBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] testDataBtn not found');
+      }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize testDataBtn:', error);
+    }
+
+    // Test Data Lazy - Load simple test data in lazy mode
+    try {
+      if (testDataLazyBtn) {
+        testDataLazyBtn.addEventListener('click', async () => {
+          try {
+            hideLandingPage();
+            // Make sure the topbar is visible
+            const topbar = document.querySelector('.topbar');
+            if (topbar) {
+              topbar.style.visibility = 'visible';
+            }
+
+            // Load test data in lazy mode
+            await initTestDataAndDeepLinksLazy();
+          } catch (error) {
+            console.error('❌ [LANDING] Error in testDataLazyBtn click handler:', error);
+          }
+        });
+        console.log('✅ [LANDING] testDataLazyBtn initialized');
+      } else {
+        console.warn('⚠️ [LANDING] testDataLazyBtn not found');
+      }
+    } catch (error) {
+      console.error('❌ [LANDING] Failed to initialize testDataLazyBtn:', error);
+    }
+
+    console.log('🎉 [LANDING] All landing page buttons initialized successfully');
+  } catch (error) {
+    console.error('❌ [LANDING] Critical error initializing landing page:', error);
+    // Even if initialization fails, show a helpful error to the user
+    const landingPage = document.getElementById('landingPage');
+    if (landingPage) {
+      const errorMsg = document.createElement('div');
+      errorMsg.style.cssText = 'color: red; text-align: center; margin-top: 20px; font-size: 14px;';
+      errorMsg.textContent = 'Error initializing buttons. Please refresh the page.';
+      landingPage.appendChild(errorMsg);
+    }
   }
 }
 

@@ -5,9 +5,9 @@
 export { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot } from './data-lazy.js';
 
 // Eager loading functions
-export { loadEager, loadFromUrl } from './data-eager.js';
+export { loadEager } from './data-eager.js';
 
-// Lazy loading functions
-export { isStubNode, loadLazy, loadChunk, findChunkForPath, getNodePath, loadNodeData } from './data-lazy.js';
+// Lazy loading functions - viewport-based automatic loading
+export { isStubNode, loadLazy, loadChunk, getNodePath, autoLoadVisibleChunks, onViewportChange, startAutoLoading } from './data-lazy.js';
 
 

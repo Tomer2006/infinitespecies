@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://en.wikipedia.org" crossorigin>
+  <script type="importmap">
+  {
+    "imports": {
+      "d3-hierarchy": "https://cdn.jsdelivr.net/npm/d3-hierarchy@3/+esm",
+      "d3-ease": "https://cdn.jsdelivr.net/npm/d3-ease@3/+esm"
+    }
+  }
+  </script>
   <link rel="modulepreload" href="app-modular.js">
   <link rel="modulepreload" href="modules/canvas.js">
   <link rel="modulepreload" href="modules/render.js">
@@ -19,14 +27,6 @@
   <link rel="modulepreload" href="modules/performance.js">
   <link rel="modulepreload" href="modules/state.js">
   <link rel="modulepreload" href="modules/landing.js">
-  <script type="importmap">
-  {
-    "imports": {
-      "d3-hierarchy": "https://cdn.jsdelivr.net/npm/d3-hierarchy@3/+esm",
-      "d3-ease": "https://cdn.jsdelivr.net/npm/d3-ease@3/+esm"
-    }
-  }
-  </script>
 </head>
 <body>
 <div class="app">
@@ -156,6 +156,18 @@
         <button class="landing-btn secondary" id="aboutBtn">
           <span class="btn-icon">ℹ️</span>
           <span class="btn-text">About</span>
+        </button>
+
+        <button class="landing-btn secondary" id="testDataBtn">
+          <span class="btn-icon">🧪</span>
+          <span class="btn-text">Test Data</span>
+          <span class="btn-hint">Load simple test taxonomy data</span>
+        </button>
+
+        <button class="landing-btn secondary" id="testDataLazyBtn">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">Test Data Lazy</span>
+          <span class="btn-hint">Load simple test data (lazy mode)</span>
         </button>
       </div>
 

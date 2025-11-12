@@ -2,7 +2,7 @@ import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
 import { perf } from './performance.js';
-import { logInfo, logWarn, logError, logDebug } from './logger.js';
+import { logDebug } from './logger.js';
 
 let ctx;
 let W = 0;

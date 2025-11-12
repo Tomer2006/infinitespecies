@@ -20,7 +20,6 @@ import {
   fileInput,
   jsonText,
   loadError,
-  providerSelect,
   progressLabel
 } from './dom.js';
 import { requestRender, screenToWorld } from './canvas.js';
@@ -33,9 +32,9 @@ import { openProviderSearch } from './providers.js';
 import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
-import { loadFromJSONText } from './data.js';
+import { loadFromJSONText, onViewportChange } from './data.js';
 import { getNodePath } from './deeplink.js';
-import { showBigFor, hideBigPreview } from './preview.js';
+import { hideBigPreview } from './preview.js';
 
 export function initEvents() {
   let isMiddlePanning = false;
@@ -57,6 +56,8 @@ export function initEvents() {
       state.camera.y -= dy / state.camera.k;
       lastPan = { x, y };
       requestRender();
+      // Trigger viewport change for lazy loading
+      onViewportChange();
       // Hide tooltip and big preview while panning
       const tooltipEl = document.getElementById('tooltip');
       if (tooltipEl) tooltipEl.style.opacity = 0;
@@ -87,19 +88,14 @@ export function initEvents() {
   });
 
   canvas.addEventListener('mousedown', ev => {
-    logTrace(`Mouse down: button=${ev.button}, position=(${ev.clientX}, ${ev.clientY})`);
     if (ev.button === 1) {
       isMiddlePanning = true;
       const rect = canvas.getBoundingClientRect();
       lastPan = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-      logDebug('Middle mouse pan started');
       ev.preventDefault();
     }
   });
   window.addEventListener('mouseup', () => {
-    if (isMiddlePanning) {
-      logDebug('Middle mouse pan ended');
-    }
     isMiddlePanning = false;
     lastPan = null;
   });
@@ -163,17 +159,13 @@ export function initEvents() {
         my = ev.clientY - rect.top;
       const [wx, wy] = screenToWorld(mx, my);
 
-      const oldK = state.camera.k;
-      const oldX = state.camera.x;
-      const oldY = state.camera.y;
-
       state.camera.k *= scale;
       state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
       state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
 
-      logTrace(`Zoom: deltaY=${ev.deltaY}, scale=${scale.toFixed(4)}, zoom=${oldK.toFixed(4)}→${state.camera.k.toFixed(4)}, pan=(${oldX.toFixed(2)}, ${oldY.toFixed(2)})→(${state.camera.x.toFixed(2)}, ${state.camera.y.toFixed(2)})`);
-
       requestRender();
+      // Trigger viewport change for lazy loading
+      onViewportChange();
       ev.preventDefault();
     },
     { passive: false }

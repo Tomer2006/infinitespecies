@@ -29,6 +29,7 @@ export const state = {
   lazyManifest: null,
   loadedChunks: new Map(), // filename -> chunk data
   lazyBaseUrl: 'data lazy',
+  lazyPathToChunk: new Map(), // path string -> chunk filename
 };
 
 export function rebuildNodeMap() {

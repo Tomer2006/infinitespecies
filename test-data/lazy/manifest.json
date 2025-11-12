@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "type": "lazy_loading_optimized",
+  "created": "2025-10-30T12:00:00.000Z",
+  "source_file": "test-data.json",
+  "target_chunk_mb": 1,
+  "total_files": 4,
+  "total_size_bytes": 1775,
+  "root_name": "Life",
+  "files": [
+    {
+      "filename": "tree_lazy_chunk_004.json",
+      "size_bytes": 502,
+      "size_mb": 0.0005,
+      "path": "Life"
+    },
+    {
+      "filename": "tree_lazy_chunk_001.json",
+      "size_bytes": 531,
+      "size_mb": 0.0005,
+      "path": "Life > Bacteria"
+    },
+    {
+      "filename": "tree_lazy_chunk_002.json",
+      "size_bytes": 510,
+      "size_mb": 0.0005,
+      "path": "Life > Eukaryota > Animalia"
+    },
+    {
+      "filename": "tree_lazy_chunk_003.json",
+      "size_bytes": 232,
+      "size_mb": 0.0002,
+      "path": "Life > Eukaryota > Plantae"
+    }
+  ]
+}

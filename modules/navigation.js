@@ -4,9 +4,8 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { showLoading, hideLoading } from './loading.js';
-import { logInfo, logWarn, logDebug, logTrace } from './logger.js';
-import { isStubNode, loadNodeData } from './data.js';
+import { logInfo, logDebug, logTrace } from './logger.js';
+import { onViewportChange } from './data.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -49,19 +48,6 @@ export async function updateNavigation(node, animate = true) {
 
   logInfo(`Starting navigation to "${node.name}" (animate=${animate})`);
 
-  // Load stub node data if in lazy mode
-  if (state.loadMode === 'lazy' && isStubNode(node)) {
-    logDebug(`Detected stub node: "${node.name}", loading chunk data...`);
-    showLoading('Loading node data...');
-    try {
-      await loadNodeData(node);
-      logInfo(`Successfully loaded data for stub node: "${node.name}"`);
-    } catch (err) {
-      logWarn(`Failed to load chunk data for stub node: "${node.name}": ${err.message}`);
-    }
-    hideLoading();
-  }
-
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;
 
@@ -80,19 +66,22 @@ export async function updateNavigation(node, animate = true) {
 
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-    logDebug(`Starting camera animation: zoom to ${targetK.toFixed(4)}`);
     animateToCam(0, 0, targetK);
   } else {
     state.camera.x = 0;
     state.camera.y = 0;
     state.camera.k = Math.min(W, H) / state.layout.diameter;
-    logDebug(`Camera set instantly: zoom to ${state.camera.k.toFixed(4)}`);
   }
 
   requestRender();
 
   const endTime = performance.now();
   logInfo(`Navigation completed: ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
+  
+  // Trigger viewport-based loading after navigation settles
+  if (state.loadMode === 'lazy') {
+    setTimeout(() => onViewportChange(), 500);
+  }
 }
 
 // Legacy function for backward compatibility
