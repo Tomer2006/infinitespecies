@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
-import { perf } from './performance.js';
+import { perf } from './settings.js';
 import { easeCubicInOut } from 'd3-ease';
 import { onViewportChange } from './data.js';
 

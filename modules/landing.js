@@ -8,6 +8,7 @@ import { updateNavigation } from './navigation.js';
 import { state } from './state.js';
 import { tick } from './canvas.js';
 import { logWarn } from './logger.js';
+import { perf } from './settings.js';
 
 export function showLandingPage() {
   const landingPage = document.getElementById('landingPage');
@@ -342,6 +343,22 @@ export function initLandingPage() {
     const aboutBtn = document.getElementById('aboutBtn');
     const testDataBtn = document.getElementById('testDataBtn');
     const testDataLazyBtn = document.getElementById('testDataLazyBtn');
+
+    // Apply settings to conditionally show/hide buttons
+    if (startLazyBtn && !perf.startPage.showLazyLoadButton) {
+      startLazyBtn.style.display = 'none';
+      console.log('🎯 [LANDING] Hiding lazy load button based on settings');
+    }
+
+    if (testDataBtn && !perf.startPage.showTestDataButton) {
+      testDataBtn.style.display = 'none';
+      console.log('🎯 [LANDING] Hiding test data button based on settings');
+    }
+
+    if (testDataLazyBtn && !perf.startPage.showTestDataButton) {
+      testDataLazyBtn.style.display = 'none';
+      console.log('🎯 [LANDING] Hiding test data lazy button based on settings');
+    }
 
     // Start Exploration (Eager) - Load all data at once from data/ folder
     try {

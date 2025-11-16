@@ -1,6 +1,6 @@
 import { screenToWorld, viewportRadius, getFrameCounter } from './canvas.js';
 import { state } from './state.js';
-import { perf } from './performance.js';
+import { perf } from './settings.js';
 
 let _cachedViewR = 0;
 let _cachedFrame = -1;

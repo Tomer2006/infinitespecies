@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "type": "lazy_loading_optimized",
+  "created": "2025-11-14T10:34:31.626Z",
+  "source_file": "test-data/eager/test-data.json",
+  "target_chunk_mb": 0.5,
+  "split_depth": 2,
+  "total_files": 3,
+  "total_nodes": 10,
+  "total_size_bytes": 736,
+  "root_name": "Life",
+  "files": [
+    {
+      "filename": "tree_lazy_chunk_000.json",
+      "size_bytes": 269,
+      "size_mb": 0.00025653839111328125,
+      "path": "Life",
+      "node_count": 3
+    },
+    {
+      "filename": "tree_lazy_chunk_001.json",
+      "size_bytes": 179,
+      "size_mb": 0.00017070770263671875,
+      "path": "Life > Bacteria",
+      "node_count": 3
+    },
+    {
+      "filename": "tree_lazy_chunk_002.json",
+      "size_bytes": 288,
+      "size_mb": 0.000274658203125,
+      "path": "Life > Eukaryota",
+      "node_count": 5
+    }
+  ]
+}

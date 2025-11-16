@@ -1,7 +1,7 @@
 import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';
-import { perf } from './performance.js';
+import { perf } from './settings.js';
 import { logDebug } from './logger.js';
 
 let ctx;

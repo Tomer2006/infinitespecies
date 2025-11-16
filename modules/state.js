@@ -29,7 +29,8 @@ export const state = {
   lazyManifest: null,
   loadedChunks: new Map(), // filename -> chunk data
   lazyBaseUrl: 'data lazy',
-  lazyPathToChunk: new Map(), // path string -> chunk filename
+  lazyPathToChunk: new Map(),   // path string -> primary chunk filename (for backward compat)
+  lazyPathToChunks: new Map(),  // path string -> array of chunk filenames (for full merges)
 };
 
 export function rebuildNodeMap() {

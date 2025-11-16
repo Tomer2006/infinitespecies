@@ -1,7 +1,7 @@
 import { getContext, W, H, worldToScreen } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor } from './constants.js';
-import { perf } from './performance.js';
+import { perf } from './settings.js';
 
 // Optimized text measurement cache with size limits and hit tracking
 const measureCache = new Map();
