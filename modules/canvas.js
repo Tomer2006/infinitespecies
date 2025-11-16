@@ -19,8 +19,8 @@ let lastCam = { x: 0, y: 0, k: 1 };
 
 // Frame rate limiting
 let lastRenderTime = 0;
-let targetFrameTime = 1000 / 60; // Target 60 FPS
-let adaptiveFrameRate = true;
+let targetFrameTime = 1000 / perf.canvas.targetFPS;
+let adaptiveFrameRate = perf.canvas.adaptiveFrameRate;
 
 export function getContext() {
   return ctx;
@@ -95,7 +95,7 @@ function loop() {
 
   // Update FPS text ~8 times/sec to reduce layout cost
   framesSinceFps++;
-  if (fpsEl && now - lastFpsUpdate >= 125) {
+  if (fpsEl && now - lastFpsUpdate >= perf.canvas.fpsUpdateIntervalMs) {
     const sec = (now - lastFpsUpdate) / 1000;
     const fps = framesSinceFps / sec;
     fpsEl.textContent = buildOverlayText(fps);

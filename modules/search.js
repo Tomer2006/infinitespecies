@@ -3,8 +3,9 @@ import { worldToScreen } from './canvas.js';
 import { updateNavigation } from './navigation.js';
 import { searchResultsEl } from './dom.js';
 import { getNodePath } from './deeplink.js';
+import { perf } from './settings.js';
 
-export function findAllByQuery(q, limit = 50) {
+export function findAllByQuery(q, limit = perf.search.maxResults) {
   if (!q) return [];
   q = q.trim().toLowerCase();
   if (!q || !state.layout?.root) return [];
@@ -35,16 +36,16 @@ export function pulseAtNode(node) {
   el.style.top = sy - sr * 1.2 + 'px';
   el.style.width = sr * 2.4 + 'px';
   el.style.height = sr * 2.4 + 'px';
-  el.style.boxShadow = `0 0 ${sr * 0.6}px ${sr * 0.3}px rgba(113,247,197,.3), inset 0 0 ${sr * 0.5}px ${sr * 0.25}px rgba(113,247,197,.25)`;
-  el.style.border = '2px solid rgba(113,247,197,.6)';
+  el.style.boxShadow = `0 0 ${sr * perf.search.pulseShadowOuter}px ${sr * perf.search.pulseShadowInner}px rgba(113,247,197,.3), inset 0 0 ${sr * perf.search.pulseShadowOuter2}px ${sr * perf.search.pulseShadowInner2}px rgba(113,247,197,.25)`;
+  el.style.border = `2px solid ${perf.search.pulseColor}`;
   el
     .animate(
       [
         { transform: 'scale(0.9)', opacity: 0.0 },
-        { transform: 'scale(1)', opacity: 0.7, offset: 0.2 },
+        { transform: 'scale(1)', opacity: perf.search.pulseOpacity, offset: perf.search.pulseScaleOffset },
         { transform: 'scale(1.2)', opacity: 0.0 }
       ],
-      { duration: 900, easing: 'ease-out' }
+      { duration: perf.search.pulseDurationMs, easing: 'ease-out' }
     )
     .onfinish = () => {
     el.style.display = 'none';
@@ -117,15 +118,15 @@ function renderResults(nodes, q) {
 
 export function handleSearch(progressLabelEl) {
   const q = document.getElementById('searchInput').value;
-  const matches = findAllByQuery(q, 50);
+  const matches = findAllByQuery(q, perf.search.maxResults);
   if (!matches.length) {
     if (progressLabelEl) {
-      progressLabelEl.textContent = `No match for “${q}”`;
+      progressLabelEl.textContent = `No match for "${q}"`;
       progressLabelEl.style.color = 'var(--warn)';
       setTimeout(() => {
         progressLabelEl.textContent = '';
         progressLabelEl.style.color = '';
-      }, 900);
+      }, perf.search.noMatchDisplayMs);
     }
     hideResults();
     return;

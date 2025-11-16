@@ -123,7 +123,7 @@ export function onViewportChange() {
   viewportCheckTimer = setTimeout(() => {
     autoLoadVisibleChunks();
     viewportCheckTimer = null;
-  }, 150); // 150ms debounce
+  }, perf.timing.viewportCheckDebounceMs);
 }
 
 /**

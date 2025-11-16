@@ -1,5 +1,7 @@
 // Browser runtime metrics overlay helpers
 
+import { perf } from './settings.js';
+
 let gpuInfo = null;
 let eventLoopLagMs = 0;
 let lastIntervalTs = 0;
@@ -45,13 +47,13 @@ export function initRuntimeMetrics() {
   lastIntervalTs = performance.now();
   setInterval(() => {
     const now = performance.now();
-    const expected = lastIntervalTs + 500;
+    const expected = lastIntervalTs + perf.timing.metricsUpdateIntervalMs;
     const drift = now - expected; // positive when lagging
     lastIntervalTs = now;
     // EWMA to smooth
-    const alpha = 0.2;
+    const alpha = perf.timing.eventLoopLagAlpha;
     eventLoopLagMs = Math.max(0, alpha * drift + (1 - alpha) * eventLoopLagMs);
-  }, 500);
+  }, perf.timing.metricsUpdateIntervalMs);
 }
 
 export function buildOverlayText(currentFps) {

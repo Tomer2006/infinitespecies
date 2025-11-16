@@ -39,20 +39,21 @@ function performMemoryCleanup() {
 let gridPattern = null;
 function getGridPattern(ctx) {
   if (gridPattern) return gridPattern;
+  const tileSize = perf.rendering.gridTileSize;
   const tile = document.createElement('canvas');
-  tile.width = 40;
-  tile.height = 40;
+  tile.width = tileSize;
+  tile.height = tileSize;
   const tctx = tile.getContext('2d');
-  tctx.strokeStyle = '#8aa1ff';
-  tctx.globalAlpha = 0.05;
-  tctx.lineWidth = 1;
+  tctx.strokeStyle = perf.rendering.gridColor;
+  tctx.globalAlpha = perf.rendering.gridAlpha;
+  tctx.lineWidth = perf.rendering.gridLineWidth;
   tctx.beginPath();
   // vertical line at x=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(0, 40);
+  tctx.lineTo(0, tileSize);
   // horizontal line at y=0
   tctx.moveTo(0, 0);
-  tctx.lineTo(40, 0);
+  tctx.lineTo(tileSize, 0);
   tctx.stroke();
   gridPattern = ctx.createPattern(tile, 'repeat');
   return gridPattern;
@@ -109,11 +110,12 @@ export function draw() {
   if (perf.rendering.showGrid) {
     ctx.save();
     const pat = getGridPattern(ctx);
-    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % 40);
-    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % 40);
+    const tileSize = perf.rendering.gridTileSize;
+    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % tileSize);
+    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % tileSize);
     ctx.translate(offX, offY);
     ctx.fillStyle = pat;
-    ctx.fillRect(-offX, -offY, W + 40, H + 40);
+    ctx.fillRect(-offX, -offY, W + tileSize, H + tileSize);
     ctx.restore();
   }
 
@@ -213,7 +215,7 @@ export function draw() {
         // Simplified stroke for medium nodes
         if (sr >= LOD_MEDIUM * 2) {
           setLineWidth(1);
-          setStrokeStyle(d.children && d.children.length ? 'rgba(220,230,255,0.6)' : 'rgba(180,195,240,0.6)');
+          setStrokeStyle(d.children && d.children.length ? perf.rendering.strokeColorWithChildren : perf.rendering.strokeColorLeaf);
           ctx.stroke();
         }
         break;
@@ -225,9 +227,9 @@ export function draw() {
         setGlobalAlpha(1);
         ctx.fill();
         if (sr >= perf.rendering.strokeMinPxRadius) {
-          const lineWidth = Math.max(1, Math.min(3, 1.5 * Math.sqrt(Math.max(sr / 40, 0.25))));
+          const lineWidth = Math.max(perf.rendering.strokeLineWidthMin, Math.min(perf.rendering.strokeLineWidthMax, perf.rendering.strokeLineWidthBase * Math.sqrt(Math.max(sr / perf.rendering.gridTileSize, 0.25))));
           setLineWidth(lineWidth);
-          setStrokeStyle(d.children && d.children.length ? 'rgba(220,230,255,0.85)' : 'rgba(180,195,240,0.85)');
+          setStrokeStyle(d.children && d.children.length ? perf.rendering.strokeColorWithChildrenDetail : perf.rendering.strokeColorLeafDetail);
           ctx.stroke();
         }
         break;

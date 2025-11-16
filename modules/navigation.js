@@ -6,6 +6,7 @@ import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
 import { logInfo, logDebug, logTrace } from './logger.js';
 import { onViewportChange } from './data.js';
+import { perf } from './settings.js';
 
 export function setBreadcrumbs(node) {
   if (!breadcrumbsEl) return;
@@ -37,7 +38,7 @@ export function setBreadcrumbs(node) {
 export function fitNodeInView(node) {
   const d = state.nodeLayoutMap.get(node._id);
   if (!d) return;
-  const targetRadiusPx = Math.min(W, H) * 0.5;
+  const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
   const k = targetRadiusPx / d._vr;
   animateToCam(d._vx, d._vy, k);
 }
@@ -80,7 +81,7 @@ export async function updateNavigation(node, animate = true) {
   
   // Trigger viewport-based loading after navigation settles
   if (state.loadMode === 'lazy') {
-    setTimeout(() => onViewportChange(), 500);
+    setTimeout(() => onViewportChange(), perf.timing.navigationViewportDelayMs);
   }
 }
 

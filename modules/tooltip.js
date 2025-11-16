@@ -2,6 +2,7 @@ import { ttip, tName, tMeta } from './dom.js';
 import { state } from './state.js';
 import { showBigFor, hideBigPreview } from './preview.js';
 import { W, H } from './canvas.js';
+import { perf } from './settings.js';
 
 let lastThumbShownForId = 0;
 let thumbDelayTimer = null;
@@ -55,7 +56,7 @@ export function updateTooltip(n, px, py) {
       if (state.hoverNode && state.hoverNode._id === n._id) {
         showBigFor(n);
       }
-    }, 60);
+    }, perf.input.tooltipThumbDelayMs);
   }
   // No canvas redraw here; tooltip DOM updates don't need a frame
 }

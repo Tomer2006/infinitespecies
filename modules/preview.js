@@ -1,9 +1,10 @@
 import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom.js';
 import { state } from './state.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';
+import { perf } from './settings.js';
 
 const thumbCache = new Map();
-const MAX_THUMBS = 300; // cap to prevent runaway memory
+const MAX_THUMBS = perf.preview.maxThumbnails;
 let lastThumbNodeId = null;
 let previewReqToken = 0;
 

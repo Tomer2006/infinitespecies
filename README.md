@@ -18,12 +18,13 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - [📄 License](#-license)
 
 ## 🌐 Live Demo
-- **Local Development**: Run `python -m http.server 8000` and visit `http://localhost:8000` 🚀
+- **🌐 Live Site**: Visit [https://biozoom.netlify.app/](https://biozoom.netlify.app/) 🚀
+- **💻 Local Development**: Run `python -m http.server 8000` and visit `http://localhost:8000`
 - Features interactive taxonomy visualization with custom data loading 📊
 
 ## ✨ Key Features
 
-- 🌍 **Landing Page**: Choose between starting exploration or loading custom data
+- 🌍 **Landing Page**: Choose between starting exploration or loading custom data (configurable UI options)
 - 🔍 **Zoomable Interface**: Smooth circle-packing visualization with mouse and keyboard controls
 - 🔎 **Smart Search**: Real-time search with multi-result dropdown and navigation
 - 🖼️ **Image Previews**: Wikipedia thumbnails for hovered organisms
@@ -31,6 +32,7 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - 🔗 **Deep Linking**: Share exact views via URL hash - every navigation state is preserved
 - 📊 **Custom Data Support**: Load your own JSON taxonomy data
+- ⚙️ **Configurable UI**: Customize which buttons appear on the landing page
 
 ### 🚀 Quick Start
 
@@ -60,7 +62,7 @@ python -m http.server 8000
 
 ### 🖥️ UI Overview
 
-- **🌍 Landing Page**: Choose between "Start Exploration" (loads default data) or "Load Custom Data"
+- **🌍 Landing Page**: Choose between "Start Exploration" (loads default data), "Load Custom Data", or test data options (configurable)
 - **📋 Top bar** (after starting):
   - `🏠 Menu`: Return to landing page
   - `📤 Load JSON`: paste or upload custom JSON taxonomy data
@@ -72,6 +74,21 @@ python -m http.server 8000
   - `🔄 Reset`: back to root
 - **🍞 Breadcrumbs**: click any crumb to navigate up (also updates the URL hash for deep linking)
 - **💬 Tooltip**: shows organism name, level, descendants count, children count, and ID
+
+### ⚙️ Configuration
+
+Customize the landing page UI by editing `modules/settings.js`:
+
+```javascript
+startPage: {
+  showLazyLoadButton: false,      // Show/hide lazy loading button
+  showEagerLoadButton: true,      // Show/hide eager loading button
+  showTestDataButton: false,      // Show/hide test data buttons
+  defaultLoadMode: 'eager'        // Default loading mode ('lazy' or 'eager')
+}
+```
+
+This allows you to tailor the user experience for different deployment scenarios.
 
 ### 📊 Data Loading & Management
 
@@ -188,7 +205,7 @@ biozoom/
     ├── ⏳ loading.js          # Progress tracking and loading states
     ├── ⌨️ events.js           # Input handling (mouse, keyboard, touch)
     ├── 📊 metrics.js          # Runtime performance monitoring
-    ├── ⚡ performance.js      # Performance settings and memory management
+    ├── ⚙️ settings.js         # Performance settings, UI config, and memory management
     ├── 📝 logger.js           # Structured logging system
     └── 🌐 dom.js              # DOM element references and utilities
 ```
@@ -213,24 +230,6 @@ The application automatically tracks your navigation state in the URL for seamle
 - `#/` - Root view (Life) 🌍
 - `#/Life/cellular%20organisms/Eukaryota` - Navigate to Eukaryotes 🦠
 - `#/Life/cellular%20organisms/Eukaryota/Opisthokonta/Metazoa` - Jump to Animals 🐘
-
-### 🛠️ Troubleshooting
-
-**Common Issues:** ⚠️
-
-| Problem | Solution |
-|---------|----------|
-| 🚫 **CORS/Fetch Errors** | Run a local server (see Quick Start). File:// protocol blocks network requests |
-| 🐌 **Performance Issues** | Zoom in closer - labels only render when circles are sufficiently large |
-| 📄 **JSON Parse Errors** | Use "Load JSON" modal - it shows detailed error messages with line numbers |
-| 🔗 **Missing External Links** | Check browser pop-up blocker - external search opens in new tabs |
-| 📱 **Mobile Performance** | Try smaller datasets or use WiFi - mobile browsers have memory limits |
-| 💻 **PowerShell '&&' Error** | Run commands on separate lines: first `cd`, then `python -m http.server 8080` |
-
-**Performance Tips:** 💡
-- 📊 **Large datasets**: Zoom to specific areas rather than viewing the entire tree
-- 🍞 **Smooth navigation**: Use breadcrumbs for fast level-jumping
-- 🔍 **Search efficiency**: Use partial matches - search is real-time and case-insensitive
 
 ### 🎯 Use Cases
 

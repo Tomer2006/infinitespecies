@@ -6,6 +6,9 @@ import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot } from './data-common.js';
 
+const maxRetries = perf.loading.maxRetries;
+const retryBaseDelayMs = perf.loading.retryBaseDelayMs;
+
 // ============================================================================
 // EAGER LOADING FUNCTIONS
 // ============================================================================
@@ -61,7 +64,6 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const concurrency = Math.max(computeFetchConcurrency(), 8);
   let completed = 0;
   let failed = 0;
-  const maxRetries = 3;
   const results = new Array(manifest.files.length);
   const progressUpdateInterval = Math.max(1, Math.floor(totalFiles / 20));
 
@@ -75,7 +77,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
       const res = await fetch(fileUrl, {
         cache: 'default',
-        signal: AbortSignal.timeout(30000)
+        signal: AbortSignal.timeout(perf.loading.fetchTimeoutMs)
       });
 
       if (!res.ok) {
@@ -93,7 +95,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
       return true;
     } catch (err) {
       if (retryCount < maxRetries) {
-        const delay = Math.pow(2, retryCount) * 1000;
+        const delay = Math.pow(2, retryCount) * retryBaseDelayMs;
         logWarn(`Retrying ${fileUrl} after error: ${err.message}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return loadFileWithRetry(fileInfo, index, retryCount + 1);

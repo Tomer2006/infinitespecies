@@ -35,6 +35,7 @@ import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
 import { loadFromJSONText, onViewportChange } from './data.js';
 import { getNodePath } from './deeplink.js';
 import { hideBigPreview } from './preview.js';
+import { perf } from './settings.js';
 
 export function initEvents() {
   let isMiddlePanning = false;
@@ -124,7 +125,7 @@ export function initEvents() {
       canvas.style.cursor = 'not-allowed';
       setTimeout(() => {
         canvas.style.cursor = '';
-      }, 200);
+      }, perf.input.clickDisabledFeedbackMs);
       return;
     }
 
@@ -153,7 +154,7 @@ export function initEvents() {
   canvas.addEventListener(
     'wheel',
     ev => {
-      const scale = Math.exp(-ev.deltaY * 0.0015);
+      const scale = Math.exp(-ev.deltaY * perf.input.zoomSensitivity);
       const rect = canvas.getBoundingClientRect();
       const mx = ev.clientX - rect.left,
         my = ev.clientY - rect.top;
