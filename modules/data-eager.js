@@ -137,7 +137,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
   const validResults = results.filter(r => r !== undefined);
   logInfo(`Merging ${validResults.length} loaded split files`);
-  setProgress(0.95, 'Merging tree data...');
+  setProgress(perf.indexing.progressMergePercent, 'Merging tree data...');
 
   // Sort by index to maintain order
   validResults.sort((a, b) => a.index - b.index);
@@ -210,7 +210,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     return;
   }
 
-  setProgress(0.98, 'Processing merged tree...');
+  setProgress(perf.indexing.progressProcessPercent, 'Processing merged tree...');
   const normalizedTree = normalizeTree(mergedTree);
   await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);

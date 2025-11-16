@@ -154,7 +154,7 @@ export async function indexTreeProgressive(root, options = {}) {
       setProgress(processed / total, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`);
     }
   }
-  if (showProgress && !document.hidden) setProgress(0.95, 'Computing descendant counts...');
+  if (showProgress && !document.hidden) setProgress(perf.indexing.progressDescendantsPercent, 'Computing descendant counts...');
   computeDescendantCountsIter(root);
   if (showProgress && !document.hidden) setProgress(1, 'Done');
 }

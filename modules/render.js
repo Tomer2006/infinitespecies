@@ -37,8 +37,15 @@ function performMemoryCleanup() {
 
 // Cached grid pattern for the background
 let gridPattern = null;
+let cachedGridSettings = null;
 function getGridPattern(ctx) {
-  if (gridPattern) return gridPattern;
+  // Check if grid settings changed - if so, regenerate pattern
+  const currentSettings = `${perf.rendering.gridTileSize}-${perf.rendering.gridColor}-${perf.rendering.gridAlpha}-${perf.rendering.gridLineWidth}`;
+  if (gridPattern && cachedGridSettings === currentSettings) {
+    return gridPattern;
+  }
+  
+  // Regenerate grid pattern with current settings
   const tileSize = perf.rendering.gridTileSize;
   const tile = document.createElement('canvas');
   tile.width = tileSize;
@@ -56,6 +63,7 @@ function getGridPattern(ctx) {
   tctx.lineTo(tileSize, 0);
   tctx.stroke();
   gridPattern = ctx.createPattern(tile, 'repeat');
+  cachedGridSettings = currentSettings;
   return gridPattern;
 }
 
@@ -227,7 +235,7 @@ export function draw() {
         setGlobalAlpha(1);
         ctx.fill();
         if (sr >= perf.rendering.strokeMinPxRadius) {
-          const lineWidth = Math.max(perf.rendering.strokeLineWidthMin, Math.min(perf.rendering.strokeLineWidthMax, perf.rendering.strokeLineWidthBase * Math.sqrt(Math.max(sr / perf.rendering.gridTileSize, 0.25))));
+          const lineWidth = Math.max(perf.rendering.strokeLineWidthMin, Math.min(perf.rendering.strokeLineWidthMax, perf.rendering.strokeLineWidthBase * Math.sqrt(Math.max(sr / perf.rendering.gridTileSize, perf.rendering.strokeLineWidthMinRatio))));
           setLineWidth(lineWidth);
           setStrokeStyle(d.children && d.children.length ? perf.rendering.strokeColorWithChildrenDetail : perf.rendering.strokeColorLeafDetail);
           ctx.stroke();
@@ -239,7 +247,7 @@ export function draw() {
     if (drawn >= maxNodes) return;
 
     if (sr > LABEL_MIN) {
-      const fontSize = Math.min(18, Math.max(10, sr / 3));
+      const fontSize = Math.min(perf.rendering.labelFontSizeMax, Math.max(perf.rendering.labelFontSizeMin, sr / perf.rendering.labelFontSizeDivisor));
       if (fontSize >= perf.rendering.labelMinFontPx) {
         const text = d.data.name;
         const key = fontSize + '|' + text;
@@ -256,7 +264,7 @@ export function draw() {
         } else {
           // Cache miss - measure and store
           ctx.save();
-          ctx.font = `600 ${fontSize}px ui-sans-serif`;
+          ctx.font = `${perf.rendering.labelFontWeight} ${fontSize}px ${perf.rendering.labelFontFamily}`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
 
@@ -349,26 +357,19 @@ export function draw() {
 
         // Render label
         ctx.save();
-        ctx.font = `600 ${cand.fontSize}px ui-sans-serif`;
+        ctx.font = `${perf.rendering.labelFontWeight} ${cand.fontSize}px ${perf.rendering.labelFontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Optimized rendering - reduce stroke complexity for smaller fonts
-        if (cand.fontSize > 14) {
-          ctx.lineWidth = Math.max(2, Math.min(5, cand.fontSize / 3));
-          ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-          ctx.lineJoin = 'round';
-          ctx.miterLimit = 2;
-          ctx.strokeText(cand.text, cand.sx, cand.sy);
-        } else {
-          // Simpler stroke for smaller fonts
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-          ctx.strokeText(cand.text, cand.sx, cand.sy);
-        }
+        // Use same stroke width calculation for all font sizes
+        ctx.lineWidth = Math.max(perf.rendering.labelStrokeWidthMin, Math.min(perf.rendering.labelStrokeWidthMax, cand.fontSize / perf.rendering.labelFontSizeDivisor));
+        ctx.strokeStyle = cand.fontSize > perf.rendering.labelLargeFontThreshold ? perf.rendering.labelStrokeColorLarge : perf.rendering.labelStrokeColor;
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.strokeText(cand.text, cand.sx, cand.sy);
 
-        ctx.fillStyle = '#e9eeff';
-        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = perf.rendering.labelFillColor;
+        ctx.globalAlpha = perf.rendering.labelAlpha;
         ctx.fillText(cand.text, cand.sx, cand.sy);
         ctx.restore();
 

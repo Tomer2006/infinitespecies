@@ -62,7 +62,7 @@ export function buildOverlayText(currentFps) {
   const heap = getHeapLine();
   const cores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 'n/a';
   const dpr = (window.devicePixelRatio || 1).toFixed(2);
-  const lag = eventLoopLagMs > 0.5 ? `${eventLoopLagMs.toFixed(1)}ms lag` : 'ok';
+  const lag = eventLoopLagMs > perf.metrics.lagThresholdMs ? `${eventLoopLagMs.toFixed(1)}ms lag` : 'ok';
   const gpu = gpuInfo ? `${gpuInfo.vendor} — ${gpuInfo.renderer}` : 'GPU: n/a';
   return `${fps} fps | ~${ms} ms/frame | loop: ${lag}\n${heap}\nCores: ${cores} | DPR: ${dpr}\n${gpu}`;
 }

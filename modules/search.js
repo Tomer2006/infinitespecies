@@ -29,21 +29,23 @@ export function pulseAtNode(node) {
   if (!d) return;
   const [sx, sy] = worldToScreen(d._vx, d._vy);
   const sr = d._vr * state.camera.k;
-  if (sr <= 2) return;
+  if (sr <= perf.search.pulseMinScreenRadius) return;
   const el = document.getElementById('pulse');
   el.style.display = 'block';
-  el.style.left = sx - sr * 1.2 + 'px';
-  el.style.top = sy - sr * 1.2 + 'px';
-  el.style.width = sr * 2.4 + 'px';
-  el.style.height = sr * 2.4 + 'px';
+  const posMult = perf.search.pulsePositionMultiplier;
+  const sizeMult = perf.search.pulseSizeMultiplier;
+  el.style.left = sx - sr * posMult + 'px';
+  el.style.top = sy - sr * posMult + 'px';
+  el.style.width = sr * sizeMult + 'px';
+  el.style.height = sr * sizeMult + 'px';
   el.style.boxShadow = `0 0 ${sr * perf.search.pulseShadowOuter}px ${sr * perf.search.pulseShadowInner}px rgba(113,247,197,.3), inset 0 0 ${sr * perf.search.pulseShadowOuter2}px ${sr * perf.search.pulseShadowInner2}px rgba(113,247,197,.25)`;
-  el.style.border = `2px solid ${perf.search.pulseColor}`;
+  el.style.border = `${perf.search.pulseBorderWidth}px solid ${perf.search.pulseColor}`;
   el
     .animate(
       [
-        { transform: 'scale(0.9)', opacity: 0.0 },
+        { transform: `scale(${perf.search.pulseScaleStart})`, opacity: 0.0 },
         { transform: 'scale(1)', opacity: perf.search.pulseOpacity, offset: perf.search.pulseScaleOffset },
-        { transform: 'scale(1.2)', opacity: 0.0 }
+        { transform: `scale(${perf.search.pulseScaleEnd})`, opacity: 0.0 }
       ],
       { duration: perf.search.pulseDurationMs, easing: 'ease-out' }
     )

@@ -69,7 +69,7 @@ export async function loadLazy(baseUrl) {
     const root = await res.json();
     logDebug('Root skeleton fetched, indexing...');
 
-    setProgress(0.5, 'Indexing skeleton...');
+    setProgress(perf.indexing.progressIndexPercent, 'Indexing skeleton...');
 
     // Index the skeleton
     await indexTreeProgressive(root, {

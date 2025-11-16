@@ -136,7 +136,7 @@ export function screenToWorld(px, py) {
 }
 
 export function viewportRadius(renderDistance) {
-  return (Math.hypot(W, H) * 0.5) / state.camera.k * renderDistance;
+  return (Math.hypot(W, H) * perf.canvas.viewportRadiusMultiplier) / state.camera.k * renderDistance;
 }
 
 export { W, H, DPR };
