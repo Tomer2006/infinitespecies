@@ -1,0 +1,9 @@
+tools/
+README.md
+scripts/
+node_modules/
+gh-cli/
+.venv/
+.cursor/
+full data/
+ 
