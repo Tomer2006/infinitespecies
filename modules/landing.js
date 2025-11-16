@@ -345,19 +345,34 @@ export function initLandingPage() {
     const testDataLazyBtn = document.getElementById('testDataLazyBtn');
 
     // Apply settings to conditionally show/hide buttons
-    if (startLazyBtn && !perf.startPage.showLazyLoadButton) {
-      startLazyBtn.style.display = 'none';
-      console.log('🎯 [LANDING] Hiding lazy load button based on settings');
+    if (startLazyBtn) {
+      if (perf.startPage.showLazyLoadButton) {
+        startLazyBtn.style.display = 'flex';
+        console.log('🎯 [LANDING] Showing lazy load button based on settings');
+      } else {
+        startLazyBtn.style.display = 'none';
+        console.log('🎯 [LANDING] Hiding lazy load button based on settings');
+      }
     }
 
-    if (testDataBtn && !perf.startPage.showTestDataButton) {
-      testDataBtn.style.display = 'none';
-      console.log('🎯 [LANDING] Hiding test data button based on settings');
+    if (testDataBtn) {
+      if (perf.startPage.showTestDataButton) {
+        testDataBtn.style.display = 'flex';
+        console.log('🎯 [LANDING] Showing test data button based on settings');
+      } else {
+        testDataBtn.style.display = 'none';
+        console.log('🎯 [LANDING] Hiding test data button based on settings');
+      }
     }
 
-    if (testDataLazyBtn && !perf.startPage.showTestDataButton) {
-      testDataLazyBtn.style.display = 'none';
-      console.log('🎯 [LANDING] Hiding test data lazy button based on settings');
+    if (testDataLazyBtn) {
+      if (perf.startPage.showTestDataButton) {
+        testDataLazyBtn.style.display = 'flex';
+        console.log('🎯 [LANDING] Showing test data lazy button based on settings');
+      } else {
+        testDataLazyBtn.style.display = 'none';
+        console.log('🎯 [LANDING] Hiding test data lazy button based on settings');
+      }
     }
 
     // Start Exploration (Eager) - Load all data at once from data/ folder
