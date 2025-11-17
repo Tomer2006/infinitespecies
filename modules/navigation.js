@@ -4,7 +4,7 @@ import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { logInfo, logDebug, logTrace } from './logger.js';
+import { logInfo, logDebug, logTrace, logWarn } from './logger.js';
 import { onViewportChange } from './data.js';
 import { perf } from './settings.js';
 
@@ -37,7 +37,10 @@ export function setBreadcrumbs(node) {
 
 export function fitNodeInView(node) {
   const d = state.nodeLayoutMap.get(node._id);
-  if (!d) return;
+  if (!d || typeof d._vr !== 'number' || d._vr <= 0) {
+    logWarn(`Cannot fit node "${node.name}" in view: node not found in layout map or invalid radius`);
+    return;
+  }
   const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
   const k = targetRadiusPx / d._vr;
   animateToCam(d._vx, d._vy, k);
@@ -64,6 +67,18 @@ export async function updateNavigation(node, animate = true) {
 
   // Mark that layout has changed for canvas rendering
   state.layoutChanged = true;
+
+  // Check if layout was successfully computed before using it
+  if (!state.layout || !state.layout.diameter) {
+    logWarn(`Layout computation failed for node "${node.name}", skipping camera update`);
+    requestRender();
+    const endTime = performance.now();
+    logInfo(`Navigation completed (no layout): ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
+    if (state.loadMode === 'lazy') {
+      setTimeout(() => onViewportChange(), perf.timing.navigationViewportDelayMs);
+    }
+    return;
+  }
 
   if (animate) {
     const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);

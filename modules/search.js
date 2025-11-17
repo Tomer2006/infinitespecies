@@ -4,6 +4,7 @@ import { updateNavigation } from './navigation.js';
 import { searchResultsEl } from './dom.js';
 import { getNodePath } from './deeplink.js';
 import { perf } from './settings.js';
+import { logWarn } from './logger.js';
 
 export function findAllByQuery(q, limit = perf.search.maxResults) {
   if (!q) return [];
@@ -25,12 +26,14 @@ export function findAllByQuery(q, limit = perf.search.maxResults) {
 }
 
 export function pulseAtNode(node) {
+  if (!node || typeof node._id !== 'number') return;
   const d = state.nodeLayoutMap.get(node._id);
   if (!d) return;
   const [sx, sy] = worldToScreen(d._vx, d._vy);
   const sr = d._vr * state.camera.k;
   if (sr <= perf.search.pulseMinScreenRadius) return;
   const el = document.getElementById('pulse');
+  if (!el) return;
   el.style.display = 'block';
   const posMult = perf.search.pulsePositionMultiplier;
   const sizeMult = perf.search.pulseSizeMultiplier;
@@ -99,12 +102,27 @@ function renderResults(nodes, q) {
     searchResultsEl.addEventListener('click', e => {
       const target = e.target.closest('.item');
       if (!target) return;
-      const id = Number(target.dataset.id || '');
+      
+      const idStr = target.dataset.id || '';
+      const id = Number(idStr);
+      
+      // Validate ID is a valid number
+      if (!idStr || isNaN(id) || id <= 0) {
+        logWarn(`Invalid search result ID: "${idStr}"`);
+        return;
+      }
+      
       const d = state.nodeLayoutMap.get(id);
       const node = d?.data;
-      if (!node) return;
+      
+      // Explicitly handle missing node with logging
+      if (!node) {
+        logWarn(`Search result node not found in layout map (ID: ${id})`);
+        return;
+      }
+      
       updateNavigation(node, false);
-      pulseAtNode(state.current);
+      if (state.current) pulseAtNode(state.current);
       // No canvas re-render needed - highlight is now CSS-based
       hideResults();
     });
@@ -119,7 +137,9 @@ function renderResults(nodes, q) {
 }
 
 export function handleSearch(progressLabelEl) {
-  const q = document.getElementById('searchInput').value;
+  const searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
+  const q = searchInput.value;
   const matches = findAllByQuery(q, perf.search.maxResults);
   if (!matches.length) {
     if (progressLabelEl) {
@@ -136,7 +156,7 @@ export function handleSearch(progressLabelEl) {
   if (matches.length === 1) {
     const node = matches[0];
     updateNavigation(node, false);
-    pulseAtNode(state.current);
+    if (state.current) pulseAtNode(state.current);
     // No canvas re-render needed - highlight is now CSS-based
     hideResults();
   } else {

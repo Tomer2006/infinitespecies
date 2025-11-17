@@ -3,7 +3,7 @@
 
 import { state } from './state.js';
 import { perf } from './settings.js';
-import { logInfo, logError } from './logger.js';
+import { logInfo, logError, logWarn } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
@@ -185,6 +185,13 @@ export async function loadFromJSONText(text) {
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
+  
+  // Validate root exists before proceeding
+  if (!root) {
+    logError('setDataRoot called with null/undefined root');
+    return;
+  }
+  
   try {
     const rawHash = location.hash ? location.hash.slice(1) : '';
     const decoded = decodePath(rawHash);
@@ -193,23 +200,34 @@ export function setDataRoot(root) {
       logInfo(`Deep link detected on data init: "${decoded}" – attempting to navigate to path`);
       findNodeByPath(decoded)
         .then(node => {
+          // Double-check DATA_ROOT is still valid (could have been cleared)
+          if (!state.DATA_ROOT) {
+            logWarn('DATA_ROOT became null during deep link resolution, skipping navigation');
+            return;
+          }
           if (node) {
             updateNavigation(node, false);
           } else {
             logWarn(`Deep link path not found: "${decoded}", falling back to root`);
-            updateNavigation(state.DATA_ROOT, false);
+            if (state.DATA_ROOT) {
+              updateNavigation(state.DATA_ROOT, false);
+            }
           }
         })
         .catch(err => {
           logError('Error resolving deep link path; falling back to root', err);
-          updateNavigation(state.DATA_ROOT, false);
+          if (state.DATA_ROOT) {
+            updateNavigation(state.DATA_ROOT, false);
+          }
         });
     } else {
       updateNavigation(state.DATA_ROOT, false);
     }
   } catch (err) {
     logError('Error during setDataRoot deep link handling; falling back to root', err);
-    updateNavigation(state.DATA_ROOT, false);
+    if (state.DATA_ROOT) {
+      updateNavigation(state.DATA_ROOT, false);
+    }
   }
 }
 

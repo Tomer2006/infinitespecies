@@ -165,8 +165,12 @@ export async function autoLoadVisibleChunks() {
 
     // A full updateNavigation is the most robust way to ensure
     // the layout map and all states are correct.
-    await updateNavigation(state.current, false); // false = don't animate camera
-    requestRender();
+    if (state.current) {
+      await updateNavigation(state.current, false); // false = don't animate camera
+      requestRender();
+    } else {
+      logWarn('Cannot update navigation after chunk load: state.current is null');
+    }
 
   } else {
     logDebug('Viewport check complete, no new stubs found.');
@@ -180,8 +184,14 @@ export async function autoLoadVisibleChunks() {
 export async function loadChunk(node) {
   if (!isStubNode(node) || node._loading) return;
 
-  node._loading = true;
+  // Validate that chunk file is available
   const chunkFile = node._chunkFile;
+  if (!chunkFile || typeof chunkFile !== 'string') {
+    logError(`Cannot load chunk for node "${node.name}": missing or invalid _chunkFile property`, { chunkFile, node });
+    return;
+  }
+
+  node._loading = true;
   const url = `${state.lazyBaseUrl}/${chunkFile}`;
 
   logDebug(`Loading chunk for "${node.name}" from ${url}`);
@@ -225,7 +235,16 @@ export async function loadChunk(node) {
     logDebug(`Successfully loaded and stitched ${chunkChildren.length} children for "${node.name}"`);
 
   } catch (err) {
-    logError(`Failed to load chunk for node "${node.name}"`, err);
+    // Provide detailed error context for debugging
+    const errorDetails = {
+      nodeName: node.name,
+      nodeId: node._id,
+      chunkFile: chunkFile,
+      url: url,
+      lazyBaseUrl: state.lazyBaseUrl,
+      error: err.message || String(err)
+    };
+    logError(`Failed to load chunk for node "${node.name}" from ${chunkFile}`, errorDetails);
     node._loading = false; // Allow retrying
   }
 }

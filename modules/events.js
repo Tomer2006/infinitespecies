@@ -297,11 +297,13 @@ export function initEvents() {
   // JSON modal and loader
   function openModal() {
     const modal = document.getElementById('jsonModal');
+    if (!modal) return;
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
   }
   function closeModal() {
     const modal = document.getElementById('jsonModal');
+    if (!modal) return;
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
     if (loadError) loadError.textContent = '';

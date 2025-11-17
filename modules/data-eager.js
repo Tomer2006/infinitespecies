@@ -55,7 +55,24 @@ export async function loadEager(url) {
 
 async function loadFromSplitFiles(baseUrl, manifest) {
   const startTime = performance.now();
-  const totalFiles = Array.isArray(manifest.files) ? manifest.files.length : (manifest.total_files || 0);
+  
+  // Validate manifest structure
+  if (!manifest || typeof manifest !== 'object') {
+    throw new Error('Invalid manifest: must be an object');
+  }
+  
+  if (!Array.isArray(manifest.files)) {
+    if (manifest.total_files && manifest.total_files > 0) {
+      throw new Error(`Invalid manifest: files array is missing but total_files is ${manifest.total_files}. Manifest must include a 'files' array.`);
+    }
+    throw new Error('Invalid manifest: missing required "files" array');
+  }
+  
+  if (manifest.files.length === 0) {
+    throw new Error('Invalid manifest: files array is empty');
+  }
+  
+  const totalFiles = manifest.files.length;
   
   logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
   
@@ -111,9 +128,23 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   };
 
   // Parallel loading with controlled concurrency
+  // Use atomic counter to prevent race conditions
+  let resolved = false;
   await new Promise((resolve) => {
     let inFlight = 0;
     let nextIndex = 0;
+
+    const checkCompletion = () => {
+      // Use atomic check to prevent race conditions
+      if (resolved) return;
+      if (completed + failed === totalFiles) {
+        resolved = true;
+        if (failed > 0) {
+          logWarn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
+        }
+        resolve();
+      }
+    };
 
     const startNext = () => {
       while (inFlight < concurrency && nextIndex < manifest.files.length) {
@@ -123,12 +154,8 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
         loadFileWithRetry(fileInfo, i).finally(() => {
           inFlight--;
-          if (completed + failed === totalFiles) {
-            if (failed > 0) {
-              logWarn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
-            }
-            resolve();
-          } else {
+          checkCompletion();
+          if (!resolved) {
             startNext();
           }
         });
@@ -139,6 +166,14 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   });
 
   const validResults = results.filter(r => r !== undefined);
+  
+  // Check if we have any valid results before proceeding
+  if (validResults.length === 0) {
+    const errorMsg = `Failed to load any files from split dataset (${totalFiles} files attempted, ${failed} failed)`;
+    logError(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
   logInfo(`Merging ${validResults.length} loaded split files`);
   setProgress(perf.indexing.progressMergePercent, 'Merging tree data...');
 

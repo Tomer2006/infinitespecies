@@ -4,7 +4,8 @@ let isLoading = false;
 
 export function showLoading(title = 'Loading…') {
   console.log('🔄 [LOADING] Showing loading screen:', title);
-  document.getElementById('loadingTitle').textContent = title;
+  const loadingTitle = document.getElementById('loadingTitle');
+  if (loadingTitle) loadingTitle.textContent = title;
   loadingEl.style.display = 'flex';
   stage.setAttribute('aria-busy', 'true');
   isLoading = true;
@@ -28,8 +29,8 @@ export function isCurrentlyLoading() {
 
 export function setProgress(ratio, label = '') {
   const pct = Math.max(0, Math.min(1, ratio));
-  progressFill.style.width = (pct * 100).toFixed(1) + '%';
-  progressPct.textContent = Math.round(pct * 100) + '%';
+  if (progressFill) progressFill.style.width = (pct * 100).toFixed(1) + '%';
+  if (progressPct) progressPct.textContent = Math.round(pct * 100) + '%';
   // Keep operation details private by not updating the user-facing label
   // if (label && !document.hidden) progressLabel.textContent = label;
 }
