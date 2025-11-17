@@ -1,4 +1,10 @@
-// Constants (non-performance) and tunables
+/**
+ * Color constants and node styling utilities
+ *
+ * Provides color palette definitions and functions for determining node colors
+ * based on taxonomic level and other node properties. Contains styling constants
+ * that are not performance-related (performance settings are in settings.js).
+ */
 
 import { perf } from './settings.js';
 

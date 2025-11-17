@@ -1,3 +1,11 @@
+/**
+ * Navigation and layout management module
+ *
+ * Handles node navigation, layout computation, breadcrumb updates,
+ * and camera positioning. Manages the relationship between taxonomy
+ * nodes, their visual layout, and user navigation state.
+ */
+
 import { breadcrumbsEl } from './dom.js';
 import { layoutFor } from './layout.js';
 import { rebuildNodeMap, state } from './state.js';

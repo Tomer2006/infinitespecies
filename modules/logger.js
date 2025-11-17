@@ -1,3 +1,11 @@
+/**
+ * Logging utilities module
+ *
+ * Provides structured logging functions with different severity levels
+ * (info, warn, error, debug, trace) and consistent formatting.
+ * Includes performance timing utilities and conditional debug output.
+ */
+
 const LOG_PREFIX = '[TaxonomyExplorer]';
 const ENABLE_DEBUG = true;
 const ENABLE_TRACE = true;

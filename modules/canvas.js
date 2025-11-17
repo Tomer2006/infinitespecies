@@ -1,3 +1,11 @@
+/**
+ * Canvas management and rendering loop module
+ *
+ * Manages the HTML5 canvas context, handles resize events, coordinates the
+ * rendering pipeline, implements frame rate limiting, and provides coordinate
+ * transformation utilities between world and screen space.
+ */
+
 import { stage, canvas, fpsEl } from './dom.js';
 import { buildOverlayText, initRuntimeMetrics } from './metrics.js';
 import { state } from './state.js';

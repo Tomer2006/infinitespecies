@@ -1,4 +1,10 @@
-// Browser runtime metrics overlay helpers
+/**
+ * Runtime performance metrics and debugging overlay module
+ *
+ * Collects and displays performance metrics including FPS, memory usage,
+ * GPU information, and event loop lag. Provides debugging overlay
+ * functionality for performance monitoring and optimization.
+ */
 
 import { perf } from './settings.js';
 

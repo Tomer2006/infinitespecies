@@ -1,10 +1,10 @@
 /**
- * Centralized settings for performance tuning, rendering, loading,
- * background processing, and UI configuration.
+ * Performance and configuration settings module
  *
- * Tweak these to trade visual fidelity for speed on different devices.
- * Most values are in pixels (px) or milliseconds (ms) and are used across
- * rendering, canvas, loading, and indexing modules.
+ * Centralized configuration for all performance tuning, rendering parameters,
+ * loading behavior, and UI settings. Values are organized by functional area
+ * and can be tweaked to balance visual fidelity against performance on
+ * different devices and data sizes.
  */
 
 export const perf = {
@@ -32,7 +32,7 @@ export const perf = {
 
     // Grid pattern settings
     gridTileSize: 40,          // Grid tile size in pixels
-    gridColor: '#8aa1ff',      // Grid line color
+    gridColor: 'rgba(138,161,255,1)',      // Grid line color
     gridAlpha: 0.15,           // Grid line opacity (0.05 = very faint, 0.15 = visible, 0.3 = prominent)
     gridLineWidth: 1,          // Grid line width in pixels
 
@@ -47,7 +47,7 @@ export const perf = {
     strokeLineWidthMinRatio: 0.25,  // Minimum ratio for stroke width calculation
 
     // Label rendering settings
-    labelFillColor: '#e9eeff',      // Label text fill color
+    labelFillColor: 'rgba(233,238,255,1)',      // Label text fill color
     labelStrokeColor: 'rgba(0,0,0,0.8)',  // Label text stroke/outline color for small fonts (≤14px)
     labelStrokeColorLarge: 'rgba(0,0,0,0.8)',  // Label text stroke/outline color for large fonts (>14px)
     labelAlpha: 1,                  // Label text opacity (1 = fully opaque, best for readability)
@@ -155,22 +155,22 @@ export const perf = {
     pulseScaleEnd: 1.2,           // Pulse animation end scale
     pulseScaleOffset: 0.2,        // Pulse scale animation offset
     pulseDurationMs: 900,         // Pulse animation duration in milliseconds
-    pulseColor: 'rgba(113,247,197,0.6)'  // Pulse border color
+    pulseColor: 'rgb(113, 247, 198)'  // Pulse border color
   },
 
   // Color palette (Tableau 10 colors for level-based assignment)
   colors: {
     palette: [
-      '#1f77b4', // Blue
-      '#ff7f0e', // Orange
-      '#d62728', // Red
-      '#2ca02c', // Green (Teal-ish)
-      '#17becf', // Teal
-      '#bcbd22', // Yellow
-      '#9467bd', // Purple
-      '#e377c2', // Pink
-      '#8c564b', // Brown
-      '#7f7f7f'  // Gray
+      'rgb(31, 118, 180)', // Blue
+      'rgb(255, 126, 14)', // Orange
+      'rgb(214, 39, 39)', // Red
+      'rgb(44, 160, 44)', // Green
+      'rgb(23, 189, 207)', // Teal
+      'rgb(189, 189, 34)', // Yellow
+      'rgb(147, 103, 189)', // Purple
+      'rgb(227, 119, 195)', // Pink
+      'rgb(140, 86, 75)', // Brown
+      'rgb(127, 127, 127)'  // Gray
     ]
   },
 

@@ -1,3 +1,11 @@
+/**
+ * User interaction and event handling module
+ *
+ * Manages all user input events including mouse, keyboard, canvas interactions,
+ * UI button clicks, search functionality, and modal dialogs. Coordinates
+ * between user actions and application state changes.
+ */
+
 import {
   canvas,
   helpModal,

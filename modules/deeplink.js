@@ -1,3 +1,11 @@
+/**
+ * Deep linking and URL navigation module
+ *
+ * Handles browser URL hash-based navigation for bookmarkable taxonomy paths.
+ * Encodes/decodes node paths to/from URL fragments and navigates to specific
+ * nodes when URLs contain deep links.
+ */
+
 import { state } from './state.js';
 import { logWarn, logDebug } from './logger.js';
 

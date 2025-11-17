@@ -1,3 +1,11 @@
+/**
+ * D3.js layout computation module
+ *
+ * Handles circle packing layout calculations using D3.js hierarchy and pack layouts.
+ * Computes node positions and radii for the taxonomy tree visualization,
+ * ensuring proper spatial relationships between parent and child nodes.
+ */
+
 import { W, H } from './canvas.js';
 import { pack as d3pack, hierarchy as d3hierarchy } from 'd3-hierarchy';
 import { logInfo, logWarn, logError, logDebug, logTrace } from './logger.js';

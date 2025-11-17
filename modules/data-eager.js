@@ -1,4 +1,11 @@
-// Eager loading functionality for taxonomy tree data
+/**
+ * Eager data loading module
+ *
+ * Handles loading of complete taxonomy datasets at application startup.
+ * Supports both single JSON files and split-file manifests with parallel
+ * downloading and retry logic for reliability.
+ */
+
 import { state } from './state.js';
 import { computeFetchConcurrency, perf } from './settings.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';

@@ -1,4 +1,10 @@
-// Shared state and indexes
+/**
+ * Global application state management module
+ *
+ * Centralizes all application state including current navigation position,
+ * layout data, camera settings, hover states, and data loading status.
+ * Provides node mapping and layout indexing utilities for efficient lookups.
+ */
 
 export const state = {
   DATA_ROOT: null,

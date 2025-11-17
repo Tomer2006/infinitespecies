@@ -1,3 +1,11 @@
+/**
+ * Tooltip and hover interaction management module
+ *
+ * Handles the display and positioning of tooltips when hovering over nodes.
+ * Manages tooltip content, positioning logic, and coordinates with the
+ * preview system for delayed thumbnail loading on hover.
+ */
+
 import { ttip, tName, tMeta } from './dom.js';
 import { state } from './state.js';
 import { showBigFor, hideBigPreview } from './preview.js';

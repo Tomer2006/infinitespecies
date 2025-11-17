@@ -1,3 +1,10 @@
+/**
+ * Camera animation and viewport management module
+ *
+ * Handles smooth camera transitions, viewport tracking, and coordinates the
+ * lazy loading system when the viewport changes during animations.
+ */
+
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
 import { perf } from './settings.js';

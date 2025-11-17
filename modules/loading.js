@@ -1,3 +1,11 @@
+/**
+ * Loading screen and progress management module
+ *
+ * Manages the loading overlay UI, progress bars, and loading state.
+ * Provides functions to show/hide loading screens and update progress
+ * indicators during data loading operations.
+ */
+
 import { loadingEl, progressFill, progressLabel, progressPct, stage, topbarEl, canvas } from './dom.js';
 
 let isLoading = false;

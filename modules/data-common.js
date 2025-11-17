@@ -1,5 +1,10 @@
-// data-common.js
-// Shared data loading functions used by both eager and lazy loading
+/**
+ * Shared data loading and processing utilities
+ *
+ * Contains common functions used by both eager and lazy loading modes,
+ * including tree normalization, progressive indexing, node counting,
+ * and data structure manipulation utilities.
+ */
 
 import { state } from './state.js';
 import { perf } from './settings.js';

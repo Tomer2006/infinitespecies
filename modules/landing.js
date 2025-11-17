@@ -1,5 +1,10 @@
-// Landing page module for biozoom
-// Handles the initial start menu and navigation to different app sections
+/**
+ * Landing page and application initialization module
+ *
+ * Manages the initial application startup sequence, landing page UI,
+ * data loading mode selection (eager vs lazy), and deep link resolution.
+ * Handles fallback scenarios when data loading fails.
+ */
 
 import { showLoading, hideLoading } from './loading.js';
 import { loadEager, loadLazy, startAutoLoading } from './data.js';
@@ -557,7 +562,7 @@ export function initLandingPage() {
     const landingPage = document.getElementById('landingPage');
     if (landingPage) {
       const errorMsg = document.createElement('div');
-      errorMsg.style.cssText = 'color: red; text-align: center; margin-top: 20px; font-size: 14px;';
+      errorMsg.style.cssText = 'color: rgba(255,0,0,1); text-align: center; margin-top: 20px; font-size: 14px;';
       errorMsg.textContent = 'Error initializing buttons. Please refresh the page.';
       landingPage.appendChild(errorMsg);
     }
@@ -614,7 +619,7 @@ function createAboutModal() {
           <h4 style="margin-top:1rem">Data Sources</h4>
           <p>This application supports loading custom taxonomy data in JSON format, as well as connecting to various online databases for additional information about organisms.</p>
 
-          <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #2a3472; text-align:center; color:#9aa3c7; font-size:12px">
+          <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(42,52,114,1); text-align:center; color:rgba(154,163,199,1); font-size:12px">
             <p>Built with modern web technologies for exploring biodiversity data.</p>
           </div>
         </div>

@@ -1,4 +1,10 @@
-// Centralized DOM references
+/**
+ * DOM element references module
+ *
+ * Centralized collection of DOM element references used throughout the application.
+ * Provides a single source of truth for DOM queries and avoids repeated
+ * document.getElementById() calls scattered throughout the codebase.
+ */
 
 export const canvas = document.getElementById('view');
 export const stage = document.getElementById('stage');

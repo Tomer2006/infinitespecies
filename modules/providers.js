@@ -1,3 +1,11 @@
+/**
+ * External data provider integration module
+ *
+ * Provides URLs and integration with external biological data sources
+ * including Wikipedia, GBIF, Google, NCBI, and iNaturalist.
+ * Handles provider selection UI and generates appropriate search URLs.
+ */
+
 import { providerSelect } from './dom.js';
 
 export function providerUrl(provider, name) {

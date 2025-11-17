@@ -1,4 +1,10 @@
-// Lazy loading functionality for taxonomy tree data
+/**
+ * Lazy loading module for on-demand data fetching
+ *
+ * Implements viewport-based lazy loading for massive taxonomy datasets.
+ * Loads only visible portions of the tree initially, then progressively
+ * fetches additional chunks as the user navigates and explores.
+ */
 
 import {
   state

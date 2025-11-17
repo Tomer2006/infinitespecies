@@ -1,3 +1,11 @@
+/**
+ * Preview and thumbnail management module
+ *
+ * Handles loading and caching of preview images for taxonomy nodes.
+ * Manages the large preview popup that appears when hovering over nodes,
+ * including thumbnail generation, caching, and Wikipedia image fetching.
+ */
+
 import { bigPreview, bigPreviewCap, bigPreviewImg, bigPreviewEmpty } from './dom.js';
 import { state } from './state.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';

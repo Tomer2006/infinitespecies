@@ -1,3 +1,12 @@
+/**
+ * Main rendering engine module
+ *
+ * Handles the core visualization rendering using HTML5 Canvas 2D API.
+ * Implements level-of-detail rendering, text measurement caching, viewport
+ * culling, and optimized batch rendering for smooth performance with
+ * millions of taxonomy nodes.
+ */
+
 import { getContext, W, H, worldToScreen } from './canvas.js';
 import { state } from './state.js';
 import { getNodeColor } from './constants.js';

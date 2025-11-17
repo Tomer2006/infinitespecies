@@ -1,3 +1,11 @@
+/**
+ * Search functionality and result management module
+ *
+ * Handles taxonomy tree searching, result filtering, and UI management.
+ * Provides fuzzy search capabilities, result highlighting, and navigation
+ * to search results with visual feedback (pulsing animations).
+ */
+
 import { state } from './state.js';
 import { worldToScreen } from './canvas.js';
 import { updateNavigation } from './navigation.js';

@@ -1,3 +1,11 @@
+/**
+ * Node picking and viewport culling module
+ *
+ * Handles mouse-to-node collision detection for interactive selection.
+ * Implements efficient viewport culling to determine which nodes are
+ * visible and should be considered for picking operations.
+ */
+
 import { screenToWorld, viewportRadius, getFrameCounter } from './canvas.js';
 import { state } from './state.js';
 import { perf } from './settings.js';
