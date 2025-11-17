@@ -231,6 +231,7 @@ The application automatically tracks your navigation state in the URL for seamle
 - `#/Life/cellular%20organisms/Eukaryota` - Navigate to Eukaryotes 🦠
 - `#/Life/cellular%20organisms/Eukaryota/Opisthokonta/Metazoa` - Jump to Animals 🐘
 
+
 ### 🎯 Use Cases
 
 **Research & Education:** 🔬
@@ -252,11 +253,3 @@ biozoom follows modern web development practices: 💻
 - 📊 **Performance Monitoring**: Built-in FPS and memory metrics
 - ♿ **Accessibility**: Keyboard navigation and semantic HTML
 - 🎨 **Dark Theme**: Consistent dark UI design throughout
-
-### 📄 License
-
-MIT License - feel free to use, modify, and distribute. 📜
-
----
-
-**Built with ❤️ using modern web technologies** 🧬
