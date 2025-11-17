@@ -6,6 +6,7 @@ import { perf } from './settings.js';
 import { logInfo, logError } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
+import { decodePath, findNodeByPath } from './deeplink.js';
 
 // ============================================================================
 // CORE DATA LOADING FUNCTIONS (shared with eager and lazy)
@@ -47,7 +48,7 @@ export function normalizeTree(rootLike) {
   return rootLike;
 }
 
-function countNodes(root) {
+export function countNodes(root) {
   let c = 0, stack = [root];
   while (stack.length) {
     const n = stack.pop();
@@ -118,10 +119,11 @@ export async function indexTreeProgressive(root, options = {}) {
   const total = Math.max(1, countNodes(root));
   const stack = [{ node: root, parent: startParent, depth: startDepth }];
   let lastYield = performance.now();
+  const isHidden = () => document.hidden;
 
   while (stack.length) {
     const now = performance.now();
-    if (!document.hidden && now - lastYield >= chunkMs) {
+    if (!isHidden() && now - lastYield >= chunkMs) {
       await new Promise(r => setTimeout(r, 0));
       lastYield = performance.now();
     }
@@ -137,10 +139,15 @@ export async function indexTreeProgressive(root, options = {}) {
 
     if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
 
-    for (const k of Object.keys(node)) {
-      if (!essentialKeys.has(k)) {
-        delete node[k];
+    // Optimized property cleanup: iterate once and collect keys to delete
+    const keysToDelete = [];
+    for (const k in node) {
+      if (!essentialKeys.has(k) && Object.prototype.hasOwnProperty.call(node, k)) {
+        keysToDelete.push(k);
       }
+    }
+    for (let i = 0; i < keysToDelete.length; i++) {
+      delete node[keysToDelete[i]];
     }
 
     if (node.children.length === 0) {
@@ -150,13 +157,16 @@ export async function indexTreeProgressive(root, options = {}) {
       stack.push({ node: node.children[i], parent: node, depth: depth + 1 });
     }
     processed++;
-    if (showProgress && !document.hidden && processed % progressEvery === 0) {
-      setProgress(processed / total, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`);
+    if (showProgress && processed % progressEvery === 0) {
+      if (!isHidden()) {
+        setProgress(processed / total, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`);
+      }
     }
   }
-  if (showProgress && !document.hidden) setProgress(perf.indexing.progressDescendantsPercent, 'Computing descendant counts...');
+  if (showProgress && !isHidden()) setProgress(perf.indexing.progressDescendantsPercent, 'Computing descendant counts...');
   computeDescendantCountsIter(root);
-  if (showProgress && !document.hidden) setProgress(1, 'Done');
+  if (showProgress && !isHidden()) setProgress(1, 'Done');
+  return processed; // Return node count for caller
 }
 
 export async function loadFromJSONText(text) {
@@ -175,6 +185,31 @@ export async function loadFromJSONText(text) {
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
-  updateNavigation(state.DATA_ROOT, false);
+  try {
+    const rawHash = location.hash ? location.hash.slice(1) : '';
+    const decoded = decodePath(rawHash);
+
+    if (decoded) {
+      logInfo(`Deep link detected on data init: "${decoded}" – attempting to navigate to path`);
+      findNodeByPath(decoded)
+        .then(node => {
+          if (node) {
+            updateNavigation(node, false);
+          } else {
+            logWarn(`Deep link path not found: "${decoded}", falling back to root`);
+            updateNavigation(state.DATA_ROOT, false);
+          }
+        })
+        .catch(err => {
+          logError('Error resolving deep link path; falling back to root', err);
+          updateNavigation(state.DATA_ROOT, false);
+        });
+    } else {
+      updateNavigation(state.DATA_ROOT, false);
+    }
+  } catch (err) {
+    logError('Error during setDataRoot deep link handling; falling back to root', err);
+    updateNavigation(state.DATA_ROOT, false);
+  }
 }
 

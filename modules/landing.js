@@ -64,15 +64,6 @@ function initDeepLinks() {
     const node = await findNodeByPath(hash);
     if (node) updateNavigation(node, true);
   });
-
-  // On first load, apply hash if present (no-op until data exists)
-  setTimeout(async () => {
-    const hash = decodePath(location.hash.slice(1));
-    if (hash && state.DATA_ROOT) {
-      const node = await findNodeByPath(hash);
-      if (node) updateNavigation(node, true);
-    }
-  }, 0);
 }
 
 async function initData() {

@@ -106,7 +106,7 @@ export const perf = {
   // Background indexing of tree data
   indexing: {
     chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
-    progressEvery: 10000,          // update the progress UI every N nodes processed
+    progressEvery: 100000,          // update the progress UI every N nodes processed
     progressMergePercent: 0.95,   // Progress percentage when merging split files
     progressProcessPercent: 0.98, // Progress percentage when processing merged tree
     progressIndexPercent: 0.5,    // Progress percentage when indexing skeleton

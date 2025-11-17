@@ -4,7 +4,7 @@ import { computeFetchConcurrency, perf } from './settings.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
-import { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot } from './data-common.js';
+import { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot, countNodes } from './data-common.js';
 
 const maxRetries = perf.loading.maxRetries;
 const retryBaseDelayMs = perf.loading.retryBaseDelayMs;
@@ -66,6 +66,9 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   let failed = 0;
   const results = new Array(manifest.files.length);
   const progressUpdateInterval = Math.max(1, Math.floor(totalFiles / 20));
+  
+  // Pre-format total for progress messages to avoid repeated toLocaleString calls
+  const totalFormatted = totalFiles.toLocaleString();
 
   const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
     const fileUrl = baseUrl + fileInfo.filename;
@@ -89,7 +92,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
       completed++;
 
       if (completed % progressUpdateInterval === 0 || completed === totalFiles) {
-        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFiles} files...`);
+        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFormatted} files...`);
       }
 
       return true;
@@ -162,12 +165,12 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   } else {
     logDebug('Split files contained nested maps; performing deep merge');
     
-    // Optimized deep merge: avoid recursion for better performance
+    // Optimized deep merge: minimize allocations, avoid Object.entries
     const deepMerge = (target, source) => {
       if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
-      const entries = Object.entries(source);
-      for (let i = 0; i < entries.length; i++) {
-        const [k, v] = entries[i];
+      for (const k in source) {
+        if (!Object.prototype.hasOwnProperty.call(source, k)) continue;
+        const v = source[k];
         if (v && typeof v === 'object' && !Array.isArray(v)) {
           if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) {
             target[k] = {};
@@ -186,22 +189,9 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     }
 
     const normalizedTree = normalizeTree(mergedMap);
-    await indexTreeProgressive(normalizedTree);
+    const nodeCount = await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
     
-    const countNodes = (root) => {
-      let c = 0;
-      const stack = [root];
-      while (stack.length) {
-        const n = stack.pop();
-        c++;
-        const ch = Array.isArray(n.children) ? n.children : [];
-        for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
-      }
-      return c;
-    };
-    
-    const nodeCount = countNodes(normalizedTree);
     setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
     logInfo(`Split dataset loaded with ${nodeCount} nodes`);
     
@@ -212,21 +202,9 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
   setProgress(perf.indexing.progressProcessPercent, 'Processing merged tree...');
   const normalizedTree = normalizeTree(mergedTree);
-  await indexTreeProgressive(normalizedTree);
+  const nodeCount = await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
 
-  const countNodes = (root) => {
-    let c = 0;
-    const stack = [root];
-    while (stack.length) {
-      const n = stack.pop();
-      c++;
-      const ch = Array.isArray(n.children) ? n.children : [];
-      for (let i = 0; i < ch.length; i++) stack.push(ch[i]);
-    }
-    return c;
-  };
-  const nodeCount = countNodes(normalizedTree);
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
   logInfo(`Split dataset loaded with ${nodeCount} nodes`);
   
