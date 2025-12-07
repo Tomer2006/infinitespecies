@@ -13,6 +13,29 @@ import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot, countNodes } from './data-common.js';
 
+
+/**
+ * Detects file format from URL or filename
+ * @param {string} url - File URL or filename
+ * @returns {'json'|'unknown'}
+ */
+function detectFileFormat(url) {
+  const lower = url.toLowerCase();
+  if (lower.endsWith('.json')) {
+    return 'json';
+  }
+  return 'unknown';
+}
+
+/**
+ * Parses JSON data from response
+ * @param {Response} res - Fetch response
+ * @returns {Promise<any>}
+ */
+async function parseDataResponse(res) {
+  return res.json();
+}
+
 const maxRetries = perf.loading.maxRetries;
 const retryBaseDelayMs = perf.loading.retryBaseDelayMs;
 
@@ -51,7 +74,7 @@ export async function loadEager(url) {
   // Single file loading (fallback/default for eager mode)
   logInfo(`Loading single JSON file eagerly from ${url}`);
   const res = await fetch(url, { cache: 'default' });
-  
+
   if (!res.ok) {
     throw new Error(`Failed to fetch ${url} (${res.status})`);
   }
@@ -96,6 +119,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
   const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
     const fileUrl = baseUrl + fileInfo.filename;
+    const format = detectFileFormat(fileInfo.filename);
 
     try {
       if (retryCount > 0) {
@@ -111,7 +135,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
         throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
       }
 
-      const chunk = await res.json();
+      const chunk = await parseDataResponse(res, format);
       results[index] = { index, chunk, fileInfo };
       completed++;
 
