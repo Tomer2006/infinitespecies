@@ -130,7 +130,7 @@ export const perf = {
   // Preview/Thumbnail settings
   preview: {
     maxThumbnails: 300,           // maximum number of thumbnails to cache (prevents memory runaway)
-    thumbnailDelayMs: 60          // delay (ms) before showing thumbnail preview
+    thumbnailDelayMs: 30          // delay (ms) before showing thumbnail preview
   },
 
   // Navigation settings
