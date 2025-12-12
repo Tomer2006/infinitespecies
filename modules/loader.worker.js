@@ -2,16 +2,20 @@
  * Web Worker for data loading and layout computation
  * 
  * Handles fetching, parsing, normalizing, and calculating layout for the taxonomy tree
- * off the main thread to prevent UI freezing.
+ * off the main thread to prevent UI freezing. Supports both single JSON and split-file manifests.
  */
 
 import { pack as d3pack, hierarchy as d3hierarchy } from 'https://cdn.jsdelivr.net/npm/d3-hierarchy@3/+esm';
 
-// Configuration (mirroring settings.js where relevant)
+// Configuration
 const CHUNK_MS = 20;
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 1000;
+const FETCH_TIMEOUT_MS = 30000;
+const CONCURRENCY = 8;
 
 // ============================================================================
-// LOGIC COPIED/ADAPTED FROM data-common.js and layout.js
+// HELPERS
 // ============================================================================
 
 function mapToChildren(obj) {
@@ -82,8 +86,34 @@ function computeDescendantCountsIter(root) {
     }
 }
 
-// Progressive indexing that yields to event loop (internal to worker)
-// Even inside a worker, we might want to yield to allow 'progress' messages to be posted
+function detectFileFormat(url) {
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.json')) return 'json';
+    return 'unknown';
+}
+
+async function parseDataResponse(res, format) {
+    return res.json();
+}
+
+function deepMerge(target, source) {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+    for (const k in source) {
+        if (!Object.prototype.hasOwnProperty.call(source, k)) continue;
+        const v = source[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+            if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) {
+                target[k] = {};
+            }
+            deepMerge(target[k], v);
+        } else {
+            target[k] = v;
+        }
+    }
+    return target;
+}
+
+// Progressive indexing that yields to event loop
 async function indexTree(root) {
     let globalId = 1;
     const stack = [{ node: root, parent: null, depth: 0 }];
@@ -91,7 +121,6 @@ async function indexTree(root) {
     const total = Math.max(1, countNodes(root));
     let lastYield = performance.now();
 
-    // Essential keys to keep
     const essentialKeys = new Set([
         'name', 'children', 'level', 'parent', '_id',
         '_vx', '_vy', '_vr', '_leaves'
@@ -100,7 +129,6 @@ async function indexTree(root) {
     while (stack.length) {
         const now = performance.now();
         if (now - lastYield >= CHUNK_MS) {
-            // Report progress
             postMessage({ type: 'progress', percent: processed / total, message: `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}` });
             await new Promise(r => setTimeout(r, 0));
             lastYield = performance.now();
@@ -112,20 +140,10 @@ async function indexTree(root) {
         node.name = String(node.name ?? 'Unnamed');
         if (node.name.length > 100) node.name = node.name.slice(0, 100);
         node.level = depth;
-        // We don't need actual parent references for the layout calculation itself in D3 v4+, 
-        // but we might want them for the main thread. 
-        // However, passing circular structures (parent pointers) back from Worker via postMessage 
-        // causes DataCloneError if we aren't careful.
-        // D3 hierarchy will re-create parent pointers. 
-        // Let's strip them here or handle them carefully. 
-        // Actually, for D3 pack, we just need the hierarchy structure.
-        // We will let D3 build the hierarchy.
-
         node._id = globalId++;
 
         if (!Array.isArray(node.children)) node.children = node.children ? [].concat(node.children) : [];
 
-        // Cleanup keys
         const keysToDelete = [];
         for (const k in node) {
             if (!essentialKeys.has(k) && Object.prototype.hasOwnProperty.call(node, k)) {
@@ -150,84 +168,168 @@ async function indexTree(root) {
     return globalId;
 }
 
-// Layout logic
 function computeLayout(root, width, height) {
     const pack = d3pack().size([width, height]).padding(0);
-
     const h = d3hierarchy(root)
         .sum(d => (d.children && d.children.length > 0) ? 0 : 1)
         .sort((a, b) => b.value - a.value);
 
     pack(h);
 
-    // Extract only the necessary layout data to send back
-    // We want to return the modified root with _vx, _vy, _vr attached
-    // But d3 hierarchy creates a wrapper. We need to sync it back to the data or return the wrapper data.
-    // The 'data-common.js' logic used `h.each(d => { d._vx = ... })` but `d` there was the hierarchy node.
-    // We need to mutate the underlying data objects or return a structure that the main thread can use.
-
     const cx = width / 2;
     const cy = height / 2;
-
-    const layoutMap = {};
-
     let count = 0;
+
     h.each(d => {
-        // Attach layout props to the raw data object
         d.data._vx = d.x - cx;
         d.data._vy = d.y - cy;
         d.data._vr = d.r;
-        d.data.depth = d.depth; // Update depth from d3
+        d.data.depth = d.depth;
         count++;
     });
 
     return { root: h.data, count };
 }
 
-
 // ============================================================================
 // MESSAGE HANDLER
 // ============================================================================
 
 self.onmessage = async (e) => {
-    const { type, url, canvasW, canvasH } = e.data;
+    const { type, url, baseUrl, manifest, canvasW, canvasH } = e.data;
 
     if (type === 'load') {
         try {
             postMessage({ type: 'progress', percent: 0, message: 'Fetching data...' });
-
             const res = await fetch(url);
             if (!res.ok) throw new Error(`Failed to fetch ${url}`);
 
-            // Determine size for progress (approximate)
-            const contentLength = res.headers.get('content-length');
-            const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
-
             postMessage({ type: 'progress', percent: 0.1, message: 'Parsing JSON...' });
-
             const text = await res.text();
             const data = JSON.parse(text);
 
-            postMessage({ type: 'progress', percent: 0.3, message: 'Normalizing tree...' });
-            const root = normalizeTree(data);
-
-            postMessage({ type: 'progress', percent: 0.4, message: 'Indexing tree...' });
-            await indexTree(root);
-
-            postMessage({ type: 'progress', percent: 0.8, message: 'Computing global layout...' });
-            // Use a fixed large dimension for layout; the generic logic uses min(W,H)
-            // We'll use the passed canvas dimensions or a default
-            const dim = Math.min(canvasW || 1000, canvasH || 1000);
-            const { root: layoutRoot, count } = computeLayout(root, dim, dim);
-
-            postMessage({
-                type: 'complete',
-                data: layoutRoot,
-                stats: { nodes: count }
-            });
-
+            await processData(data, canvasW, canvasH);
+        } catch (err) {
+            postMessage({ type: 'error', error: err.message });
+        }
+    }
+    else if (type === 'loadSplit') {
+        try {
+            await loadSplitFiles(baseUrl, manifest, canvasW, canvasH);
         } catch (err) {
             postMessage({ type: 'error', error: err.message });
         }
     }
 };
+
+async function processData(data, w, h) {
+    postMessage({ type: 'progress', percent: 0.3, message: 'Normalizing tree...' });
+    const root = normalizeTree(data);
+
+    postMessage({ type: 'progress', percent: 0.4, message: 'Indexing tree...' });
+    await indexTree(root);
+
+    postMessage({ type: 'progress', percent: 0.8, message: 'Computing global layout...' });
+    const dim = Math.min(w || 1000, h || 1000);
+    const { root: layoutRoot, count } = computeLayout(root, dim, dim);
+
+    postMessage({
+        type: 'complete',
+        data: layoutRoot,
+        stats: { nodes: count }
+    });
+}
+
+async function loadSplitFiles(baseUrl, manifest, w, h) {
+    const totalFiles = manifest.files.length;
+    postMessage({ type: 'progress', percent: 0, message: `Loading ${totalFiles} split files...` });
+
+    let completed = 0;
+    let failed = 0;
+    const results = new Array(totalFiles);
+
+    const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
+        const fileUrl = baseUrl + fileInfo.filename;
+        const format = detectFileFormat(fileInfo.filename);
+
+        try {
+            const res = await fetch(fileUrl, {
+                signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+            });
+            if (!res.ok) throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
+
+            const chunk = await parseDataResponse(res, format);
+            results[index] = { index, chunk };
+            completed++;
+
+            // Post occasional progress
+            if (completed % 5 === 0 || completed === totalFiles) {
+                postMessage({ type: 'progress', percent: (completed / totalFiles) * 0.5, message: `Loaded ${completed}/${totalFiles} files...` });
+            }
+            return true;
+        } catch (err) {
+            if (retryCount < MAX_RETRIES) {
+                const delay = Math.pow(2, retryCount) * RETRY_BASE_DELAY_MS;
+                await new Promise(r => setTimeout(r, delay));
+                return loadFileWithRetry(fileInfo, index, retryCount + 1);
+            } else {
+                failed++;
+                return false;
+            }
+        }
+    };
+
+    // Parallel fetch loop
+    let inFlight = 0;
+    let nextIndex = 0;
+
+    await new Promise(resolve => {
+        const checkCompletion = () => {
+            if (completed + failed === totalFiles) resolve();
+        };
+        const startNext = () => {
+            while (inFlight < CONCURRENCY && nextIndex < totalFiles) {
+                const i = nextIndex++;
+                inFlight++;
+                loadFileWithRetry(manifest.files[i], i).finally(() => {
+                    inFlight--;
+                    checkCompletion();
+                    if (completed + failed < totalFiles) startNext();
+                });
+            }
+        };
+        startNext();
+    });
+
+    if (failed > 0 && results.filter(r => r).length === 0) {
+        throw new Error(`Failed to load split files (${failed} failed)`);
+    }
+
+    postMessage({ type: 'progress', percent: 0.5, message: 'Merging split data...' });
+
+    const validResults = results.filter(r => r !== undefined).sort((a, b) => a.index - b.index);
+
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    const isStructuredNode = obj => obj && typeof obj === 'object' && (hasOwnProperty.call(obj, 'children') || hasOwnProperty.call(obj, 'name'));
+    const anyStructured = validResults.some(r => isStructuredNode(r.chunk));
+
+    let mergedTree;
+    if (anyStructured) {
+        mergedTree = { name: 'Life', level: 0, children: [] };
+        for (const { chunk } of validResults) {
+            if (chunk && Array.isArray(chunk.children)) {
+                mergedTree.children.push(...chunk.children);
+            } else if (isStructuredNode(chunk)) {
+                mergedTree.children.push(chunk);
+            }
+        }
+    } else {
+        const mergedMap = {};
+        for (const { chunk } of validResults) {
+            deepMerge(mergedMap, chunk);
+        }
+        mergedTree = mergedMap; // Will be normalized next
+    }
+
+    await processData(mergedTree, w, h);
+}
