@@ -40,8 +40,6 @@ export function updateTooltip(n, px, py) {
     const metaParts = [];
     const levelText = typeof n.level === 'number' || typeof n.level === 'string' ? String(n.level) : '';
     const leavesNum = typeof n._leaves === 'number' ? n._leaves : 0;
-    const childrenNum = Array.isArray(n.children) ? n.children.length : 0;
-    const idNum = typeof n._id === 'number' ? n._id : 0;
 
     metaParts.push(`Level: ${levelText}`);
     metaParts.push(`Descendants: ${leavesNum.toLocaleString()}`);
