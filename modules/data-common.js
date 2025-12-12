@@ -12,6 +12,8 @@ import { logInfo, logError, logWarn } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
+import { layoutFor } from './layout.js';
+import { rebuildNodeMap } from './state.js';
 
 // ============================================================================
 // CORE DATA LOADING FUNCTIONS (shared with eager and lazy)
@@ -94,8 +96,8 @@ export async function indexTreeProgressive(root, options = {}) {
     typeof options.startDepth === 'number'
       ? options.startDepth
       : startParent && typeof startParent.level === 'number'
-      ? startParent.level + 1
-      : 0;
+        ? startParent.level + 1
+        : 0;
   const showProgress = options.showProgress ?? resetGlobalId;
 
   if (resetGlobalId) state.globalId = 1;
@@ -105,20 +107,20 @@ export async function indexTreeProgressive(root, options = {}) {
     options.essentialKeys instanceof Set
       ? options.essentialKeys
       : new Set([
-          'name',
-          'children',
-          'level',
-          'parent',
-          '_id',
-          '_vx',
-          '_vy',
-          '_vr',
-          '_leaves',
-          '_stub',
-          '_chunkPath',
-          '_chunkFile',
-          '_loading'
-        ]);
+        'name',
+        'children',
+        'level',
+        'parent',
+        '_id',
+        '_vx',
+        '_vy',
+        '_vr',
+        '_leaves',
+        '_stub',
+        '_chunkPath',
+        '_chunkFile',
+        '_loading'
+      ]);
 
   let processed = 0;
   const total = Math.max(1, countNodes(root));
@@ -190,13 +192,26 @@ export async function loadFromJSONText(text) {
 
 export function setDataRoot(root) {
   state.DATA_ROOT = root;
-  
+
   // Validate root exists before proceeding
   if (!root) {
     logError('setDataRoot called with null/undefined root');
     return;
   }
-  
+
+  // Pre-calculate global layout for eager mode to enable O(1) navigation
+  if (state.loadMode === 'eager') {
+    logInfo('Pre-computing global layout for eager mode...');
+    const globalLayout = layoutFor(root);
+    if (globalLayout) {
+      state.rootLayout = globalLayout;
+      // Set as current layout temporarily to build the map
+      state.layout = globalLayout;
+      rebuildNodeMap();
+      logInfo('Global layout computed and node map built.');
+    }
+  }
+
   try {
     const rawHash = location.hash ? location.hash.slice(1) : '';
     const decoded = decodePath(rawHash);

@@ -63,18 +63,26 @@ export async function updateNavigation(node, animate = true) {
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;
 
-  logTrace('Computing layout for current node');
-  state.layout = layoutFor(state.current);
-
-  if (state.layout) {
-    logDebug(`Layout computed: ${state.layout.root?.descendants()?.length || 0} nodes, diameter=${state.layout.diameter}px`);
+  // OPTIMIZATION: Use global layout if available (Eager mode)
+  if (state.rootLayout) {
+    if (state.layout !== state.rootLayout) {
+      state.layout = state.rootLayout;
+      state.layoutChanged = true;
+    }
+    // No need to rebuild map or re-compute layout
+    logDebug('Using cached global layout');
+  } else {
+    // Legacy behavior (Lazy mode or fallback)
+    logTrace('Computing layout for current node');
+    state.layout = layoutFor(state.current);
+    if (state.layout) {
+      logDebug(`Layout computed: ${state.layout.root?.descendants()?.length || 0} nodes, diameter=${state.layout.diameter}px`);
+    }
+    rebuildNodeMap();
+    state.layoutChanged = true;
   }
 
-  rebuildNodeMap();
   setBreadcrumbs(state.current);
-
-  // Mark that layout has changed for canvas rendering
-  state.layoutChanged = true;
 
   // Check if layout was successfully computed before using it
   if (!state.layout || !state.layout.diameter) {
@@ -89,19 +97,50 @@ export async function updateNavigation(node, animate = true) {
   }
 
   if (animate) {
-    const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
-    animateToCam(0, 0, targetK);
+    if (state.rootLayout) {
+      // Global layout: zoom to node position
+      const d = state.nodeLayoutMap.get(state.current._id);
+      if (d) {
+        // Calculate k to fit the node's circle (d._vr) into the view (min(W, H))
+        // Target diameter = min(W, H)
+        // d._vr is radius, so diameter is 2 * d._vr
+        // k = target_diameter / (2 * d._vr)
+        const targetK = Math.min(W, H) / (2 * d._vr);
+        animateToCam(d._vx, d._vy, targetK);
+      } else {
+        // Fallback for root or error
+        const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+        animateToCam(0, 0, targetK);
+      }
+    } else {
+      // Local layout: center at 0,0
+      const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+      animateToCam(0, 0, targetK);
+    }
   } else {
-    state.camera.x = 0;
-    state.camera.y = 0;
-    state.camera.k = Math.min(W, H) / state.layout.diameter;
+    if (state.rootLayout) {
+      const d = state.nodeLayoutMap.get(state.current._id);
+      if (d) {
+        state.camera.x = d._vx;
+        state.camera.y = d._vy;
+        state.camera.k = Math.min(W, H) / (2 * d._vr);
+      } else {
+        state.camera.x = 0;
+        state.camera.y = 0;
+        state.camera.k = Math.min(W, H) / state.layout.diameter;
+      }
+    } else {
+      state.camera.x = 0;
+      state.camera.y = 0;
+      state.camera.k = Math.min(W, H) / state.layout.diameter;
+    }
   }
 
   requestRender();
 
   const endTime = performance.now();
   logInfo(`Navigation completed: ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
-  
+
   // Trigger viewport-based loading after navigation settles
   if (state.loadMode === 'lazy') {
     setTimeout(() => onViewportChange(), perf.timing.navigationViewportDelayMs);

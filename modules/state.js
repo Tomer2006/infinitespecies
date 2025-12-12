@@ -10,6 +10,7 @@ export const state = {
   DATA_ROOT: null,
   current: null,
   layout: null,
+  rootLayout: null, // Cached global layout for Eager mode
   globalId: 1,
 
   // camera
@@ -30,7 +31,7 @@ export const state = {
 
   // data loading state
   loadMode: 'eager', // 'eager' or 'lazy'
-  
+
   // lazy loading state
   lazyManifest: null,
   loadedChunks: new Map(), // filename -> chunk data
