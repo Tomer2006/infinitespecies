@@ -22,7 +22,7 @@ export const perf = {
     maxLabels: 180,
     labelGridCellPx: 30,
     maxNodesPerFrame: 9000,
-    showGrid: true,
+    showGrid: false,
 
     // Level-of-detail thresholds (in pixels)
     lodDetailThreshold: 8,     // Above this size, render with full detail
@@ -31,7 +31,7 @@ export const perf = {
     lodSkipThreshold: 1,       // Below this size, skip rendering entirely
 
     // Grid pattern settings
-    gridTileSize: 100,          // Grid tile size in pixels
+    gridTileSize: 40,          // Grid tile size in pixels
     gridColor: 'rgba(138,161,255,1)',      // Grid line color
     gridAlpha: 0.15,           // Grid line opacity (0.05 = very faint, 0.15 = visible, 0.3 = prominent)
     gridLineWidth: 1,          // Grid line width in pixels
