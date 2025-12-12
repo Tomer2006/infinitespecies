@@ -45,8 +45,6 @@ export function updateTooltip(n, px, py) {
 
     metaParts.push(`Level: ${levelText}`);
     metaParts.push(`Descendants: ${leavesNum.toLocaleString()}`);
-    metaParts.push(`Children: ${childrenNum}`);
-    metaParts.push(`ID: ${idNum}`);
 
     if (tMeta) tMeta.textContent = metaParts.join(' • ');
     lastTooltipNodeId = n._id;
