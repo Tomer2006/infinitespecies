@@ -34,7 +34,7 @@ export function updateTooltip(n, px, py) {
 
   // Update tooltip content only when the hovered node changes
   if (n._id !== lastTooltipNodeId) {
-    if (tName) tName.textContent = n.name + (n.level ? ` (${n.level})` : '');
+    if (tName) tName.textContent = n.name;
 
     // Build metadata with explicit labels for clarity
     const metaParts = [];
