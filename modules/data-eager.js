@@ -71,41 +71,93 @@ export async function loadEager(url) {
     logWarn(`Manifest fetch failed at ${manifestUrl}: ${e.message}`);
   }
 
-  // Single file loading (fallback/default for eager mode)
-  logInfo(`Loading single JSON file eagerly from ${url}`);
-  const res = await fetch(url, { cache: 'default' });
+  // Single file loading with Web Worker
+  logInfo(`Loading single JSON file eagerly using Web Worker from ${url}`);
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${url} (${res.status})`);
-  }
+  return new Promise((resolve, reject) => {
+    const worker = new Worker('modules/loader.worker.js', { type: 'module' });
 
-  const text = await res.text();
-  await loadFromJSONText(text);
+    // Cleanup function
+    const cleanup = () => {
+      worker.terminate();
+    };
+
+    worker.onmessage = (e) => {
+      const { type, percent, message, data, error, stats } = e.data;
+
+      if (type === 'progress') {
+        setProgress(percent, message);
+      } else if (type === 'complete') {
+        logInfo(`Worker finished loading ${stats?.nodes} nodes`);
+        // The worker returns the processed root with layout data (_vx, _vy, _vr)
+        // We need to integrate this into the main thread state
+
+        // We need to re-establish parent pointers because they don't survive postMessage (JSON/StructuredClone)
+        // A quick traversal to fix parents
+        const root = data;
+        const stack = [root];
+        while (stack.length) {
+          const n = stack.pop();
+          if (n.children) {
+            for (const child of n.children) {
+              child.parent = n;
+              stack.push(child);
+            }
+          }
+        }
+
+        // Initialize state
+        setDataRoot(root);
+        cleanup();
+        resolve();
+      } else if (type === 'error') {
+        logError(`Worker error: ${error}`);
+        cleanup();
+        reject(new Error(error));
+      }
+    };
+
+    worker.onerror = (err) => {
+      logError('Worker script error', err);
+      cleanup();
+      reject(err);
+    };
+
+    // Start the worker
+    import('./canvas.js').then(({ W, H }) => {
+      worker.postMessage({
+        type: 'load',
+        url,
+        canvasW: W,
+        canvasH: H
+      });
+    });
+  });
 }
 
 async function loadFromSplitFiles(baseUrl, manifest) {
   const startTime = performance.now();
-  
+
   // Validate manifest structure
   if (!manifest || typeof manifest !== 'object') {
     throw new Error('Invalid manifest: must be an object');
   }
-  
+
   if (!Array.isArray(manifest.files)) {
     if (manifest.total_files && manifest.total_files > 0) {
       throw new Error(`Invalid manifest: files array is missing but total_files is ${manifest.total_files}. Manifest must include a 'files' array.`);
     }
     throw new Error('Invalid manifest: missing required "files" array');
   }
-  
+
   if (manifest.files.length === 0) {
     throw new Error('Invalid manifest: files array is empty');
   }
-  
+
   const totalFiles = manifest.files.length;
-  
+
   logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
-  
+
   setProgress(0, `Loading ${totalFiles} split files...`);
 
   const concurrency = Math.max(computeFetchConcurrency(), 8);
@@ -113,7 +165,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   let failed = 0;
   const results = new Array(manifest.files.length);
   const progressUpdateInterval = Math.max(1, Math.floor(totalFiles / 20));
-  
+
   // Pre-format total for progress messages to avoid repeated toLocaleString calls
   const totalFormatted = totalFiles.toLocaleString();
 
@@ -197,14 +249,14 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   });
 
   const validResults = results.filter(r => r !== undefined);
-  
+
   // Check if we have any valid results before proceeding
   if (validResults.length === 0) {
     const errorMsg = `Failed to load any files from split dataset (${totalFiles} files attempted, ${failed} failed)`;
     logError(errorMsg);
     throw new Error(errorMsg);
   }
-  
+
   logInfo(`Merging ${validResults.length} loaded split files`);
   setProgress(perf.indexing.progressMergePercent, 'Merging tree data...');
 
@@ -230,7 +282,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     }
   } else {
     logDebug('Split files contained nested maps; performing deep merge');
-    
+
     // Optimized deep merge: minimize allocations, avoid Object.entries
     const deepMerge = (target, source) => {
       if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
@@ -257,10 +309,10 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     const normalizedTree = normalizeTree(mergedMap);
     const nodeCount = await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
-    
+
     setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
     logInfo(`Split dataset loaded with ${nodeCount} nodes`);
-    
+
     const duration = performance.now() - startTime;
     logDebug(`Split loading completed in ${duration.toFixed(0)}ms`);
     return;
@@ -273,7 +325,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
   setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`);
   logInfo(`Split dataset loaded with ${nodeCount} nodes`);
-  
+
   const duration = performance.now() - startTime;
   logDebug(`Split loading completed in ${duration.toFixed(0)}ms`);
 }
