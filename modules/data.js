@@ -12,7 +12,4 @@ export { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, s
 // Eager loading functions
 export { loadEager } from './data-eager.js';
 
-// Lazy loading functions - viewport-based automatic loading
-export { isStubNode, loadLazy, loadChunk, autoLoadVisibleChunks, onViewportChange, startAutoLoading } from './data-lazy.js';
-
 

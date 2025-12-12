@@ -13,7 +13,6 @@ import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
 import { logInfo, logDebug, logTrace, logWarn } from './logger.js';
-import { onViewportChange } from './data.js';
 import { perf } from './settings.js';
 
 export function setBreadcrumbs(node) {
@@ -72,7 +71,7 @@ export async function updateNavigation(node, animate = true) {
     // No need to rebuild map or re-compute layout
     logDebug('Using cached global layout');
   } else {
-    // Legacy behavior (Lazy mode or fallback)
+    // Legacy behavior (fallback)
     logTrace('Computing layout for current node');
     state.layout = layoutFor(state.current);
     if (state.layout) {
@@ -90,9 +89,6 @@ export async function updateNavigation(node, animate = true) {
     requestRender();
     const endTime = performance.now();
     logInfo(`Navigation completed (no layout): ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
-    if (state.loadMode === 'lazy') {
-      setTimeout(() => onViewportChange(), perf.timing.navigationViewportDelayMs);
-    }
     return;
   }
 
@@ -140,11 +136,6 @@ export async function updateNavigation(node, animate = true) {
 
   const endTime = performance.now();
   logInfo(`Navigation completed: ${node.name}, ${(endTime - startTime).toFixed(2)}ms total`);
-
-  // Trigger viewport-based loading after navigation settles
-  if (state.loadMode === 'lazy') {
-    setTimeout(() => onViewportChange(), perf.timing.navigationViewportDelayMs);
-  }
 }
 
 // Legacy function for backward compatibility

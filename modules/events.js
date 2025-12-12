@@ -40,7 +40,7 @@ import { openProviderSearch } from './providers.js';
 import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
-import { loadFromJSONText, onViewportChange } from './data.js';
+import { loadFromJSONText } from './data.js';
 import { getNodePath } from './deeplink.js';
 import { hideBigPreview } from './preview.js';
 import { perf } from './settings.js';
@@ -65,8 +65,6 @@ export function initEvents() {
       state.camera.y -= dy / state.camera.k;
       lastPan = { x, y };
       requestRender();
-      // Trigger viewport change for lazy loading
-      onViewportChange();
       // Hide tooltip and big preview while panning
       const tooltipEl = document.getElementById('tooltip');
       if (tooltipEl) tooltipEl.style.opacity = 0;
@@ -173,8 +171,6 @@ export function initEvents() {
       state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
 
       requestRender();
-      // Trigger viewport change for lazy loading
-      onViewportChange();
       ev.preventDefault();
     },
     { passive: false }

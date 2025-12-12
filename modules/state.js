@@ -30,14 +30,7 @@ export const state = {
   layoutChanged: false,
 
   // data loading state
-  loadMode: 'eager', // 'eager' or 'lazy'
-
-  // lazy loading state
-  lazyManifest: null,
-  loadedChunks: new Map(), // filename -> chunk data
-  lazyBaseUrl: 'data lazy',
-  lazyPathToChunk: new Map(),   // path string -> primary chunk filename (for backward compat)
-  lazyPathToChunks: new Map(),  // path string -> array of chunk filenames (for full merges)
+  loadMode: 'eager', // 'eager' only now
 };
 
 export function rebuildNodeMap() {
