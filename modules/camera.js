@@ -2,14 +2,13 @@
  * Camera animation and viewport management module
  *
  * Handles smooth camera transitions, viewport tracking, and coordinates the
- * lazy loading system when the viewport changes during animations.
+ * loading system when the viewport changes during animations.
  */
 
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
 import { perf } from './settings.js';
 import { easeCubicInOut } from 'd3-ease';
-import { onViewportChange } from './data.js';
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
@@ -34,16 +33,11 @@ export function animateToCam(nx, ny, nk, dur = perf.animation.cameraAnimationMs)
     state.camera.k = lerp(sk, state.targetCam.k, e);
 
     requestRender();
-    
-    // Trigger viewport change detection for lazy loading
-    onViewportChange();
-    
+
     if (t < 1) {
       requestAnimationFrame(step);
     } else {
       state.animating = false;
-      // Final viewport check when animation completes
-      onViewportChange();
     }
   }
   requestAnimationFrame(step);

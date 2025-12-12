@@ -134,9 +134,7 @@ canvas.loading{pointer-events:none;opacity:0.7}
 .landing-btn.secondary .btn-hint{color:rgba(234,240,255,0.6)}
 
 /* Initially hide buttons that may be disabled by settings */
-#startLazyBtn{display:none}
-#testDataBtn{display:none}
-#testDataLazyBtn{display:none}
+
 .landing-footer{color:rgba(154,163,199,1);font-size:.9rem;margin-top:2rem}
 .landing-footer kbd{background:rgba(21,25,53,1);border:1px solid rgba(42,49,109,1);border-radius:4px;padding:.2rem .4rem;
   font-size:.8rem;color:rgba(200,210,255,1);margin:0 .2rem}

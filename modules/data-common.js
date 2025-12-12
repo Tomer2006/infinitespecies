@@ -1,7 +1,7 @@
 /**
  * Shared data loading and processing utilities
  *
- * Contains common functions used by both eager and lazy loading modes,
+ * Contains common functions used by data loading,
  * including tree normalization, progressive indexing, node counting,
  * and data structure manipulation utilities.
  */
@@ -16,7 +16,7 @@ import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 
 // ============================================================================
-// CORE DATA LOADING FUNCTIONS (shared with eager and lazy)
+// CORE DATA LOADING FUNCTIONS
 // ============================================================================
 
 export function mapToChildren(obj) {

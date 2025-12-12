@@ -2,7 +2,7 @@
  * Landing page and application initialization module
  *
  * Manages the initial application startup sequence, landing page UI,
- * data loading mode selection (eager vs lazy), and deep link resolution.
+ * data loading mode selection, and deep link resolution.
  * Handles fallback scenarios when data loading fails.
  */
 

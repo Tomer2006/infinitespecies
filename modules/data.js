@@ -2,7 +2,7 @@
  * Data loading API module
  *
  * Unified interface for all data loading functionality. Re-exports functions
- * from specialized modules (eager, lazy, common) to maintain backward
+ * from specialized modules to maintain backward
  * compatibility while keeping the codebase modular.
  */
 

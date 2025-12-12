@@ -85,7 +85,7 @@ export const perf = {
 
   // Debounce/Timing settings
   timing: {
-    viewportCheckDebounceMs: 150,     // Debounce delay (ms) for lazy loading viewport checks
+    viewportCheckDebounceMs: 150,     // Debounce delay (ms) for viewport checks
     navigationViewportDelayMs: 500,   // Delay (ms) after navigation before triggering viewport check
     searchDebounceMs: 300,             // Debounce delay (ms) for search input
     metricsUpdateIntervalMs: 500,      // Interval (ms) for updating performance metrics
@@ -176,10 +176,9 @@ export const perf = {
 
   // Start page UI settings
   startPage: {
-    showLazyLoadButton: false,      // whether to show the lazy loading button
     showEagerLoadButton: true,     // whether to show the eager loading button
     showTestDataButton: false,     // whether to show the test data button
-    defaultLoadMode: 'eager'        // default loading mode ('lazy' or 'eager')
+    defaultLoadMode: 'eager'        // default loading mode
   }
 };
 
