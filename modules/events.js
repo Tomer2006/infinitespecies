@@ -41,8 +41,6 @@ import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
-import { fitNodeInView } from './navigation.js';
-import { state } from './state.js';
 import { getNodePath } from './deeplink.js';
 import { hideBigPreview } from './preview.js';
 import { perf } from './settings.js';
