@@ -9,7 +9,7 @@
 import { showLoading, hideLoading } from './loading.js';
 import { loadEager } from './data.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
-import { updateNavigation } from './navigation.js';
+import { updateNavigation, fitNodeInView } from './navigation.js';
 import { state } from './state.js';
 import { tick } from './canvas.js';
 import { logWarn } from './logger.js';
@@ -92,7 +92,8 @@ async function initData() {
       console.log(`✅ [LANDING] SUCCESS: ${url} loaded in ${attemptDuration.toFixed(2)}ms`);
       hideLoading();
 
-      console.log('🎨 [LANDING] Triggering initial render...');
+      console.log('🎨 [LANDING] Triggering initial render and fitting view...');
+      fitNodeInView(state.DATA_ROOT);
       tick();
 
       const totalDuration = performance.now() - startTime;

@@ -41,6 +41,8 @@ import { fitNodeInView, goToNode } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
+import { fitNodeInView } from './navigation.js';
+import { state } from './state.js';
 import { getNodePath } from './deeplink.js';
 import { hideBigPreview } from './preview.js';
 import { perf } from './settings.js';
@@ -384,6 +386,7 @@ export function initEvents() {
       closeModal();
       showLoading('Parsing custom JSON…');
       await loadFromJSONText(text);
+      fitNodeInView(state.DATA_ROOT);
       hideLoading();
     } catch (err) {
       hideLoading();
