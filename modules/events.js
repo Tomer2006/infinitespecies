@@ -386,8 +386,10 @@ export function initEvents() {
       closeModal();
       showLoading('Parsing custom JSON…');
       await loadFromJSONText(text);
-      fitNodeInView(state.DATA_ROOT);
       hideLoading();
+      state.layoutChanged = true;
+      fitNodeInView(state.DATA_ROOT);
+      requestRender();
     } catch (err) {
       hideLoading();
       openModal();

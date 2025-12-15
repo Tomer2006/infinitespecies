@@ -93,6 +93,7 @@ async function initData() {
       hideLoading();
 
       console.log('🎨 [LANDING] Triggering initial render and fitting view...');
+      state.layoutChanged = true;
       fitNodeInView(state.DATA_ROOT);
       tick();
 
