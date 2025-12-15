@@ -166,14 +166,14 @@ export async function indexTreeProgressive(root, options = {}) {
     processed++;
     if (showProgress && processed % progressEvery === 0) {
       if (!isHidden()) {
-        setProgress(0.1 + (processed / total) * 0.9, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`);
+        setProgress(0.1 + (processed / total) * 0.9, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`, 2, 3);
       }
     }
   }
   // State 3: Finalizing (0% → 100%)
-  if (showProgress && !isHidden()) setProgress(0, 'Finalizing...');
+  if (showProgress && !isHidden()) setProgress(0, 'Finalizing...', 3, 3);
   computeDescendantCountsIter(root);
-  if (showProgress && !isHidden()) setProgress(1, 'Done');
+  if (showProgress && !isHidden()) setProgress(1, 'Done', 3, 3);
   return processed; // Return node count for caller
 }
 

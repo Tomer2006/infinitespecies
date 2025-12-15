@@ -17,7 +17,7 @@ export function showLoading(title = 'Loading…') {
   loadingEl.style.display = 'flex';
   stage.setAttribute('aria-busy', 'true');
   isLoading = true;
-  setProgress(0, 'Starting…');
+  setProgress(0, 'Starting…', 1, 3);
   if (topbarEl) topbarEl.style.visibility = 'hidden';
   if (canvas) canvas.classList.add('loading');
 }
@@ -35,10 +35,16 @@ export function isCurrentlyLoading() {
   return isLoading;
 }
 
-export function setProgress(ratio, label = '') {
+export function setProgress(ratio, label = '', currentStage = null, totalStages = null) {
   const pct = Math.max(0, Math.min(1, ratio));
   if (progressFill) progressFill.style.width = (pct * 100).toFixed(1) + '%';
   if (progressPct) progressPct.textContent = Math.round(pct * 100) + '%';
-  // Keep operation details private by not updating the user-facing label
-  // if (label && !document.hidden) progressLabel.textContent = label;
+
+  // Format label with stage information if provided
+  let displayLabel = label;
+  if (currentStage !== null && totalStages !== null) {
+    displayLabel = `Stage ${currentStage} of ${totalStages}: ${label}`;
+  }
+
+  if (displayLabel && !document.hidden) progressLabel.textContent = displayLabel;
 }
