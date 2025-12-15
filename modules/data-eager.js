@@ -106,6 +106,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
 
   logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
 
+  // State 1: Loading Files (0% → 100%)
   setProgress(0, `Loading ${totalFiles} split files...`);
 
   const concurrency = Math.max(computeFetchConcurrency(), 8);
@@ -206,7 +207,9 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   }
 
   logInfo(`Merging ${validResults.length} loaded split files`);
-  setProgress(perf.indexing.progressMergePercent, 'Merging tree data...');
+
+  // State 2: Processing & Indexing (0% → 100%)
+  setProgress(0, 'Processing tree data...');
 
   // Sort by index to maintain order
   validResults.sort((a, b) => a.index - b.index);
@@ -266,7 +269,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     return;
   }
 
-  setProgress(perf.indexing.progressProcessPercent, 'Processing merged tree...');
+  setProgress(0.1, 'Processing merged tree...');
   const normalizedTree = normalizeTree(mergedTree);
   const nodeCount = await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
