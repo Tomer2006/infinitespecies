@@ -166,7 +166,7 @@ export async function indexTreeProgressive(root, options = {}) {
     processed++;
     if (showProgress && processed % progressEvery === 0) {
       if (!isHidden()) {
-        setProgress(0.1 + (processed / total) * 0.9, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`, 2, 3);
+        setProgress(processed / total, `Indexing... ${processed.toLocaleString()}/${total.toLocaleString()}`, 2, 3);
       }
     }
   }

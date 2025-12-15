@@ -209,7 +209,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   logInfo(`Merging ${validResults.length} loaded split files`);
 
   // State 2: Processing & Indexing (0% → 100%)
-  setProgress(0, 'Processing tree data...', 2, 3);
+  // Progress starts with indexing phase
 
   // Sort by index to maintain order
   validResults.sort((a, b) => a.index - b.index);
@@ -269,7 +269,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     return;
   }
 
-  setProgress(0.1, 'Processing merged tree...', 2, 3);
+  // Processing merged tree happens during indexing phase
   const normalizedTree = normalizeTree(mergedTree);
   const nodeCount = await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
