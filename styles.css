@@ -72,6 +72,7 @@ canvas.loading{pointer-events:none;opacity:0.7}
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .splash-brand .brand-sub{color:rgba(198,207,247,1);font-size:12px}
 .splash-hint{margin-top:.5rem;color:rgba(154,163,199,1);font-size:12px;opacity:.9}
+.stage-info{font-size:14px;font-weight:600;color:var(--accent);margin-bottom:.5rem;text-align:center}
 .progress-bar{height:12px;background:rgba(14,19,49,1);border:1px solid rgba(39,48,112,1);border-radius:8px;overflow:hidden}
 .progress-fill{height:100%;width:0%;background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 .progress-meta{display:flex;justify-content:flex-end;color:rgba(198,207,247,1);font-size:12px;margin-top:.4rem}

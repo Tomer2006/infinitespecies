@@ -6,7 +6,7 @@
  * indicators during data loading operations.
  */
 
-import { loadingEl, progressFill, progressLabel, progressPct, stage, topbarEl, canvas } from './dom.js';
+import { loadingEl, progressFill, progressLabel, progressPct, stageInfo, stage, topbarEl, canvas } from './dom.js';
 
 let isLoading = false;
 
@@ -17,6 +17,7 @@ export function showLoading(title = 'Loading…') {
   loadingEl.style.display = 'flex';
   stage.setAttribute('aria-busy', 'true');
   isLoading = true;
+  if (stageInfo) stageInfo.style.display = 'none';
   setProgress(0, 'Starting…', 1, 3);
   if (topbarEl) topbarEl.style.visibility = 'hidden';
   if (canvas) canvas.classList.add('loading');
@@ -40,11 +41,16 @@ export function setProgress(ratio, label = '', currentStage = null, totalStages 
   if (progressFill) progressFill.style.width = (pct * 100).toFixed(1) + '%';
   if (progressPct) progressPct.textContent = Math.round(pct * 100) + '%';
 
-  // Format label with stage information if provided
-  let displayLabel = label;
-  if (currentStage !== null && totalStages !== null) {
-    displayLabel = `Stage ${currentStage} of ${totalStages}: ${label}`;
+  // Update stage info display
+  if (stageInfo) {
+    if (currentStage !== null && totalStages !== null) {
+      stageInfo.textContent = `Stage ${currentStage} of ${totalStages}`;
+      stageInfo.style.display = 'block';
+    } else {
+      stageInfo.style.display = 'none';
+    }
   }
 
-  if (displayLabel && !document.hidden) progressLabel.textContent = displayLabel;
+  // Format label (remove stage prefix since it's now separate)
+  if (label && !document.hidden) progressLabel.textContent = label;
 }
