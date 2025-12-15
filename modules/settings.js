@@ -109,7 +109,7 @@ export const perf = {
     progressEvery: 100000,          // update the progress UI every N nodes processed
     progressMergePercent: 0.1,   // Progress percentage when merging split files
     progressProcessPercent: 0.2, // Progress percentage when processing merged tree
-    progressDescendantsPercent: 1.0  // Progress percentage when computing descendant counts
+    progressDescendantsPercent: 0.95  // Progress percentage when computing descendant counts
   },
 
   // Memory management settings
