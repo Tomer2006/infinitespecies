@@ -107,10 +107,9 @@ export const perf = {
   indexing: {
     chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
     progressEvery: 100000,          // update the progress UI every N nodes processed
-    progressMergePercent: 0.95,   // Progress percentage when merging split files
-    progressProcessPercent: 0.98, // Progress percentage when processing merged tree
-    progressIndexPercent: 0.5,    // Progress percentage when indexing skeleton
-    progressDescendantsPercent: 0.95  // Progress percentage when computing descendant counts
+    progressMergePercent: 0.1,   // Progress percentage when merging split files
+    progressProcessPercent: 0.2, // Progress percentage when processing merged tree
+    progressDescendantsPercent: 1.0  // Progress percentage when computing descendant counts
   },
 
   // Memory management settings
@@ -129,8 +128,8 @@ export const perf = {
 
   // Preview/Thumbnail settings
   preview: {
-    maxThumbnails: 300,           // maximum number of thumbnails to cache (prevents memory runaway)
-    thumbnailDelayMs: 30          // delay (ms) before showing thumbnail preview
+    maxThumbnails: 100,           // maximum number of thumbnails to cache (prevents memory runaway)
+    thumbnailDelayMs: 20          // delay (ms) before showing thumbnail preview
   },
 
   // Navigation settings
@@ -140,7 +139,7 @@ export const perf = {
 
   // Search settings
   search: {
-    maxResults: 100,               // maximum number of search results to return
+    maxResults: 150,               // maximum number of search results to return
     noMatchDisplayMs: 900,        // duration (ms) to display "No match" message
     pulseMinScreenRadius: 2,       // Minimum screen radius (px) to show pulse animation
     pulsePositionMultiplier: 1.2,  // Multiplier for pulse element position offset
