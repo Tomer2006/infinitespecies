@@ -106,7 +106,7 @@ export const perf = {
   // Background indexing of tree data
   indexing: {
     chunkMs: 20,                  // time budget (ms) before yielding control back to the event loop
-    progressEvery: 100000          // update the progress UI every N nodes processed
+    progressEvery: 1000          // update the progress UI every N nodes processed
   },
 
   // Memory management settings
