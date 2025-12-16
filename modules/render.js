@@ -83,6 +83,44 @@ export function draw() {
     return;
   }
 
+  // Destructure performance settings once at the top
+  const {
+    lodDetailThreshold,
+    lodMediumThreshold,
+    lodSimpleThreshold,
+    lodSkipThreshold,
+    minPxRadius,
+    labelMinPxRadius,
+    maxNodesPerFrame,
+    verticalPadPx,
+    gridTileSize,
+    strokeColorWithChildren,
+    strokeColorLeaf,
+    strokeMinPxRadius,
+    strokeLineWidthMin,
+    strokeLineWidthMax,
+    strokeLineWidthBase,
+    strokeLineWidthMinRatio,
+    strokeColorWithChildrenDetail,
+    strokeColorLeafDetail,
+    labelFontSizeMax,
+    labelFontSizeMin,
+    labelFontSizeDivisor,
+    labelMinFontPx,
+    labelFontWeight,
+    labelFontFamily,
+    maxLabels,
+    labelGridCellPx,
+    labelStrokeWidthMin,
+    labelStrokeWidthMax,
+    labelLargeFontThreshold,
+    labelStrokeColorLarge,
+    labelStrokeColor,
+    labelFillColor,
+    labelAlpha,
+    showGrid
+  } = perf.rendering;
+
   // Periodic memory cleanup
   performMemoryCleanup();
 
@@ -125,34 +163,24 @@ export function draw() {
   };
 
   // Grid via cached pattern fill (toggleable) - optimized
-  if (perf.rendering.showGrid) {
+  if (showGrid) {
     ctx.save();
     const pat = getGridPattern(ctx);
-    const tileSize = perf.rendering.gridTileSize;
-    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % tileSize);
-    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % tileSize);
+    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % gridTileSize);
+    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % gridTileSize);
     ctx.translate(offX, offY);
     ctx.fillStyle = pat;
-    ctx.fillRect(-offX, -offY, W + tileSize, H + tileSize);
+    ctx.fillRect(-offX, -offY, W + gridTileSize, H + gridTileSize);
     ctx.restore();
   }
 
-  const MIN_PX_R = perf.rendering.minPxRadius;
-  const LABEL_MIN = perf.rendering.labelMinPxRadius;
   labelCandidates.length = 0;
 
   let drawn = 0;
-  const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
-
-  // LOD thresholds for performance optimization
-  const LOD_DETAIL = perf.rendering.lodDetailThreshold;
-  const LOD_MEDIUM = perf.rendering.lodMediumThreshold;
-  const LOD_SIMPLE = perf.rendering.lodSimpleThreshold;
-  const LOD_SKIP = perf.rendering.lodSkipThreshold;
+  const maxNodes = maxNodesPerFrame || Infinity;
 
   // Pre-compute viewport bounds for efficient culling
-  const padPx = perf.rendering.verticalPadPx;
-  const padWorld = padPx / state.camera.k;
+  const padWorld = verticalPadPx / state.camera.k;
   const halfW = W / (2 * state.camera.k);
   const halfH = H / (2 * state.camera.k);
   const minX = state.camera.x - halfW - padWorld;
@@ -187,12 +215,12 @@ export function draw() {
     if (!isInViewport(d._vx, d._vy, d._vr)) return;
     const sr = d._vr * state.camera.k;
     // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
-    if (sr < MIN_PX_R) return;
+    if (sr < minPxRadius) return;
 
     const [sx, sy] = worldToScreen(d._vx, d._vy);
 
     // Level-of-detail rendering based on screen size
-    if (sr < LOD_SKIP) {
+    if (sr < lodSkipThreshold) {
       // Skip rendering entirely for very small nodes
       drawn++;
       const ch = d.children || [];
@@ -205,9 +233,9 @@ export function draw() {
 
     // Determine LOD level
     let lodLevel = 'detail';
-    if (sr < LOD_DETAIL) {
-      if (sr < LOD_MEDIUM) {
-        lodLevel = sr < LOD_SIMPLE ? 'simple' : 'medium';
+    if (sr < lodDetailThreshold) {
+      if (sr < lodMediumThreshold) {
+        lodLevel = sr < lodSimpleThreshold ? 'simple' : 'medium';
       } else {
         lodLevel = 'medium';
       }
@@ -231,9 +259,9 @@ export function draw() {
         setGlobalAlpha(1);
         ctx.fill();
         // Simplified stroke for medium nodes
-        if (sr >= LOD_MEDIUM * 2) {
+        if (sr >= lodMediumThreshold * 2) {
           setLineWidth(1);
-          setStrokeStyle(d.children && d.children.length ? perf.rendering.strokeColorWithChildren : perf.rendering.strokeColorLeaf);
+          setStrokeStyle(d.children && d.children.length ? strokeColorWithChildren : strokeColorLeaf);
           ctx.stroke();
         }
         break;
@@ -244,10 +272,10 @@ export function draw() {
         setFillStyle(getNodeColor(d.data));
         setGlobalAlpha(1);
         ctx.fill();
-        if (sr >= perf.rendering.strokeMinPxRadius) {
-          const lineWidth = Math.max(perf.rendering.strokeLineWidthMin, Math.min(perf.rendering.strokeLineWidthMax, perf.rendering.strokeLineWidthBase * Math.sqrt(Math.max(sr / perf.rendering.gridTileSize, perf.rendering.strokeLineWidthMinRatio))));
+        if (sr >= strokeMinPxRadius) {
+          const lineWidth = Math.max(strokeLineWidthMin, Math.min(strokeLineWidthMax, strokeLineWidthBase * Math.sqrt(Math.max(sr / gridTileSize, strokeLineWidthMinRatio))));
           setLineWidth(lineWidth);
-          setStrokeStyle(d.children && d.children.length ? perf.rendering.strokeColorWithChildrenDetail : perf.rendering.strokeColorLeafDetail);
+          setStrokeStyle(d.children && d.children.length ? strokeColorWithChildrenDetail : strokeColorLeafDetail);
           ctx.stroke();
         }
         break;
@@ -256,9 +284,9 @@ export function draw() {
     drawn++;
     if (drawn >= maxNodes) return;
 
-    if (sr > LABEL_MIN) {
-      const fontSize = Math.min(perf.rendering.labelFontSizeMax, Math.max(perf.rendering.labelFontSizeMin, sr / perf.rendering.labelFontSizeDivisor));
-      if (fontSize >= perf.rendering.labelMinFontPx) {
+    if (sr > labelMinPxRadius) {
+      const fontSize = Math.min(labelFontSizeMax, Math.max(labelFontSizeMin, sr / labelFontSizeDivisor));
+      if (fontSize >= labelMinFontPx) {
         const text = d.data.name;
         const key = fontSize + '|' + text;
         let metrics = measureCache.get(key);
@@ -274,7 +302,7 @@ export function draw() {
         } else {
           // Cache miss - measure and store
           ctx.save();
-          ctx.font = `${perf.rendering.labelFontWeight} ${fontSize}px ${perf.rendering.labelFontFamily}`;
+          ctx.font = `${labelFontWeight} ${fontSize}px ${labelFontFamily}`;
           metrics = { width: ctx.measureText(text).width };
           ctx.restore();
 
@@ -319,13 +347,13 @@ export function draw() {
 
     // Dynamic label limit based on zoom level - fewer labels when zoomed out
     const zoomFactor = Math.max(0.1, Math.min(1, state.camera.k));
-    const dynamicMaxLabels = Math.floor(perf.rendering.maxLabels * zoomFactor);
+    const dynamicMaxLabels = Math.floor(maxLabels * zoomFactor);
     const capped = labelCandidates.slice(0, Math.min(dynamicMaxLabels, labelCandidates.length));
 
     if (capped.length > 0) {
       const placed = [];
       const grid = new Map();
-      const cell = perf.rendering.labelGridCellPx;
+      const cell = labelGridCellPx;
 
       // Pre-compute cell keys to avoid repeated calculations
       const cellsForRect = r => {
@@ -367,19 +395,19 @@ export function draw() {
 
         // Render label
         ctx.save();
-        ctx.font = `${perf.rendering.labelFontWeight} ${cand.fontSize}px ${perf.rendering.labelFontFamily}`;
+        ctx.font = `${labelFontWeight} ${cand.fontSize}px ${labelFontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Use same stroke width calculation for all font sizes
-        ctx.lineWidth = Math.max(perf.rendering.labelStrokeWidthMin, Math.min(perf.rendering.labelStrokeWidthMax, cand.fontSize / perf.rendering.labelFontSizeDivisor));
-        ctx.strokeStyle = cand.fontSize > perf.rendering.labelLargeFontThreshold ? perf.rendering.labelStrokeColorLarge : perf.rendering.labelStrokeColor;
+        ctx.lineWidth = Math.max(labelStrokeWidthMin, Math.min(labelStrokeWidthMax, cand.fontSize / labelFontSizeDivisor));
+        ctx.strokeStyle = cand.fontSize > labelLargeFontThreshold ? labelStrokeColorLarge : labelStrokeColor;
         ctx.lineJoin = 'round';
         ctx.miterLimit = 2;
         ctx.strokeText(cand.text, cand.sx, cand.sy);
 
-        ctx.fillStyle = perf.rendering.labelFillColor;
-        ctx.globalAlpha = perf.rendering.labelAlpha;
+        ctx.fillStyle = labelFillColor;
+        ctx.globalAlpha = labelAlpha;
         ctx.fillText(cand.text, cand.sx, cand.sy);
         ctx.restore();
 
