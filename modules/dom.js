@@ -34,6 +34,7 @@ export const progressFill = document.getElementById('progressFill');
 export const progressLabel = document.getElementById('progressLabel');
 export const progressPct = document.getElementById('progressPct');
 export const stageInfo = document.getElementById('stageInfo');
+export const loadingTimer = document.getElementById('loadingTimer');
 
 export const jsonModal = document.getElementById('jsonModal');
 export const loadBtn = document.getElementById('loadBtn');
