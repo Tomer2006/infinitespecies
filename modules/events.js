@@ -398,6 +398,8 @@ export function initEvents() {
   // Help modal close button
   helpCloseBtn?.addEventListener('click', () => {
     if (!helpModal) return;
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn && getComputedStyle(helpBtn).display !== 'none') helpBtn.focus();
     helpModal.classList.remove('open');
     helpModal.setAttribute('aria-hidden', 'true');
   });

@@ -246,6 +246,8 @@ function createAboutModal() {
   const closeBtn = modal.querySelector('#aboutCloseBtn');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
+      const aboutBtn = document.getElementById('aboutBtn');
+      if (aboutBtn) aboutBtn.focus();
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
     });
