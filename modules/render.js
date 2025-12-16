@@ -17,6 +17,7 @@ const measureCache = new Map();
 const MAX_CACHE_SIZE = perf.memory.maxTextCacheSize;
 const CACHE_CLEANUP_THRESHOLD = perf.memory.cacheCleanupThreshold;
 let cacheAccessOrder = []; // Track access order for LRU-like behavior
+const labelCandidates = [];
 
 // Memory management: progressive cleanup
 let lastMemoryCheck = 0;
@@ -35,7 +36,7 @@ function performMemoryCleanup() {
     // Cleanup text cache if needed
     if (measureCache.size > CACHE_CLEANUP_THRESHOLD) {
       const cleanupSize = Math.min(perf.memory.progressiveCleanupBatch,
-                                   measureCache.size - CACHE_CLEANUP_THRESHOLD);
+        measureCache.size - CACHE_CLEANUP_THRESHOLD);
       for (let i = 0; i < cleanupSize && cacheAccessOrder.length > 0; i++) {
         const lruKey = cacheAccessOrder.shift();
         measureCache.delete(lruKey);
@@ -53,7 +54,7 @@ function getGridPattern(ctx) {
   if (gridPattern && cachedGridSettings === currentSettings) {
     return gridPattern;
   }
-  
+
   // Regenerate grid pattern with current settings
   const tileSize = perf.rendering.gridTileSize;
   const tile = document.createElement('canvas');
@@ -138,7 +139,7 @@ export function draw() {
 
   const MIN_PX_R = perf.rendering.minPxRadius;
   const LABEL_MIN = perf.rendering.labelMinPxRadius;
-  const labelCandidates = [];
+  labelCandidates.length = 0;
 
   let drawn = 0;
   const maxNodes = perf.rendering.maxNodesPerFrame || Infinity;
