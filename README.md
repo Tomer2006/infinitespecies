@@ -1,6 +1,6 @@
-# 🌿 biozoom
+# 🌿 infinitespecies
 
-Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
+Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
 
 ## 📋 Table of Contents
 
@@ -18,7 +18,7 @@ Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exp
 - [📄 License](#-license)
 
 ## 🌐 Live Demo
-- **🌐 Live Site**: Visit [https://biozoom.netlify.app/](https://biozoom.netlify.app/) 🚀
+- **🌐 Live Site**: Visit [https://infinitespecies.netlify.app/](https://infinitespecies.netlify.app/) 🚀
 - **💻 Local Development**: Run `python -m http.server 8000` and visit `http://localhost:8000`
 - Features interactive taxonomy visualization with custom data loading 📊
 
@@ -46,7 +46,7 @@ python -m http.server 8000
 
 **Windows (PowerShell) note:** 💡
 - If you see "The token '&&' is not a valid statement" error, run commands on separate lines:
-  - First: `cd C:\Users\<you>\Documents\biozoom` 📂
+  - First: `cd C:\Users\<you>\Documents\infinitespecies` 📂
   - Then: `python -m http.server 8000` ▶️
 
 ### 🎮 Controls
@@ -180,7 +180,7 @@ This application supports **large taxonomy datasets** 📊 through intelligent d
 ### 📁 Project Structure
 
 ```
-biozoom/
+infinitespecies/
 ├── 🌐 index.html              # Main application entry point with landing page
 ├── 🎨 styles.css              # Global styles and dark theme
 ├── 🚀 app-modular.js          # Application bootstrap (ES modules)
@@ -246,7 +246,7 @@ The application automatically tracks your navigation state in the URL for seamle
 
 ### 🤝 Contributing
 
-biozoom follows modern web development practices: 💻
+infinitespecies follows modern web development practices: 💻
 
 - 📦 **ES Modules**: Clean, modular architecture without build tools
 - 🟨 **Vanilla JavaScript**: No heavy frameworks - just D3.js for visualization

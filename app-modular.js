@@ -1,4 +1,4 @@
-// Entry point for the modular biozoom
+// Entry point for the modular infinitespecies
 // Loads modules, initializes canvas sizing, data, events, deeplinks, and render loop
 
 import { resizeCanvas, registerDrawCallback } from './modules/canvas.js';

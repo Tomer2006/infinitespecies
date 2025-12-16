@@ -1,22 +1,22 @@
 {
-  "name": "biozoom",
+  "name": "infinitespecies",
   "version": "1.0.0",
-  "description": "Welcome to **BioZoom**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯",
+  "description": "Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯",
   "main": "app-modular.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tomer2006/biozoom.git"
+    "url": "git+https://github.com/Tomer2006/infinitespecies.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Tomer2006/biozoom/issues"
+    "url": "https://github.com/Tomer2006/infinitespecies/issues"
   },
-  "homepage": "https://github.com/Tomer2006/biozoom#readme",
+  "homepage": "https://github.com/Tomer2006/infinitespecies#readme",
   "dependencies": {
     "JSONStream": "^1.3.5"
   }

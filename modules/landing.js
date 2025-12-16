@@ -187,10 +187,8 @@ export function initLandingPage() {
     // About
     if (aboutBtn) {
       aboutBtn.addEventListener('click', () => {
-        hideLandingPage();
+        // Keep landing page visible, just overlay the modal
         showAboutModal();
-        const topbar = document.querySelector('.topbar');
-        if (topbar) topbar.style.visibility = 'visible';
       });
     }
 
@@ -229,7 +227,7 @@ function createAboutModal() {
   modal.innerHTML = `
     <div class="modal-card">
       <div class="modal-head">
-        <div class="modal-title">About biozoom</div>
+        <div class="modal-title">About infinitespecies</div>
         <div style="display:flex;gap:.5rem">
           <button class="btn secondary" id="aboutCloseBtn" title="Close about">Close</button>
         </div>
@@ -237,7 +235,7 @@ function createAboutModal() {
       <div class="modal-body">
         <div class="side">
           <h4>About This Application</h4>
-          <p>biozoom is an interactive web application for exploring the Tree of Life. It provides a zoomable, interactive visualization of taxonomic relationships across millions of organisms.</p>
+          <p>infinitespecies is an interactive web application for exploring the Tree of Life. It provides a zoomable, interactive visualization of taxonomic relationships across millions of organisms.</p>
           <h4 style="margin-top:1rem">Data Sources</h4>
           <p>This application supports loading custom taxonomy data in JSON format, as well as connecting to various online databases for additional information about organisms.</p>
           <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(42,52,114,1); text-align:center; color:rgba(154,163,199,1); font-size:12px">
