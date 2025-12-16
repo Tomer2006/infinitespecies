@@ -154,7 +154,7 @@ export async function indexTreeProgressive(root, options = {}) {
       }
     }
     for (let i = 0; i < keysToDelete.length; i++) {
-      delete node[keysToDelete[i]];
+      node[keysToDelete[i]] = undefined;
     }
 
     if (node.children.length === 0) {
