@@ -50,8 +50,12 @@ let gridPattern = null;
 let cachedGridSettings = null;
 function getGridPattern(ctx) {
   // Check if grid settings changed - if so, regenerate pattern
-  const currentSettings = `${perf.rendering.gridTileSize}-${perf.rendering.gridColor}-${perf.rendering.gridAlpha}-${perf.rendering.gridLineWidth}`;
-  if (gridPattern && cachedGridSettings === currentSettings) {
+  const p = perf.rendering;
+  if (gridPattern && cachedGridSettings &&
+    cachedGridSettings.tileSize === p.gridTileSize &&
+    cachedGridSettings.color === p.gridColor &&
+    cachedGridSettings.alpha === p.gridAlpha &&
+    cachedGridSettings.lineWidth === p.gridLineWidth) {
     return gridPattern;
   }
 
@@ -73,7 +77,12 @@ function getGridPattern(ctx) {
   tctx.lineTo(tileSize, 0);
   tctx.stroke();
   gridPattern = ctx.createPattern(tile, 'repeat');
-  cachedGridSettings = currentSettings;
+  cachedGridSettings = {
+    tileSize: perf.rendering.gridTileSize,
+    color: perf.rendering.gridColor,
+    alpha: perf.rendering.gridAlpha,
+    lineWidth: perf.rendering.gridLineWidth
+  };
   return gridPattern;
 }
 
@@ -84,6 +93,8 @@ export function draw() {
   }
 
   // Destructure performance settings once at the top
+  const { k: camK, x: camX, y: camY } = state.camera;
+
   const {
     lodDetailThreshold,
     lodMediumThreshold,
@@ -166,8 +177,8 @@ export function draw() {
   if (showGrid) {
     ctx.save();
     const pat = getGridPattern(ctx);
-    const offX = Math.floor((W / 2 - state.camera.x * state.camera.k) % gridTileSize);
-    const offY = Math.floor((H / 2 - state.camera.y * state.camera.k) % gridTileSize);
+    const offX = Math.floor((W / 2 - camX * camK) % gridTileSize);
+    const offY = Math.floor((H / 2 - camY * camK) % gridTileSize);
     ctx.translate(offX, offY);
     ctx.fillStyle = pat;
     ctx.fillRect(-offX, -offY, W + gridTileSize, H + gridTileSize);
@@ -180,13 +191,13 @@ export function draw() {
   const maxNodes = maxNodesPerFrame || Infinity;
 
   // Pre-compute viewport bounds for efficient culling
-  const padWorld = verticalPadPx / state.camera.k;
-  const halfW = W / (2 * state.camera.k);
-  const halfH = H / (2 * state.camera.k);
-  const minX = state.camera.x - halfW - padWorld;
-  const maxX = state.camera.x + halfW + padWorld;
-  const minY = state.camera.y - halfH - padWorld;
-  const maxY = state.camera.y + halfH + padWorld;
+  const padWorld = verticalPadPx / camK;
+  const halfW = W / (2 * camK);
+  const halfH = H / (2 * camK);
+  const minX = camX - halfW - padWorld;
+  const maxX = camX + halfW + padWorld;
+  const minY = camY - halfH - padWorld;
+  const maxY = camY + halfH + padWorld;
 
   // Optimized viewport culling using pre-computed bounds
   const isInViewport = (cx, cy, r) => {
@@ -213,7 +224,7 @@ export function draw() {
     if (drawn >= maxNodes) return;
     // Optimized viewport culling
     if (!isInViewport(d._vx, d._vy, d._vr)) return;
-    const sr = d._vr * state.camera.k;
+    const sr = d._vr * camK;
     // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
     if (sr < minPxRadius) return;
 
@@ -344,7 +355,7 @@ export function draw() {
     labelCandidates.sort((a, b) => b.fontSize - a.fontSize);
 
     // Dynamic label limit based on zoom level - fewer labels when zoomed out
-    const zoomFactor = Math.max(0.1, Math.min(1, state.camera.k));
+    const zoomFactor = Math.max(0.1, Math.min(1, camK));
     const dynamicMaxLabels = Math.floor(maxLabels * zoomFactor);
     const capped = labelCandidates.slice(0, Math.min(dynamicMaxLabels, labelCandidates.length));
 
