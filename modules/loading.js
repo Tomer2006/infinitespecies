@@ -21,7 +21,7 @@ export function showLoading(title = 'Loading…') {
   stage.setAttribute('aria-busy', 'true');
   isLoading = true;
   if (stageInfo) stageInfo.style.display = 'none';
-  setProgress(0, 'Starting…', 1, 3);
+  setProgress(0, 'Starting…', 1, 2);
   if (topbarEl) topbarEl.style.visibility = 'hidden';
   if (canvas) canvas.classList.add('loading');
   startTimer();

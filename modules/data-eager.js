@@ -107,7 +107,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
 
   // State 1: Loading Files (0% → 100%)
-  setProgress(0, `Loading ${totalFiles} split files...`, 1, 3);
+  setProgress(0, `Loading ${totalFiles} split files...`, 1, 2);
 
   const concurrency = Math.max(computeFetchConcurrency(), 8);
   let completed = 0;
@@ -141,7 +141,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
       completed++;
 
       if (completed % progressUpdateInterval === 0 || completed === totalFiles) {
-        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFormatted} files...`, 1, 3);
+        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFormatted} files...`, 1, 2);
       }
 
       return true;
@@ -261,7 +261,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
     const nodeCount = await indexTreeProgressive(normalizedTree);
     setDataRoot(normalizedTree);
 
-    setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 3);
+    setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 2);
     logInfo(`Split dataset loaded with ${nodeCount} nodes`);
 
     const duration = performance.now() - startTime;
@@ -274,7 +274,7 @@ async function loadFromSplitFiles(baseUrl, manifest) {
   const nodeCount = await indexTreeProgressive(normalizedTree);
   setDataRoot(normalizedTree);
 
-  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 3);
+  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 2);
   logInfo(`Split dataset loaded with ${nodeCount} nodes`);
 
   const duration = performance.now() - startTime;
