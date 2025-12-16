@@ -146,6 +146,7 @@ export function initLandingPage() {
     if (startExplorationBtn) {
       startExplorationBtn.addEventListener('click', async () => {
         try {
+          if (document.activeElement) document.activeElement.blur();
           hideLandingPage();
           const topbar = document.querySelector('.topbar');
           if (topbar) topbar.style.visibility = 'visible';
@@ -159,6 +160,7 @@ export function initLandingPage() {
     // Load Custom Data
     if (loadDataBtn) {
       loadDataBtn.addEventListener('click', () => {
+        if (document.activeElement) document.activeElement.blur();
         hideLandingPage();
         const jsonModal = document.getElementById('jsonModal');
         if (jsonModal) {
@@ -191,6 +193,7 @@ export function initLandingPage() {
     // Test Data
     if (testDataBtn) {
       testDataBtn.addEventListener('click', async () => {
+        if (document.activeElement) document.activeElement.blur();
         hideLandingPage();
         const topbar = document.querySelector('.topbar');
         if (topbar) topbar.style.visibility = 'visible';
@@ -247,9 +250,14 @@ function createAboutModal() {
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       const aboutBtn = document.getElementById('aboutBtn');
-      if (aboutBtn) aboutBtn.focus();
+      // Blur first to avoid ARIA warning on the close button itself
+      if (document.activeElement) document.activeElement.blur();
+
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
+
+      // Restore focus
+      if (aboutBtn) aboutBtn.focus();
     });
   }
 

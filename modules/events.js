@@ -399,9 +399,14 @@ export function initEvents() {
   helpCloseBtn?.addEventListener('click', () => {
     if (!helpModal) return;
     const helpBtn = document.getElementById('helpBtn');
-    if (helpBtn && getComputedStyle(helpBtn).display !== 'none') helpBtn.focus();
+
+    // Blur first to avoid ARIA warning on the close button itself
+    if (document.activeElement) document.activeElement.blur();
+
     helpModal.classList.remove('open');
     helpModal.setAttribute('aria-hidden', 'true');
+
+    if (helpBtn && getComputedStyle(helpBtn).display !== 'none') helpBtn.focus();
   });
 
   helpBackToMenuBtn?.addEventListener('click', () => {
