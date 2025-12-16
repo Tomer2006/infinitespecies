@@ -28,20 +28,30 @@ async function fetchWikipediaThumb(title) {
   const p = (async () => {
     try {
       // Get Wikipedia summary for thumbnail, description, and Wikidata ID
-      const encoded = encodeURIComponent(title.replace(/\s+/g, '_'));
-      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`;
-      const wikiRes = await fetch(wikiUrl, { headers: { Accept: 'application/json' } });
+      // Use Action API instead of REST API to avoid 404 errors in console
+      const encoded = encodeURIComponent(title);
+      const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages|extracts|pageprops&titles=${encoded}&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&redirects=1`;
+
+      const wikiRes = await fetch(wikiUrl);
       if (!wikiRes.ok) return null;
       const wikiData = await wikiRes.json();
 
+      const pages = wikiData?.query?.pages;
+      if (!pages) return null;
+
+      const pageId = Object.keys(pages)[0];
+      if (pageId === '-1' || !pages[pageId] || pages[pageId].missing) return null;
+
+      const page = pages[pageId];
+
       // Get taxonomic rank from Wikidata using the Wikidata ID from Wikipedia
-      const taxonomicRank = await getTaxonomicRankFromWikidata(wikiData?.wikibase_item);
+      const taxonomicRank = await getTaxonomicRankFromWikidata(page.pageprops?.wikibase_item);
 
       // Return both thumbnail and taxonomic rank info
       return {
-        thumbnail: wikiData?.thumbnail?.source || wikiData?.originalimage?.source || null,
+        thumbnail: page.thumbnail?.source || null,
         taxonomicRank: taxonomicRank,
-        description: wikiData?.extract || null
+        description: page.extract || null
       };
     } catch (_e) {
       logError('Error fetching Wikipedia data', _e);
