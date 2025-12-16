@@ -173,14 +173,11 @@ export function initLandingPage() {
     // Help
     if (helpBtn) {
       helpBtn.addEventListener('click', () => {
-        hideLandingPage();
         const helpModal = document.getElementById('helpModal');
         if (helpModal) {
           helpModal.classList.add('open');
           helpModal.setAttribute('aria-hidden', 'false');
         }
-        const topbar = document.querySelector('.topbar');
-        if (topbar) topbar.style.visibility = 'visible';
       });
     }
 
