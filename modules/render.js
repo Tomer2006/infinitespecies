@@ -301,10 +301,8 @@ export function draw() {
           cacheAccessOrder.push(key);
         } else {
           // Cache miss - measure and store
-          ctx.save();
           ctx.font = `${labelFontWeight} ${fontSize}px ${labelFontFamily}`;
           metrics = { width: ctx.measureText(text).width };
-          ctx.restore();
 
           // Cache management
           if (measureCache.size >= MAX_CACHE_SIZE) {
