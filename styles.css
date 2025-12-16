@@ -489,7 +489,8 @@ canvas.loading {
   min-height: 300px
 }
 
-.modal#helpModal .modal-body {
+.modal#helpModal .modal-body,
+.modal#aboutModal .modal-body {
   grid-template-columns: 1fr
 }
 
