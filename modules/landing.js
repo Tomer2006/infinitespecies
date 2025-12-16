@@ -187,7 +187,6 @@ export function initLandingPage() {
     // About
     if (aboutBtn) {
       aboutBtn.addEventListener('click', () => {
-        // Keep landing page visible, just overlay the modal
         showAboutModal();
       });
     }

@@ -79,7 +79,7 @@ canvas.loading{pointer-events:none;opacity:0.7}
 .progress-meta #progressLabel{display:none}
 /* removed spinner for single progress bar */
 .pulse{position:absolute;border-radius:50%;pointer-events:none;z-index:1;opacity:.6;mix-blend-mode:screen;display:none}
-.modal{position:fixed;inset:0;background:rgba(6,8,20,.72);display:none;align-items:center;justify-content:center;z-index:10}
+.modal{position:fixed;inset:0;background:rgba(6,8,20,.72);display:none;align-items:center;justify-content:center;z-index:20}
 .modal.open{display:flex}
 .modal-card{width:min(900px, 92vw);max-height:90vh;display:flex;flex-direction:column;gap:.75rem;
   background:rgba(15,19,48,1);border:1px solid rgba(42,52,114,1);border-radius:14px;padding:1rem;box-shadow:0 20px 60px rgba(0,0,0,.5)}
