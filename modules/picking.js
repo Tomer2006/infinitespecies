@@ -6,7 +6,7 @@
  * visible and should be considered for picking operations.
  */
 
-import { screenToWorld, viewportRadius, getFrameCounter } from './canvas.js';
+import { screenToWorld, viewportRadius, getFrameCounter, W, H } from './canvas.js';
 import { state } from './state.js';
 import { perf } from './settings.js';
 
@@ -29,7 +29,9 @@ export function nodeInView(d) {
 
 export function pickNodeAt(px, py) {
   const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : (state.layout && state.layout.root ? state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth) : []);
-  const [wx, wy] = screenToWorld(px, py);
+  // const [wx, wy] = screenToWorld(px, py);
+  const wx = state.camera.x + (px - W / 2) / state.camera.k;
+  const wy = state.camera.y + (py - H / 2) / state.camera.k;
   for (const d of nodes) {
     if (!nodeInView(d)) continue;
     // Early reject nodes that are too small on screen to be interactable
