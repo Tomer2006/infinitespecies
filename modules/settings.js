@@ -131,7 +131,7 @@ export const perf = {
 
   // Navigation settings
   navigation: {
-    fitTargetRadiusMultiplier: 0.3  // Multiplier for fitNodeInView target radius (0.5 = 50% of viewport)
+    fitTargetRadiusMultiplier: 0.4  // Multiplier for fitNodeInView target radius (0.5 = 50% of viewport)
   },
 
   // Search settings
