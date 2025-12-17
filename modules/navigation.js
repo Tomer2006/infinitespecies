@@ -90,11 +90,9 @@ export async function updateNavigation(node, animate = true) {
       // Global layout: zoom to node position
       const d = state.nodeLayoutMap.get(state.current._id);
       if (d) {
-        // Calculate k to fit the node's circle (d._vr) into the view (min(W, H))
-        // Target diameter = min(W, H)
-        // d._vr is radius, so diameter is 2 * d._vr
-        // k = target_diameter / (2 * d._vr)
-        const targetK = Math.min(W, H) / (2 * d._vr);
+        // Calculate k to fit the node's circle using the same multiplier as fitNodeInView
+        const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
+        const targetK = targetRadiusPx / d._vr;
         animateToCam(d._vx, d._vy, targetK);
       } else {
         // Fallback for root or error
@@ -112,7 +110,8 @@ export async function updateNavigation(node, animate = true) {
       if (d) {
         state.camera.x = d._vx;
         state.camera.y = d._vy;
-        state.camera.k = Math.min(W, H) / (2 * d._vr);
+        const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
+        state.camera.k = targetRadiusPx / d._vr;
       } else {
         state.camera.x = 0;
         state.camera.y = 0;
