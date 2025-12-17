@@ -10,7 +10,6 @@ import {
   canvas,
   helpModal,
   helpCloseBtn,
-  helpBackToMenuBtn,
   providerSearchBtn,
   copyLinkBtn,
   searchInputEl,
@@ -410,19 +409,7 @@ export function initEvents() {
     if (helpBtn && getComputedStyle(helpBtn).display !== 'none') helpBtn.focus();
   });
 
-  helpBackToMenuBtn?.addEventListener('click', () => {
-    // Close help modal and show landing page
-    if (helpModal) {
-      helpModal.classList.remove('open');
-      helpModal.setAttribute('aria-hidden', 'true');
-    }
-    // Hide topbar and show landing page
-    const topbar = document.querySelector('.topbar');
-    if (topbar) {
-      topbar.style.visibility = 'hidden';
-    }
-    showLandingPage();
-  });
+
 }
 
 

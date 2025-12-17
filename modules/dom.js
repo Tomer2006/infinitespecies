@@ -21,7 +21,6 @@ export const bigPreviewEmpty = document.getElementById('bigPreviewEmpty');
 
 export const helpModal = document.getElementById('helpModal');
 export const helpCloseBtn = document.getElementById('helpCloseBtn');
-export const helpBackToMenuBtn = document.getElementById('helpBackToMenuBtn');
 
 export const providerSelect = document.getElementById('providerSelect');
 export const providerSearchBtn = document.getElementById('providerSearchBtn');
