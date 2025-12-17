@@ -137,7 +137,6 @@ export function initLandingPage() {
 
   try {
     const startExplorationBtn = document.getElementById('startExplorationBtn');
-    const loadDataBtn = document.getElementById('loadDataBtn');
     const helpBtn = document.getElementById('helpBtn');
     const aboutBtn = document.getElementById('aboutBtn');
     const testDataBtn = document.getElementById('testDataBtn');
@@ -157,20 +156,6 @@ export function initLandingPage() {
       });
     }
 
-    // Load Custom Data
-    if (loadDataBtn) {
-      loadDataBtn.addEventListener('click', () => {
-        if (document.activeElement) document.activeElement.blur();
-        hideLandingPage();
-        const jsonModal = document.getElementById('jsonModal');
-        if (jsonModal) {
-          jsonModal.classList.add('open');
-          jsonModal.setAttribute('aria-hidden', 'false');
-        }
-        const topbar = document.querySelector('.topbar');
-        if (topbar) topbar.style.visibility = 'visible';
-      });
-    }
 
     // Help
     if (helpBtn) {
