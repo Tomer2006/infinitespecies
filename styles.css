@@ -338,27 +338,11 @@ canvas.loading {
   position: absolute;
   inset: 0;
   display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3rem;
   background: linear-gradient(180deg, rgba(9, 12, 27, .92), rgba(9, 12, 27, .86));
   z-index: 5
-}
-
-.loading-progress-top {
-  width: 100%;
-  padding: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0
-}
-
-.loading-progress-top .progress-bar {
-  height: 6px;
-  border-radius: 0;
-  border: none;
-  border-bottom: 1px solid rgba(39, 48, 112, 0.5)
 }
 
 .loader {
@@ -367,8 +351,7 @@ canvas.loading {
   border: 1px solid rgba(42, 52, 114, 1);
   border-radius: 14px;
   padding: 1rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
-  margin: auto
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .35)
 }
 
 .loader h3 {
