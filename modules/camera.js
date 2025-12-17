@@ -8,7 +8,13 @@
 import { state } from './state.js';
 import { requestRender } from './canvas.js';
 import { perf } from './settings.js';
-import { easeCubicInOut } from 'd3-ease';
+
+// Native cubic-in-out easing function (replaces d3-ease)
+function easeCubicInOut(t) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
 
 function lerp(a, b, t) {
   return a + (b - a) * t;

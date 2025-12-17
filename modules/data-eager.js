@@ -1,9 +1,8 @@
 /**
  * Eager data loading module
  *
- * Handles loading of complete taxonomy datasets at application startup.
- * Supports both single JSON files and split-file manifests with parallel
- * downloading and retry logic for reliability.
+ * Handles loading of pre-baked taxonomy datasets at application startup.
+ * Uses pre-calculated layouts for optimal performance (no runtime D3 dependency).
  */
 
 import { state, rebuildNodeMap } from './state.js';
@@ -12,30 +11,6 @@ import { logInfo, logWarn, logError, logDebug } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
-import { mapToChildren, normalizeTree, indexTreeProgressive, loadFromJSONText, setDataRoot, countNodes } from './data-common.js';
-
-
-/**
- * Detects file format from URL or filename
- * @param {string} url - File URL or filename
- * @returns {'json'|'unknown'}
- */
-function detectFileFormat(url) {
-  const lower = url.toLowerCase();
-  if (lower.endsWith('.json')) {
-    return 'json';
-  }
-  return 'unknown';
-}
-
-/**
- * Parses JSON data from response
- * @param {Response} res - Fetch response
- * @returns {Promise<any>}
- */
-async function parseDataResponse(res) {
-  return res.json();
-}
 
 const maxRetries = perf.loading.maxRetries;
 const retryBaseDelayMs = perf.loading.retryBaseDelayMs;
@@ -44,262 +19,33 @@ const retryBaseDelayMs = perf.loading.retryBaseDelayMs;
 // EAGER LOADING FUNCTIONS
 // ============================================================================
 
-// Eager loading: loads everything at once
+// Eager loading: loads everything at once (using pre-baked layout data)
 export async function loadEager(url) {
   if (!url) throw new Error('No URL provided');
 
   state.loadMode = 'eager';
-  logInfo(`Loading data eagerly from ${url}`);;
+  logInfo(`Loading data eagerly from ${url}`);
 
   const baseUrl = url.replace(/[^/]*$/, '');
 
-  // First, try to load pre-baked layout data
+  // Load pre-baked layout data (required - no fallback to raw data)
   const bakedManifestUrl = baseUrl + 'tree_baked_manifest.json';
-  try {
-    logDebug(`Checking for baked layout at ${bakedManifestUrl}`);
-    const bakedManifestRes = await fetch(bakedManifestUrl, { cache: 'default' });
+  logInfo(`Loading baked layout from ${bakedManifestUrl}`);
 
-    if (bakedManifestRes.ok) {
-      const bakedManifest = await bakedManifestRes.json();
-      if (bakedManifest.version && bakedManifest.files && bakedManifest.layout_size) {
-        logInfo('Pre-baked layout manifest detected, loading optimized data');
-        return await loadFromBakedFiles(baseUrl, bakedManifest);
-      }
-    } else {
-      logDebug(`No baked manifest found at ${bakedManifestUrl}`);
-    }
-  } catch (e) {
-    logWarn(`Baked manifest fetch failed at ${bakedManifestUrl}: ${e.message}`);
+  const bakedManifestRes = await fetch(bakedManifestUrl, { cache: 'default' });
+
+  if (!bakedManifestRes.ok) {
+    throw new Error(`Failed to fetch baked manifest at ${bakedManifestUrl} (${bakedManifestRes.status}). Run "node tools/bake-layout.js" to generate baked data.`);
   }
 
-  // Check if this is a split dataset by looking for manifest.json
-  const manifestUrl = baseUrl + 'manifest.json';
+  const bakedManifest = await bakedManifestRes.json();
 
-  try {
-    logDebug(`Attempting to fetch manifest from ${manifestUrl}`);
-    const manifestRes = await fetch(manifestUrl, { cache: 'default' });
-
-    if (manifestRes.ok) {
-      const manifest = await manifestRes.json();
-      if (manifest.version && manifest.files) {
-        logInfo('Split-file manifest detected, loading eagerly');
-        return await loadFromSplitFiles(baseUrl, manifest);
-      }
-    } else {
-      logDebug(`No manifest found at ${manifestUrl}`);
-    }
-  } catch (e) {
-    logWarn(`Manifest fetch failed at ${manifestUrl}: ${e.message}`);
+  if (!bakedManifest.version || !bakedManifest.files || !bakedManifest.layout_size) {
+    throw new Error('Invalid baked manifest: missing required fields (version, files, layout_size)');
   }
 
-  // Single file loading (fallback/default for eager mode)
-  logInfo(`Loading single JSON file eagerly from ${url}`);
-  const res = await fetch(url, { cache: 'default' });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${url} (${res.status})`);
-  }
-
-  const text = await res.text();
-  await loadFromJSONText(text);
-}
-
-async function loadFromSplitFiles(baseUrl, manifest) {
-  const startTime = performance.now();
-
-  // Validate manifest structure
-  if (!manifest || typeof manifest !== 'object') {
-    throw new Error('Invalid manifest: must be an object');
-  }
-
-  if (!Array.isArray(manifest.files)) {
-    if (manifest.total_files && manifest.total_files > 0) {
-      throw new Error(`Invalid manifest: files array is missing but total_files is ${manifest.total_files}. Manifest must include a 'files' array.`);
-    }
-    throw new Error('Invalid manifest: missing required "files" array');
-  }
-
-  if (manifest.files.length === 0) {
-    throw new Error('Invalid manifest: files array is empty');
-  }
-
-  const totalFiles = manifest.files.length;
-
-  logInfo(`Loading split dataset from ${baseUrl} (${totalFiles} files)`);
-
-  // State 1: Loading Files (0% → 100%)
-  setProgress(0, `Loading ${totalFiles} split files...`, 1, 2);
-
-  const concurrency = Math.max(computeFetchConcurrency(), 8);
-  let completed = 0;
-  let failed = 0;
-  const results = new Array(manifest.files.length);
-  const progressUpdateInterval = Math.max(1, Math.floor(totalFiles / 20));
-
-  // Pre-format total for progress messages to avoid repeated toLocaleString calls
-  const totalFormatted = totalFiles.toLocaleString();
-
-  const loadFileWithRetry = async (fileInfo, index, retryCount = 0) => {
-    const fileUrl = baseUrl + fileInfo.filename;
-    const format = detectFileFormat(fileInfo.filename);
-
-    try {
-      if (retryCount > 0) {
-        logDebug(`Fetching split file ${fileUrl} (attempt ${retryCount + 1})`);
-      }
-
-      const res = await fetch(fileUrl, {
-        cache: 'default',
-        signal: AbortSignal.timeout(perf.loading.fetchTimeoutMs)
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch ${fileUrl} (${res.status})`);
-      }
-
-      const chunk = await parseDataResponse(res, format);
-      results[index] = { index, chunk, fileInfo };
-      completed++;
-
-      if (completed % progressUpdateInterval === 0 || completed === totalFiles) {
-        setProgress(completed / totalFiles, `Loaded ${completed}/${totalFormatted} files...`, 1, 2);
-      }
-
-      return true;
-    } catch (err) {
-      if (retryCount < maxRetries) {
-        const delay = Math.pow(2, retryCount) * retryBaseDelayMs;
-        logWarn(`Retrying ${fileUrl} after error: ${err.message}`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return loadFileWithRetry(fileInfo, index, retryCount + 1);
-      } else {
-        failed++;
-        logError(`Failed to load ${fileUrl} after ${maxRetries} retries`, err);
-        return false;
-      }
-    }
-  };
-
-  // Parallel loading with controlled concurrency
-  // Use atomic counter to prevent race conditions
-  let resolved = false;
-  await new Promise((resolve) => {
-    let inFlight = 0;
-    let nextIndex = 0;
-
-    const checkCompletion = () => {
-      // Use atomic check to prevent race conditions
-      if (resolved) return;
-      if (completed + failed === totalFiles) {
-        resolved = true;
-        if (failed > 0) {
-          logWarn(`Completed loading with ${failed} failed files out of ${totalFiles}`);
-        }
-        resolve();
-      }
-    };
-
-    const startNext = () => {
-      while (inFlight < concurrency && nextIndex < manifest.files.length) {
-        const i = nextIndex++;
-        inFlight++;
-        const fileInfo = manifest.files[i];
-
-        loadFileWithRetry(fileInfo, i).finally(() => {
-          inFlight--;
-          checkCompletion();
-          if (!resolved) {
-            startNext();
-          }
-        });
-      }
-    };
-
-    startNext();
-  });
-
-  const validResults = results.filter(r => r !== undefined);
-
-  // Check if we have any valid results before proceeding
-  if (validResults.length === 0) {
-    const errorMsg = `Failed to load any files from split dataset (${totalFiles} files attempted, ${failed} failed)`;
-    logError(errorMsg);
-    throw new Error(errorMsg);
-  }
-
-  logInfo(`Merging ${validResults.length} loaded split files`);
-
-  // State 2: Processing & Indexing (0% → 100%)
-  // Progress starts with indexing phase
-
-  // Sort by index to maintain order
-  validResults.sort((a, b) => a.index - b.index);
-
-  // Determine schema type: structured nodes vs nested map
-  const hasOwnProperty = Object.prototype.hasOwnProperty;
-  const isStructuredNode = obj => obj && typeof obj === 'object' && (hasOwnProperty.call(obj, 'children') || hasOwnProperty.call(obj, 'name'));
-  const anyStructured = validResults.some(r => isStructuredNode(r.chunk));
-
-  let mergedTree;
-  if (anyStructured) {
-    logDebug('Split files contained structured nodes; merging children arrays');
-    mergedTree = { name: 'Life', level: 0, children: [] };
-
-    for (const { chunk } of validResults) {
-      if (chunk && Array.isArray(chunk.children)) {
-        mergedTree.children.push(...chunk.children);
-      } else if (isStructuredNode(chunk)) {
-        mergedTree.children.push(chunk);
-      }
-    }
-  } else {
-    logDebug('Split files contained nested maps; performing deep merge');
-
-    // Optimized deep merge: minimize allocations, avoid Object.entries
-    const deepMerge = (target, source) => {
-      if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
-      for (const k in source) {
-        if (!Object.prototype.hasOwnProperty.call(source, k)) continue;
-        const v = source[k];
-        if (v && typeof v === 'object' && !Array.isArray(v)) {
-          if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) {
-            target[k] = {};
-          }
-          deepMerge(target[k], v);
-        } else {
-          target[k] = v;
-        }
-      }
-      return target;
-    };
-
-    const mergedMap = {};
-    for (const { chunk } of validResults) {
-      deepMerge(mergedMap, chunk);
-    }
-
-    const normalizedTree = normalizeTree(mergedMap);
-    const nodeCount = await indexTreeProgressive(normalizedTree);
-    setDataRoot(normalizedTree);
-
-    setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 2);
-    logInfo(`Split dataset loaded with ${nodeCount} nodes`);
-
-    const duration = performance.now() - startTime;
-    logDebug(`Split loading completed in ${duration.toFixed(0)}ms`);
-    return;
-  }
-
-  // Processing merged tree happens during indexing phase
-  const normalizedTree = normalizeTree(mergedTree);
-  const nodeCount = await indexTreeProgressive(normalizedTree);
-  setDataRoot(normalizedTree);
-
-  setProgress(1, `Loaded ${nodeCount.toLocaleString()} nodes from ${totalFiles} files`, 2, 2);
-  logInfo(`Split dataset loaded with ${nodeCount} nodes`);
-
-  const duration = performance.now() - startTime;
-  logDebug(`Split loading completed in ${duration.toFixed(0)}ms`);
+  logInfo('Pre-baked layout manifest loaded, using optimized data path');
+  return await loadFromBakedFiles(baseUrl, bakedManifest);
 }
 
 // ============================================================================
@@ -410,10 +156,22 @@ async function loadFromBakedFiles(baseUrl, manifest) {
   // Sort by index and merge all arrays
   validResults.sort((a, b) => a.index - b.index);
 
-  const flatNodes = [];
+  // Pre-calculate total size for array pre-allocation
+  let totalSize = 0;
   for (const { chunk } of validResults) {
     if (Array.isArray(chunk)) {
-      flatNodes.push(...chunk);
+      totalSize += chunk.length;
+    }
+  }
+
+  // Pre-allocate and copy (avoids stack overflow from spread operator with millions of elements)
+  const flatNodes = new Array(totalSize);
+  let offset = 0;
+  for (const { chunk } of validResults) {
+    if (Array.isArray(chunk)) {
+      for (let i = 0; i < chunk.length; i++) {
+        flatNodes[offset++] = chunk[i];
+      }
     }
   }
 

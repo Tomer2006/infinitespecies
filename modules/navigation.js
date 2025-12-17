@@ -1,18 +1,17 @@
 /**
  * Navigation and layout management module
  *
- * Handles node navigation, layout computation, breadcrumb updates,
- * and camera positioning. Manages the relationship between taxonomy
- * nodes, their visual layout, and user navigation state.
+ * Handles node navigation, breadcrumb updates, and camera positioning.
+ * Manages the relationship between taxonomy nodes, their visual layout,
+ * and user navigation state. Requires pre-baked layout data.
  */
 
 import { breadcrumbsEl } from './dom.js';
-import { layoutFor } from './layout.js';
 import { rebuildNodeMap, state } from './state.js';
 import { updateDeepLinkFromNode } from './deeplink.js';
 import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
-import { logInfo, logDebug, logTrace, logWarn } from './logger.js';
+import { logInfo, logDebug, logWarn, logError } from './logger.js';
 import { perf } from './settings.js';
 
 export function setBreadcrumbs(node) {
@@ -62,23 +61,17 @@ export async function updateNavigation(node, animate = true) {
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;
 
-  // OPTIMIZATION: Use global layout if available (Eager mode)
+  // Must have pre-baked layout - no runtime D3 calculation
   if (state.rootLayout) {
     if (state.layout !== state.rootLayout) {
       state.layout = state.rootLayout;
       state.layoutChanged = true;
     }
-    // No need to rebuild map or re-compute layout
     logDebug('Using cached global layout');
   } else {
-    // Legacy behavior (fallback)
-    logTrace('Computing layout for current node');
-    state.layout = layoutFor(state.current);
-    if (state.layout) {
-      logDebug(`Layout computed: ${state.layout.root?.descendants()?.length || 0} nodes, diameter=${state.layout.diameter}px`);
-    }
-    rebuildNodeMap();
-    state.layoutChanged = true;
+    // No baked layout - this is an error state
+    logError('No pre-baked layout available. Run "node tools/bake-layout.js" to generate layout data.');
+    throw new Error('No pre-baked layout available');
   }
 
   setBreadcrumbs(state.current);

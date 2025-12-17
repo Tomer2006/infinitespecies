@@ -12,7 +12,6 @@ import { logInfo, logError, logWarn } from './logger.js';
 import { setProgress } from './loading.js';
 import { updateNavigation } from './navigation.js';
 import { decodePath, findNodeByPath } from './deeplink.js';
-import { layoutFor } from './layout.js';
 import { rebuildNodeMap } from './state.js';
 
 // ============================================================================
@@ -200,17 +199,11 @@ export function setDataRoot(root) {
     return;
   }
 
-  // Pre-calculate global layout for eager mode to enable O(1) navigation
-  if (state.loadMode === 'eager') {
-    logInfo('Pre-computing global layout for eager mode...');
-    const globalLayout = layoutFor(root);
-    if (globalLayout) {
-      state.rootLayout = globalLayout;
-      // Set as current layout temporarily to build the map
-      state.layout = globalLayout;
-      rebuildNodeMap();
-      logInfo('Global layout computed and node map built.');
-    }
+  // Skip layout calculation if using pre-baked layout data
+  if (state.useBakedLayout && state.rootLayout) {
+    logInfo('Using pre-baked layout, skipping runtime layout calculation');
+  } else {
+    logError('No pre-baked layout available. Run "node tools/bake-layout.js" to generate layout data.');
   }
 
   try {
