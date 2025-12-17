@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "Pre-baked D3 circle-packing layout for taxonomy tree",
+  "layout_size": 4000,
+  "layout_padding": 0,
+  "total_nodes": 4209163,
+  "total_files": 5,
+  "files": [
+    {
+      "filename": "tree_baked_part_001.json",
+      "nodes_count": 841833,
+      "size_bytes": 90855538
+    },
+    {
+      "filename": "tree_baked_part_002.json",
+      "nodes_count": 841833,
+      "size_bytes": 89756871
+    },
+    {
+      "filename": "tree_baked_part_003.json",
+      "nodes_count": 841833,
+      "size_bytes": 91627976
+    },
+    {
+      "filename": "tree_baked_part_004.json",
+      "nodes_count": 841833,
+      "size_bytes": 92651209
+    },
+    {
+      "filename": "tree_baked_part_005.json",
+      "nodes_count": 841831,
+      "size_bytes": 91231378
+    }
+  ],
+  "created_at": "2025-12-16T21:20:40.121Z"
+}
