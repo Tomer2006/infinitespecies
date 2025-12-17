@@ -4,7 +4,7 @@
 import { resizeCanvas, registerDrawCallback } from './modules/canvas.js';
 import { draw } from './modules/render.js';
 import { initEvents } from './modules/events.js';
-import { initLandingPage, showLandingPage } from './modules/landing.js';
+import { initLandingPage, showLandingPage, initAboutModal } from './modules/landing.js';
 
 (function init() {
   // Canvas and render bootstrap
@@ -14,8 +14,9 @@ import { initLandingPage, showLandingPage } from './modules/landing.js';
   // Wire UI and input events
   initEvents();
 
-  // Initialize landing page
+  // Initialize landing page and modals
   initLandingPage();
+  initAboutModal();
 
   // Show landing page first (data will be loaded when user chooses to start exploration)
   showLandingPage();

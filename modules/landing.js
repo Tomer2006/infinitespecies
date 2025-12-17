@@ -193,66 +193,37 @@ export function initLandingPage() {
 }
 
 function showAboutModal() {
-  let aboutModal = document.getElementById('aboutModal');
-  if (!aboutModal) {
-    aboutModal = createAboutModal();
-    document.body.appendChild(aboutModal);
-  }
+  const aboutModal = document.getElementById('aboutModal');
+  if (!aboutModal) return;
+
   aboutModal.classList.add('open');
   aboutModal.setAttribute('aria-hidden', 'false');
 }
 
-function createAboutModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.id = 'aboutModal';
-  modal.setAttribute('aria-hidden', 'true');
+export function initAboutModal() {
+  const aboutModal = document.getElementById('aboutModal');
+  const closeBtn = document.getElementById('aboutCloseBtn');
 
-  modal.innerHTML = `
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">About infinitespecies</div>
-        <div style="display:flex;gap:.5rem">
-          <button class="btn secondary" id="aboutCloseBtn" title="Close about">Close</button>
-        </div>
-      </div>
-      <div class="modal-body">
-        <div class="side">
-          <h4>About This Application</h4>
-          <p>infinitespecies is an interactive web application for exploring the Tree of Life. It provides a zoomable, interactive visualization of taxonomic relationships across millions of organisms.</p>
-          <h4 style="margin-top:1rem">Data Sources</h4>
-          <p>This application supports loading custom taxonomy data in JSON format, as well as connecting to various online databases for additional information about organisms.</p>
-          <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(42,52,114,1); text-align:center; color:rgba(154,163,199,1); font-size:12px">
-            <p>Built with modern web technologies for exploring biodiversity data.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Add close button functionality
-  const closeBtn = modal.querySelector('#aboutCloseBtn');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       const aboutBtn = document.getElementById('aboutBtn');
-      // Blur first to avoid ARIA warning on the close button itself
       if (document.activeElement) document.activeElement.blur();
 
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden', 'true');
+      aboutModal.classList.remove('open');
+      aboutModal.setAttribute('aria-hidden', 'true');
 
-      // Restore focus
       if (aboutBtn) aboutBtn.focus();
     });
   }
 
   // Close on backdrop click
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden', 'true');
-    }
-  });
-
-  return modal;
+  if (aboutModal) {
+    aboutModal.addEventListener('click', (e) => {
+      if (e.target === aboutModal) {
+        aboutModal.classList.remove('open');
+        aboutModal.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
 }
+
