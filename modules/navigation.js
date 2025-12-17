@@ -49,6 +49,7 @@ export function fitNodeInView(node) {
   }
   const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
   const k = targetRadiusPx / d._vr;
+  console.log(`[fitNodeInView] node="${node.name}" _id=${node._id} _vr=${d._vr} W=${W} H=${H} mult=${perf.navigation.fitTargetRadiusMultiplier} targetR=${targetRadiusPx} k=${k} currentK=${state.camera.k}`);
   animateToCam(d._vx, d._vy, k);
 }
 
@@ -93,6 +94,7 @@ export async function updateNavigation(node, animate = true) {
         // Calculate k to fit the node's circle using the same multiplier as fitNodeInView
         const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
         const targetK = targetRadiusPx / d._vr;
+        console.log(`[updateNavigation] node="${state.current.name}" _id=${state.current._id} _vr=${d._vr} W=${W} H=${H} mult=${perf.navigation.fitTargetRadiusMultiplier} targetR=${targetRadiusPx} k=${targetK} currentK=${state.camera.k}`);
         animateToCam(d._vx, d._vy, targetK);
       } else {
         // Fallback for root or error
