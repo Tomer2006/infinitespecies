@@ -178,7 +178,7 @@ async function loadFromBakedFiles(baseUrl, manifest) {
   logInfo(`Rehydrating ${flatNodes.length.toLocaleString()} nodes from baked data`);
 
   // O(N) rehydration: build tree from flat array
-  const root = rehydrateTree(flatNodes);
+  const root = await rehydrateTree(flatNodes);
 
   // Set state
   state.DATA_ROOT = root;
@@ -330,19 +330,22 @@ function createHierarchyWrapper(root) {
  * This is an O(N) operation using array-based parent lookup.
  *
  * @param {Array} flatNodes - Array of {id, parent_id, name, level, x, y, r}
- * @returns {Object} - Root node with children arrays and layout coordinates
+ * @returns {Promise<Object>} - Root node with children arrays and layout coordinates
  */
-function rehydrateTree(flatNodes) {
+async function rehydrateTree(flatNodes) {
   if (!flatNodes || flatNodes.length === 0) {
     throw new Error('Cannot rehydrate empty node array');
   }
 
   const nodeCount = flatNodes.length;
-  const progressEvery = Math.max(1, Math.floor(nodeCount / 20));
+  const progressEvery = perf.indexing.progressEvery || 1000;
+  const chunkMs = perf.indexing.chunkMs || 20;
 
   // Pre-allocate node lookup by ID (array-based for speed, assuming IDs are sequential)
   const maxId = flatNodes.reduce((max, n) => Math.max(max, n.id), 0);
   const nodeById = new Array(maxId + 1);
+
+  let lastYield = performance.now();
 
   // First pass: create all nodes with their properties
   for (let i = 0; i < nodeCount; i++) {
@@ -362,8 +365,14 @@ function rehydrateTree(flatNodes) {
 
     nodeById[fn.id] = node;
 
-    if (i > 0 && i % progressEvery === 0) {
-      setProgress(0.3 * (i / nodeCount), `Creating nodes... ${i.toLocaleString()}/${nodeCount.toLocaleString()}`, 2, 2);
+    if (i % progressEvery === 0) {
+      if (performance.now() - lastYield > chunkMs) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        lastYield = performance.now();
+      }
+      if (i > 0) {
+        setProgress(0.3 * (i / nodeCount), `Creating nodes... ${i.toLocaleString()}/${nodeCount.toLocaleString()}`, 2, 2);
+      }
     }
   }
 
@@ -385,8 +394,14 @@ function rehydrateTree(flatNodes) {
       }
     }
 
-    if (i > 0 && i % progressEvery === 0) {
-      setProgress(0.3 + 0.4 * (i / nodeCount), `Linking nodes... ${i.toLocaleString()}/${nodeCount.toLocaleString()}`, 2, 2);
+    if (i % progressEvery === 0) {
+      if (performance.now() - lastYield > chunkMs) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        lastYield = performance.now();
+      }
+      if (i > 0) {
+        setProgress(0.3 + 0.4 * (i / nodeCount), `Linking nodes... ${i.toLocaleString()}/${nodeCount.toLocaleString()}`, 2, 2);
+      }
     }
   }
 
@@ -395,7 +410,7 @@ function rehydrateTree(flatNodes) {
   }
 
   // Third pass: compute _leaves counts (bottom-up)
-  computeLeavesCounts(root);
+  await computeLeavesCounts(root);
 
   setProgress(0.9, 'Finalizing tree structure...', 2, 2);
 
@@ -410,7 +425,12 @@ function rehydrateTree(flatNodes) {
 /**
  * Compute _leaves counts for all nodes (iterative, bottom-up)
  */
-function computeLeavesCounts(root) {
+async function computeLeavesCounts(root) {
+  const chunkMs = perf.indexing.chunkMs || 20;
+  let lastYield = performance.now();
+  let ops = 0;
+  const checkInterval = 1000;
+
   const stack = [root];
   const post = [];
 
@@ -421,6 +441,12 @@ function computeLeavesCounts(root) {
     const ch = n.children;
     for (let i = 0; i < ch.length; i++) {
       stack.push(ch[i]);
+    }
+
+    ops++;
+    if (ops % checkInterval === 0 && performance.now() - lastYield > chunkMs) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      lastYield = performance.now();
     }
   }
 
@@ -436,6 +462,11 @@ function computeLeavesCounts(root) {
         sum += ch[j]._leaves || 1;
       }
       n._leaves = sum;
+    }
+
+    if (i % checkInterval === 0 && performance.now() - lastYield > chunkMs) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      lastYield = performance.now();
     }
   }
 }
