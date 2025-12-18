@@ -10,8 +10,8 @@
  *   node tools/bake-layout.js
  *
  * Outputs:
- *   data/manifest.json
- *   data/tree_part_001.json ... data/tree_part_005.json
+ *   data/tree_baked_manifest.json
+ *   data/tree_baked_part_001.json ... data/tree_baked_part_005.json
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -206,7 +206,7 @@ async function saveBakedData(nodes) {
 
     for (let i = 0; i < parts.length; i++) {
         const partNum = String(i + 1).padStart(3, '0');
-        const filename = `tree_part_${partNum}.json`;
+        const filename = `tree_baked_part_${partNum}.json`;
         const filePath = resolve(DATA_DIR, filename);
 
         await writeFile(filePath, JSON.stringify(parts[i]));
@@ -232,9 +232,9 @@ async function saveBakedData(nodes) {
         created_at: new Date().toISOString()
     };
 
-    const manifestPath = resolve(DATA_DIR, 'manifest.json');
+    const manifestPath = resolve(DATA_DIR, 'tree_baked_manifest.json');
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-    console.log(`Wrote manifest.json`);
+    console.log(`Wrote tree_baked_manifest.json`);
 
     return manifest;
 }
