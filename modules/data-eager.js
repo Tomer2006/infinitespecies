@@ -29,7 +29,7 @@ export async function loadEager(url) {
   const baseUrl = url.replace(/[^/]*$/, '');
 
   // Load pre-baked layout data (required - no fallback to raw data)
-  const bakedManifestUrl = baseUrl + 'tree_baked_manifest.json';
+  const bakedManifestUrl = baseUrl + 'manifest.json';
   logInfo(`Loading baked layout from ${bakedManifestUrl}`);
 
   const bakedManifestRes = await fetch(bakedManifestUrl, { cache: 'default' });
