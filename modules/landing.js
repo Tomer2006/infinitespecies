@@ -122,15 +122,6 @@ async function initData() {
   }
 }
 
-export async function initTestDataAndDeepLinks() {
-  initDeepLinks();
-  await initTestData();
-}
-
-async function initTestData() {
-  console.log('🚀 [LANDING] Test data not supported in eager mode.');
-  alert('Test data loading is not currently supported in eager mode.');
-}
 
 export function initLandingPage() {
   console.log('🎯 [LANDING] Initializing landing page buttons...');
@@ -139,7 +130,6 @@ export function initLandingPage() {
     const startExplorationBtn = document.getElementById('startExplorationBtn');
     const helpBtn = document.getElementById('helpBtn');
     const aboutBtn = document.getElementById('aboutBtn');
-    const testDataBtn = document.getElementById('testDataBtn');
 
     // Start Exploration
     if (startExplorationBtn) {
@@ -176,16 +166,6 @@ export function initLandingPage() {
       });
     }
 
-    // Test Data
-    if (testDataBtn) {
-      testDataBtn.addEventListener('click', async () => {
-        if (document.activeElement) document.activeElement.blur();
-        hideLandingPage();
-        const topbar = document.querySelector('.topbar');
-        if (topbar) topbar.style.visibility = 'visible';
-        await initTestDataAndDeepLinks();
-      });
-    }
 
     console.log('🎉 [LANDING] All landing page buttons initialized');
   } catch (error) {

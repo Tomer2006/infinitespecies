@@ -314,13 +314,19 @@ export function initEvents() {
   }
 
   loadBtn?.addEventListener('click', () => openModal());
-  backToMenuBtn?.addEventListener('click', () => {
+  backToMenuBtn?.addEventListener('click', async () => {
     // Hide topbar and show landing page
     const topbar = document.querySelector('.topbar');
     if (topbar) {
       topbar.style.visibility = 'hidden';
     }
     showLandingPage();
+
+    // Reset to root to clean up state and URL hash
+    if (state.DATA_ROOT) {
+      // Use animate=false for instant reset so it's ready when they come back
+      await goToNode(state.DATA_ROOT, false);
+    }
   });
   cancelLoadBtn?.addEventListener('click', () => closeModal());
   insertSampleBtn?.addEventListener('click', () => {
