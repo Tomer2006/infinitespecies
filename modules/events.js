@@ -347,7 +347,35 @@ export function initEvents() {
     }
     showLandingPage();
 
-    // Reset to root to clean up state and URL hash
+    // --- Reset everything ---
+
+    // 1. Clear search input and results
+    if (searchInputEl) searchInputEl.value = '';
+    const searchResultsDiv = document.getElementById('searchResults');
+    if (searchResultsDiv) {
+      searchResultsDiv.style.display = 'none';
+      searchResultsDiv.innerHTML = '';
+    }
+
+    // 2. Clear progress/status label
+    if (progressLabel) progressLabel.textContent = '';
+
+    // 3. Hide tooltip
+    const tooltipEl = document.getElementById('tooltip');
+    if (tooltipEl) tooltipEl.style.opacity = '0';
+
+    // 4. Hide big preview
+    hideBigPreview();
+
+    // 5. Clear hover state
+    state.hoverNode = null;
+
+    // 6. Clear URL hash
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    // 7. Reset navigation to root (camera position and current node)
     if (state.DATA_ROOT) {
       // Use animate=false for instant reset so it's ready when they come back
       await goToNode(state.DATA_ROOT, false);
