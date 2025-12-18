@@ -154,6 +154,7 @@ export function initLandingPage() {
           console.error('❌ [LANDING] Error in startExplorationBtn:', error);
         }
       });
+      startExplorationBtn.disabled = false;
     }
 
 
