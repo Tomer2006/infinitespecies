@@ -32,7 +32,9 @@ async function fetchWikipediaThumb(title) {
       const encoded = encodeURIComponent(title);
       const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages|extracts|pageprops&titles=${encoded}&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&redirects=1`;
 
-      const wikiRes = await fetch(wikiUrl);
+      const wikiRes = await fetch(wikiUrl, {
+        signal: AbortSignal.timeout(5000) // Fail fast if Wikipedia is unreachable
+      });
       if (!wikiRes.ok) return null;
       const wikiData = await wikiRes.json();
 
@@ -93,7 +95,8 @@ async function getTaxonomicRankFromWikidata(wikidataId) {
 
     const wikidataUrl = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQuery)}&format=json`;
     const wikidataRes = await fetch(wikidataUrl, {
-      headers: { Accept: 'application/json' }
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(5000) // Fail fast if Wikidata is unreachable
     });
 
     if (!wikidataRes.ok) return null;
