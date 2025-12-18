@@ -285,16 +285,41 @@ export function initEvents() {
       console.log('🚫 [EVENTS] Surprise button ignored - currently loading data');
       return;
     }
-    // Pick a random visible leaf by walking the current layout subtree
-    if (!state.layout?.root) return;
-    const leaves = [];
-    for (const d of state.layout.root.descendants()) {
-      if (!d.children || d.children.length === 0) leaves.push(d.data);
+
+    // "only set random on my counnt [current] stage"
+    // Pick a random leaf within the CURRENT view (subtree) rather than the global tree.
+    // Uses the pre-calculated _leaves count for O(depth) performance instead of O(N).
+    let node = state.current || state.DATA_ROOT;
+    if (!node) return;
+
+    // Pick a random leaf index k in [0, totalLeaves)
+    // uniformity is guaranteed by weighting branches by their leaf counts
+    let targetIndex = Math.floor(Math.random() * (node._leaves || 1));
+
+    // Traverse down to find the k-th leaf
+    while (node.children && node.children.length > 0) {
+      let found = false;
+      for (const child of node.children) {
+        const w = child._leaves || 1;
+        if (targetIndex < w) {
+          node = child;
+          found = true;
+          break;
+        }
+        targetIndex -= w;
+      }
+      // Fail-safe: if something is wrong with counts, break to avoid infinite loop
+      // (though with logical subtraction it should always find a child)
+      if (!found) {
+        if (node.children.length > 0) node = node.children[0];
+        else break;
+      }
     }
-    if (!leaves.length) return;
-    const pick = leaves[Math.floor(Math.random() * leaves.length)];
-    state.current = pick;
-    fitNodeInView(state.current);
+
+    if (node) {
+      state.current = node;
+      fitNodeInView(state.current);
+    }
     // No canvas re-render needed - highlight is now CSS-based
   });
 
