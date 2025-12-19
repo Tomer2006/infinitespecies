@@ -34,7 +34,7 @@ export function getSearchTargetName(forNode) {
 
 export function openProviderSearch(forNode) {
   if (!forNode) return;
-  const provider = providerSelect?.value || 'google';
+  const provider = providerSelect?.current?.value || 'google';
   const url = providerUrl(provider, forNode.name);
   window.open(url, '_blank', 'noopener,noreferrer');
 }

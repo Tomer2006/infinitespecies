@@ -168,6 +168,7 @@ export default function Topbar({
         </button>
 
         <select
+          id="providerSelect"
           className="select"
           value={provider}
           onChange={(e) => setProvider(e.target.value)}

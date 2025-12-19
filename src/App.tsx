@@ -16,6 +16,7 @@ import { draw } from './modules/render'
 import { loadEager, loadFromJSONText } from './modules/data'
 import { decodePath, findNodeByPath, getNodePath } from './modules/deeplink'
 import { updateNavigation, fitNodeInView, goToNode } from './modules/navigation'
+import { openProviderSearch } from './modules/providers'
 
 export interface AppState {
   isLanding: boolean
@@ -86,6 +87,12 @@ export default function App() {
       if (e.code === 'Slash' || e.key === '?' || e.code === 'F1') {
         e.preventDefault()
         setHelpOpen((prev: boolean) => !prev)
+      } else if (e.code === 'KeyS') {
+        e.preventDefault()
+        const target = state.hoverNode || state.current || state.DATA_ROOT
+        if (target) {
+          openProviderSearch(target)
+        }
       } else if (e.code === 'KeyR') {
         e.preventDefault()
         handleReset()

@@ -1,0 +1,18 @@
+# Netlify headers configuration
+# Ensure JavaScript modules are served with correct Content-Type
+
+# JavaScript files
+/*.js
+  Content-Type: text/javascript
+
+# JavaScript modules
+/*.mjs
+  Content-Type: text/javascript
+
+# All JavaScript files in any subdirectory
+/**/*.js
+  Content-Type: text/javascript
+
+/**/*.mjs
+  Content-Type: text/javascript
+
