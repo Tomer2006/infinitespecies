@@ -85,7 +85,7 @@ export default function App() {
 
       if (e.code === 'Slash' || e.key === '?' || e.code === 'F1') {
         e.preventDefault()
-        setHelpOpen(prev => !prev)
+        setHelpOpen((prev: boolean) => !prev)
       } else if (e.code === 'KeyR') {
         e.preventDefault()
         handleReset()
@@ -110,12 +110,12 @@ export default function App() {
       })
       current = current.parent
     }
-    setAppState(prev => ({ ...prev, breadcrumbs: crumbs, currentNode: node }))
+    setAppState((prev: AppState) => ({ ...prev, breadcrumbs: crumbs, currentNode: node }))
   }, [])
 
   const showLoading = useCallback((title: string) => {
     loadingStartTime.current = performance.now()
-    setAppState(prev => ({
+    setAppState((prev: AppState) => ({
       ...prev,
       isLoading: true,
       loadingTitle: title,
@@ -129,7 +129,7 @@ export default function App() {
       const elapsed = Math.floor((performance.now() - loadingStartTime.current) / 1000)
       const mins = Math.floor(elapsed / 60).toString().padStart(2, '0')
       const secs = (elapsed % 60).toString().padStart(2, '0')
-      setAppState(prev => ({ ...prev, loadingTimer: `${mins}:${secs}` }))
+      setAppState((prev: AppState) => ({ ...prev, loadingTimer: `${mins}:${secs}` }))
     }, 1000)
   }, [])
 
@@ -138,11 +138,11 @@ export default function App() {
       clearInterval(timerInterval.current)
       timerInterval.current = null
     }
-    setAppState(prev => ({ ...prev, isLoading: false }))
+    setAppState((prev: AppState) => ({ ...prev, isLoading: false }))
   }, [])
 
   const updateProgress = useCallback((progress: number, label?: string, stage?: string) => {
-    setAppState(prev => ({
+    setAppState((prev: AppState) => ({
       ...prev,
       loadingProgress: progress,
       loadingPct: `${Math.round(progress)}%`,
@@ -162,7 +162,7 @@ export default function App() {
   }, [showLoading, hideLoading, updateProgress])
 
   const handleStartExploration = async () => {
-    setAppState(prev => ({ ...prev, isLanding: false, showTopbar: true }))
+    setAppState((prev: AppState) => ({ ...prev, isLanding: false, showTopbar: true }))
     
     // Wait for canvas to be ready
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -202,7 +202,7 @@ export default function App() {
   }
 
   const handleBackToMenu = async () => {
-    setAppState(prev => ({
+    setAppState((prev: AppState) => ({
       ...prev,
       isLanding: true,
       showTopbar: false,
