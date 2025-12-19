@@ -1175,3 +1175,98 @@ body {
   border: 0;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Toast Notifications
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.toast-container {
+  position: fixed;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  pointer-events: none;
+  max-width: 400px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.75rem 1rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all var(--transition-fast);
+}
+
+.toast:hover {
+  transform: translateX(-2px);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(91, 141, 239, 0.2);
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.toast-message {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.toast-success {
+  border-color: rgba(110, 231, 183, 0.4);
+  background: linear-gradient(135deg, rgba(110, 231, 183, 0.1) 0%, rgba(110, 231, 183, 0.05) 100%);
+}
+
+.toast-success .toast-message {
+  color: var(--accent-secondary);
+}
+
+.toast-info {
+  border-color: rgba(91, 141, 239, 0.4);
+  background: linear-gradient(135deg, rgba(91, 141, 239, 0.1) 0%, rgba(91, 141, 239, 0.05) 100%);
+}
+
+.toast-info .toast-message {
+  color: var(--accent-primary);
+}
+
+.toast-warning {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+}
+
+.toast-warning .toast-message {
+  color: var(--accent-warm);
+}
+
+.toast-error {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, rgba(248, 113, 113, 0.05) 100%);
+}
+
+.toast-error .toast-message {
+  color: var(--accent-danger);
+}
+
+@media (max-width: 600px) {
+  .toast-container {
+    top: var(--space-md);
+    right: var(--space-md);
+    left: var(--space-md);
+    max-width: none;
+  }
+}
+

@@ -25,6 +25,7 @@ interface TopbarProps {
   onFit: () => void
   onCopyLink: () => void
   onUpdateBreadcrumbs: (node: TaxonomyNode) => void
+  onShowToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error', duration?: number) => string
 }
 
 interface SearchResult {
@@ -49,6 +50,7 @@ export default function Topbar({
   onFit,
   onCopyLink,
   onUpdateBreadcrumbs,
+  onShowToast,
 }: TopbarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -70,11 +72,15 @@ export default function Topbar({
   const handleSearch = () => {
     if (!searchQuery.trim()) return
 
+    // Show searching toast
+    onShowToast('Searching...', 'info', 1000)
+
     const matches = findAllByQuery(searchQuery, perf.search.maxResults)
     
     if (matches.length === 0) {
       setSearchResults([])
       setShowResults(false)
+      onShowToast('No results found', 'warning')
       return
     }
 

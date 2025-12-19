@@ -8,6 +8,8 @@ import LoadingOverlay from './components/LoadingOverlay'
 import HelpModal from './components/HelpModal'
 import AboutModal from './components/AboutModal'
 import JsonModal from './components/JsonModal'
+import ToastContainer from './components/Toast'
+import { useToast } from './hooks/useToast'
 
 // Import the existing visualization modules
 import { state } from './modules/state'
@@ -51,6 +53,7 @@ export default function App() {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [jsonOpen, setJsonOpen] = useState(false)
 
+  const toast = useToast()
   const loadingStartTime = useRef<number>(0)
   const timerInterval = useRef<number | null>(null)
 
@@ -253,7 +256,7 @@ export default function App() {
     
     try {
       await navigator.clipboard.writeText(url.toString())
-      // Could add toast notification here
+      toast.success('Link copied to clipboard')
     } catch {
       window.prompt('Copy link:', url.toString())
     }
@@ -298,6 +301,7 @@ export default function App() {
           onFit={handleFit}
           onCopyLink={handleCopyLink}
           onUpdateBreadcrumbs={updateBreadcrumbs}
+          onShowToast={toast.showToast}
         />
       )}
 
@@ -340,6 +344,8 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   )
 }
