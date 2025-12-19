@@ -1,0 +1,32 @@
+[build]
+  # Build command for Vite
+  command = "npm run build"
+  # Publish directory (Vite outputs to dist/)
+  publish = "dist"
+  # Functions directory (if you have serverless functions)
+  functions = "netlify/functions"
+
+# Redirect rules for SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers configuration (alternative to _headers file)
+# This ensures JavaScript modules are served with correct Content-Type
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "text/javascript"
+
+[[headers]]
+  for = "/*.mjs"
+  [headers.values]
+    Content-Type = "text/javascript"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
