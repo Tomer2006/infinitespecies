@@ -820,7 +820,7 @@ body {
   justify-content: center;
   background: rgba(8, 9, 15, 0.8);
   backdrop-filter: blur(8px);
-  z-index: 100;
+  z-index: 300;
 }
 
 .modal {
