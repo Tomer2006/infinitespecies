@@ -85,6 +85,28 @@ export default function App() {
       const target = e.target as HTMLElement
       const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
 
+      // Handle Escape key - close modals or clear search
+      if (e.key === 'Escape' || e.code === 'Escape') {
+        // Don't prevent default if typing in a textarea (like JsonModal)
+        // Allow Escape to work normally in text inputs
+        if (isTyping && target.tagName === 'TEXTAREA') {
+          return // Let textarea handle Escape normally
+        }
+        
+        // Close modals in order of priority
+        if (jsonOpen) {
+          e.preventDefault()
+          setJsonOpen(false)
+        } else if (helpOpen) {
+          e.preventDefault()
+          setHelpOpen(false)
+        } else if (aboutOpen) {
+          e.preventDefault()
+          setAboutOpen(false)
+        }
+        return
+      }
+
       if (isTyping) return
 
       if (e.code === 'Slash' || e.key === '?' || e.code === 'F1') {
@@ -107,7 +129,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [helpOpen, aboutOpen, jsonOpen])
 
   const updateBreadcrumbs = useCallback((node: any) => {
     const crumbs: Array<{ id: number; name: string; node: any }> = []

@@ -57,6 +57,7 @@ export default function Topbar({
   const [showResults, setShowResults] = useState(false)
   const [provider, setProvider] = useState('google')
   const searchRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -68,6 +69,29 @@ export default function Topbar({
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
+
+  const handleClear = () => {
+    setSearchQuery('')
+    setSearchResults([])
+    setShowResults(false)
+  }
+
+  // Handle Escape key to clear search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle Escape if search input is focused or search results are shown
+      const isSearchFocused = document.activeElement === searchInputRef.current
+      if ((e.key === 'Escape' || e.code === 'Escape') && (isSearchFocused || showResults)) {
+        e.preventDefault()
+        handleClear()
+        // Blur the input to remove focus
+        searchInputRef.current?.blur()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showResults])
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return
@@ -116,12 +140,6 @@ export default function Topbar({
     onUpdateBreadcrumbs(result.node)
     setShowResults(false)
     setSearchQuery('')
-  }
-
-  const handleClear = () => {
-    setSearchQuery('')
-    setSearchResults([])
-    setShowResults(false)
   }
 
   const handleProviderSearch = () => {
@@ -197,12 +215,20 @@ export default function Topbar({
             <path d="m21 21-4.35-4.35" />
           </svg>
           <input
+            ref={searchInputRef}
             className="searchbar-input"
             type="search"
             placeholder="Search organism or group… (Enter)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch()
+              } else if (e.key === 'Escape') {
+                handleClear()
+                searchInputRef.current?.blur()
+              }
+            }}
           />
           <div className="searchbar-actions">
             <button className="btn" onClick={handleSearch}>
