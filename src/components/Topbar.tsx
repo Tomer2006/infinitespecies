@@ -265,11 +265,11 @@ export default function Topbar({
           Fit
         </button>
 
-        <button className="btn btn-ghost" onClick={onCopyLink} title="Copy deep link">
+        <button className="btn" onClick={onCopyLink} title="Copy deep link">
           📋 Copy Link
         </button>
 
-        <button className="btn btn-ghost" onClick={onReset} title="Back to root">
+        <button className="btn" onClick={onReset} title="Back to root">
           Reset
         </button>
       </div>
