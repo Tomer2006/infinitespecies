@@ -992,9 +992,9 @@ body {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse 800px 600px at 30% 20%, rgba(91, 141, 239, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 500px at 70% 80%, rgba(110, 231, 183, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(192, 132, 252, 0.08) 0%, transparent 60%);
+    radial-gradient(ellipse 640px 480px at 30% 20%, rgba(91, 141, 239, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 480px 400px at 70% 80%, rgba(110, 231, 183, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 320px 320px at 50% 50%, rgba(192, 132, 252, 0.08) 0%, transparent 60%);
   animation: landingPulse 8s ease-in-out infinite;
 }
 
@@ -1007,45 +1007,45 @@ body {
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: var(--space-2xl);
-  max-width: 600px;
+  padding: 2.4rem;
+  max-width: 480px;
 }
 
 .landing-logo {
-  font-size: 5rem;
-  margin-bottom: var(--space-md);
-  filter: drop-shadow(0 0 40px rgba(91, 141, 239, 0.3));
+  font-size: 4rem;
+  margin-bottom: 0.8rem;
+  filter: drop-shadow(0 0 32px rgba(91, 141, 239, 0.3));
   animation: logoFloat 4s ease-in-out infinite;
 }
 
 @keyframes logoFloat {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6.4px); }
 }
 
 .landing-title {
-  font-size: 3rem;
+  font-size: 2.4rem;
   font-weight: 800;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0.4rem;
   letter-spacing: -0.02em;
 }
 
 .landing-tagline {
-  font-size: 1.125rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: var(--space-2xl);
+  margin-bottom: 2.4rem;
   line-height: 1.6;
 }
 
 .landing-menu {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  margin-bottom: var(--space-2xl);
+  gap: 0.8rem;
+  margin-bottom: 2.4rem;
 }
 
 .landing-btn {
@@ -1053,13 +1053,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-lg) var(--space-xl);
-  min-height: 80px;
+  gap: 0.2rem;
+  padding: 1.2rem 1.6rem;
+  min-height: 64px;
   font-family: var(--font-sans);
   font-weight: 600;
   border: none;
-  border-radius: var(--radius-xl);
+  border-radius: 19.2px;
   cursor: pointer;
   transition: all var(--transition-base);
   text-decoration: none;
@@ -1068,13 +1068,13 @@ body {
 .landing-btn-primary {
   background: var(--gradient-primary);
   color: var(--bg-deep);
-  font-size: 1.125rem;
-  box-shadow: var(--shadow-lg), 0 0 60px rgba(91, 141, 239, 0.3);
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-lg), 0 0 48px rgba(91, 141, 239, 0.3);
 }
 
 .landing-btn-primary:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: var(--shadow-lg), 0 0 80px rgba(91, 141, 239, 0.4);
+  transform: translateY(-2.4px) scale(1.02);
+  box-shadow: var(--shadow-lg), 0 0 64px rgba(91, 141, 239, 0.4);
 }
 
 .landing-btn-primary:disabled {
@@ -1085,42 +1085,42 @@ body {
 
 .landing-btn-secondary {
   background: var(--bg-secondary);
-  border: 2px solid var(--border-base);
+  border: 1.6px solid var(--border-base);
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .landing-btn-secondary:hover {
   background: var(--surface-base);
   border-color: var(--border-bright);
-  transform: translateY(-2px);
+  transform: translateY(-1.6px);
 }
 
 .landing-btn-icon {
-  font-size: 1.75rem;
+  font-size: 1.4rem;
 }
 
 .landing-btn-hint {
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 400;
   opacity: 0.7;
 }
 
 .landing-footer {
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
 }
 
 .landing-footer kbd {
   display: inline-flex;
-  padding: 0.125rem 0.375rem;
-  margin: 0 0.125rem;
+  padding: 0.1rem 0.3rem;
+  margin: 0 0.1rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   color: var(--text-secondary);
   background: var(--surface-dim);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-sm);
+  border: 0.8px solid var(--border-dim);
+  border-radius: 4.8px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
