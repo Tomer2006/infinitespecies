@@ -9,7 +9,23 @@ import HelpModal from './components/HelpModal'
 import AboutModal from './components/AboutModal'
 import JsonModal from './components/JsonModal'
 import ToastContainer from './components/Toast'
+import MobileBlocker from './components/MobileBlocker'
 import { useToast } from './hooks/useToast'
+
+// Detect if user is on a mobile or tablet device
+function isMobileDevice(): boolean {
+  // Check user agent for mobile/tablet
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || ''
+  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i
+  
+  // Also check screen width as a fallback (tablets and phones typically < 1024px)
+  const isSmallScreen = window.innerWidth < 1024
+  
+  // Check for touch-only devices (no mouse)
+  const isTouchOnly = 'ontouchstart' in window && !window.matchMedia('(pointer: fine)').matches
+  
+  return mobileRegex.test(userAgent) || (isSmallScreen && isTouchOnly)
+}
 
 // Import the existing visualization modules
 import { state } from './modules/state'
@@ -35,6 +51,7 @@ export interface AppState {
 }
 
 export default function App() {
+  const [isMobile, setIsMobile] = useState(false)
   const [appState, setAppState] = useState<AppState>({
     isLanding: true,
     isLoading: false,
@@ -54,6 +71,11 @@ export default function App() {
   const [jsonOpen, setJsonOpen] = useState(false)
 
   const toast = useToast()
+
+  // Check for mobile device on mount
+  useEffect(() => {
+    setIsMobile(isMobileDevice())
+  }, [])
   const loadingStartTime = useRef<number>(0)
   const timerInterval = useRef<number | null>(null)
 
@@ -302,6 +324,11 @@ export default function App() {
       hideLoading()
       throw err
     }
+  }
+
+  // Show mobile blocker if on mobile device
+  if (isMobile) {
+    return <MobileBlocker />
   }
 
   return (
