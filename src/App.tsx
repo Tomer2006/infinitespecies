@@ -56,7 +56,7 @@ export default function App() {
     isLanding: true,
     isLoading: false,
     loadingTitle: 'Loading…',
-    loadingStage: 'Stage 1 of 2',
+    loadingStage: 'Stage 1 of 1',
     loadingProgress: 0,
     loadingPct: '0%',
     loadingTimer: '00:00',
