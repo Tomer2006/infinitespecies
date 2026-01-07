@@ -37,7 +37,7 @@ export function isCurrentlyLoading() {
  */
 export function setProgress(progress, label, currentStage = 1, totalStages = 1) {
   const percentage = Math.round(progress * 100);
-  const stageText = totalStages > 1 ? `Stage ${currentStage} of ${totalStages}` : '';
+  const stageText = `Stage ${currentStage} of ${totalStages}`;
   
   // Call React's progress update handler if available
   if (typeof window.__reactUpdateProgress === 'function') {
