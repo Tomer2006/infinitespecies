@@ -142,16 +142,19 @@ body {
   gap: var(--space-sm);
   font-weight: 700;
   font-size: 1.1rem;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
   white-space: nowrap;
   text-decoration: none;
 }
 
 .topbar-brand-icon {
   font-size: 1.4rem;
+}
+
+.topbar-brand > span:not(.topbar-brand-icon) {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .topbar-controls {
