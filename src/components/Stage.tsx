@@ -79,21 +79,36 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
   }, [hidden])
 
   // O(1) hover validation when camera changes - only checks current hover node
+  // Only does full pick when current hover becomes invalid (rare)
   useEffect(() => {
     const validateHover = () => {
-      const currentHover = state.hoverNode
-      if (!currentHover) return  // Nothing to validate
-      
       const { x, y } = lastMouseRef.current
       if (x === 0 && y === 0) return  // No mouse position yet
       
-      // Check if current hover is still valid (O(1) check, not O(n))
+      const currentHover = state.hoverNode
+      
+      // If no current hover, try to pick one (user might have zoomed into a node)
+      if (!currentHover) {
+        const n = pickNodeAt(x, y)
+        if (n) {
+          state.hoverNode = n
+          updateTooltipAndPreview(n, x, y)
+        }
+        return
+      }
+      
+      // Check if current hover is still valid (O(1) check)
       if (!isNodeStillHoverable(currentHover, x, y)) {
-        // Node is no longer hoverable - clear hover state
-        state.hoverNode = null
-        setTooltip(prev => ({ ...prev, visible: false }))
-        hidePreviewModule()
-        prevHoverIdRef.current = null
+        // Node is no longer hoverable - find the new node under cursor
+        const n = pickNodeAt(x, y)
+        state.hoverNode = n
+        if (n) {
+          updateTooltipAndPreview(n, x, y)
+        } else {
+          setTooltip(prev => ({ ...prev, visible: false }))
+          hidePreviewModule()
+          prevHoverIdRef.current = null
+        }
       }
     }
     
