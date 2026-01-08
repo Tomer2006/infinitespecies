@@ -980,9 +980,8 @@ body {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-deep);
+  flex-direction: column;
+  background: #070a12;
   z-index: 200;
   overflow: hidden;
 }
@@ -992,17 +991,131 @@ body {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse 640px 480px at 30% 20%, rgba(91, 141, 239, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 480px 400px at 70% 80%, rgba(110, 231, 183, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 320px 320px at 50% 50%, rgba(192, 132, 252, 0.08) 0%, transparent 60%);
-  animation: landingPulse 8s ease-in-out infinite;
+    radial-gradient(ellipse 800px 600px at 20% 10%, rgba(91, 141, 239, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 80% 90%, rgba(110, 231, 183, 0.05) 0%, transparent 60%);
+  pointer-events: none;
 }
 
-@keyframes landingPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* Top-left header */
+.landing-header {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem 3rem;
 }
 
+.landing-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #3b8d7a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.landing-tagline {
+  font-size: 0.95rem;
+  color: #7a8ba3;
+  line-height: 1.5;
+}
+
+.landing-tagline .highlight {
+  color: #8fa3bd;
+}
+
+/* Center content */
+.landing-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-start-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 4rem;
+  min-width: 340px;
+  min-height: 100px;
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, #5bc4be 0%, #4db8a8 50%, #3fa896 100%);
+  border: 3px solid #e69c50;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 
+    0 0 0 1px rgba(230, 156, 80, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(91, 196, 190, 0.15);
+}
+
+.landing-start-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 0 0 2px rgba(230, 156, 80, 0.5),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 80px rgba(91, 196, 190, 0.25);
+}
+
+.landing-start-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.landing-start-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0a1628;
+  letter-spacing: 0.02em;
+}
+
+.landing-start-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(10, 22, 40, 0.7);
+}
+
+/* Footer buttons */
+.landing-footer-buttons {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2.5rem;
+}
+
+.landing-footer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 3rem;
+  min-width: 160px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #8fa3bd;
+  background: #0d1220;
+  border: 1.5px solid #1e2a3d;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.landing-footer-btn:hover {
+  background: #131a2a;
+  border-color: #2a3a52;
+  color: #b8c8dc;
+  transform: translateY(-2px);
+}
+
+/* Legacy classes for backward compatibility */
 .landing-content {
   position: relative;
   z-index: 1;
@@ -1021,24 +1134,6 @@ body {
 @keyframes logoFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6.4px); }
-}
-
-.landing-title {
-  font-size: 2.4rem;
-  font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin-bottom: 0.4rem;
-  letter-spacing: -0.02em;
-}
-
-.landing-tagline {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin-bottom: 2.4rem;
-  line-height: 1.6;
 }
 
 .landing-menu {
