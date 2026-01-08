@@ -541,7 +541,7 @@ body {
 .big-preview {
   position: absolute;
   top: var(--space-md);
-  left: var(--space-md);
+  right: var(--space-md);
   z-index: 15;
   display: none;
   pointer-events: none;
