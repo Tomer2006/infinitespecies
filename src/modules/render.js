@@ -12,6 +12,71 @@ import { state } from './state.js';
 import { getNodeColor } from './constants.js';
 import { perf } from './settings.js';
 
+/**
+ * Check if a node should be visible/rendered based on all culling criteria.
+ * This is used by both render and picking to ensure consistency.
+ * @param {Object} d - The node to check (with _vx, _vy, _vr, data properties)
+ * @returns {boolean} - True if the node should be visible
+ */
+export function isNodeVisible(d) {
+  const { k: camK, x: camX, y: camY } = state.camera;
+  const {
+    minPxRadius,
+    verticalPadPx,
+    depthRenderEnabled,
+    depthRenderBase,
+    depthRenderFalloff
+  } = perf.rendering;
+
+  // Calculate screen radius
+  const sr = d._vr * camK;
+
+  // Too small on screen
+  if (sr < minPxRadius) return false;
+
+  // Viewport bounds check
+  const padWorld = verticalPadPx / camK;
+  const halfW = W / (2 * camK);
+  const halfH = H / (2 * camK);
+  const minX = camX - halfW - padWorld;
+  const maxX = camX + halfW + padWorld;
+  const minY = camY - halfH - padWorld;
+  const maxY = camY + halfH + padWorld;
+
+  // AABB check
+  const left = d._vx - d._vr;
+  const right = d._vx + d._vr;
+  const top = d._vy - d._vr;
+  const bottom = d._vy + d._vr;
+  if (right < minX || left > maxX || bottom < minY || top > maxY) {
+    return false;
+  }
+
+  // More precise circle-rectangle intersection
+  const closestX = Math.max(minX, Math.min(d._vx, maxX));
+  const closestY = Math.max(minY, Math.min(d._vy, maxY));
+  const dx = d._vx - closestX;
+  const dy = d._vy - closestY;
+  if (dx * dx + dy * dy > d._vr * d._vr) {
+    return false;
+  }
+
+  // Depth-based render distance culling
+  if (depthRenderEnabled) {
+    const currentLevel = state.current ? (state.current.level || 0) : 0;
+    const nodeLevel = d.data.level || 0;
+    const depthFromCurrent = nodeLevel - currentLevel;
+    if (depthFromCurrent > 0) {
+      const maxRenderDistance = depthRenderBase * Math.pow(depthRenderFalloff, depthFromCurrent);
+      if (sr < minPxRadius * (1 + depthFromCurrent * 0.5) && depthFromCurrent > maxRenderDistance) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 // Optimized text measurement cache with size limits and hit tracking
 const measureCache = new Map();
 const MAX_CACHE_SIZE = perf.memory.maxTextCacheSize;
@@ -129,8 +194,14 @@ export function draw() {
     labelStrokeColor,
     labelFillColor,
     labelAlpha,
-    showGrid
+    showGrid,
+    depthRenderEnabled,
+    depthRenderBase,
+    depthRenderFalloff
   } = perf.rendering;
+
+  // Calculate current node's level for depth-based rendering
+  const currentLevel = state.current ? (state.current.level || 0) : 0;
 
   // Periodic memory cleanup
   performMemoryCleanup();
@@ -227,6 +298,20 @@ export function draw() {
     const sr = d._vr * camK;
     // If this node is too small on screen, its children are even smaller (packed layout) → prune subtree
     if (sr < minPxRadius) return;
+    
+    // Depth-based render distance culling
+    if (depthRenderEnabled) {
+      const nodeLevel = d.data.level || 0;
+      const depthFromCurrent = nodeLevel - currentLevel;
+      if (depthFromCurrent > 0) {
+        // Calculate max render distance for this depth
+        const maxRenderDistance = depthRenderBase * Math.pow(depthRenderFalloff, depthFromCurrent);
+        // Skip if screen radius is too small for this depth level
+        if (sr < minPxRadius * (1 + depthFromCurrent * 0.5) && depthFromCurrent > maxRenderDistance) {
+          return;
+        }
+      }
+    }
 
     const [sx, sy] = worldToScreen(d._vx, d._vy);
 

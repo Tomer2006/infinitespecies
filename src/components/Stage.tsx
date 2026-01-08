@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { state } from '../modules/state'
-import { requestRender, screenToWorld, resizeCanvas, tick } from '../modules/canvas'
+import { requestRender, screenToWorld, resizeCanvas, tick, registerPickingCallback } from '../modules/canvas'
 import { pickNodeAt } from '../modules/picking'
 import { goToNode, fitNodeInView } from '../modules/navigation'
 import { openProviderSearch } from '../modules/providers'
@@ -77,6 +77,34 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       return () => clearTimeout(timer)
     }
   }, [hidden])
+
+  // Register picking callback to refresh hover state when view changes
+  useEffect(() => {
+    const refreshPicking = () => {
+      // Re-pick at the last known mouse position when view changes
+      const { x, y } = lastMouseRef.current
+      if (x === 0 && y === 0) return // No mouse position yet
+      
+      const n = pickNodeAt(x, y)
+      const newId = n?._id || null
+      const prevId = prevHoverIdRef.current
+      
+      // Only update if the picked node changed
+      if (newId !== prevId) {
+        state.hoverNode = n
+        if (n) {
+          updateTooltipAndPreview(n, x, y)
+        } else {
+          setTooltip(prev => ({ ...prev, visible: false }))
+          hidePreviewModule()
+          prevHoverIdRef.current = null
+        }
+      }
+    }
+    
+    registerPickingCallback(refreshPicking)
+    return () => registerPickingCallback(null)
+  }, [])
 
   const updateTooltipAndPreview = useCallback((node: any, x: number, y: number) => {
     if (!node) {

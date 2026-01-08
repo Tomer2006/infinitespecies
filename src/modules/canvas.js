@@ -20,6 +20,9 @@ let DPR = 1;
 let needRender = true;
 let rafId = null;
 let drawCallback = null;
+let pickingCallback = null;  // Callback to refresh picking when view changes
+let lastPickingTime = 0;     // Last time picking was refreshed
+const PICKING_THROTTLE_MS = 50;  // Throttle picking refresh to every 50ms
 let frameCounter = 0;
 let lastFpsUpdate = 0;
 let framesSinceFps = 0;
@@ -116,6 +119,12 @@ function loop() {
     if (drawCallback) drawCallback();
     lastCam = { x: cam.x, y: cam.y, k: cam.k };
     state.layoutChanged = false;
+    
+    // Refresh picking when view changes (throttled to every 50ms)
+    if (pickingCallback && now - lastPickingTime >= PICKING_THROTTLE_MS) {
+      pickingCallback();
+      lastPickingTime = now;
+    }
   }
   
   if (needRender) ensureRAF();
@@ -137,6 +146,10 @@ function loop() {
 
 export function registerDrawCallback(cb) {
   drawCallback = cb;
+}
+
+export function registerPickingCallback(cb) {
+  pickingCallback = cb;
 }
 
 window.addEventListener('resize', () => {
