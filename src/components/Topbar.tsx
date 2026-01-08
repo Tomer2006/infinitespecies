@@ -181,16 +181,12 @@ export default function Topbar({
 
   return (
     <header className="topbar">
-      <div className="topbar-brand">
+      <div className="topbar-brand" onClick={onBackToMenu} title="Return to main menu" style={{ cursor: 'pointer' }}>
         <span className="topbar-brand-icon">🧬</span>
         <span>infinitespecies</span>
       </div>
 
       <div className="topbar-controls">
-        <button className="btn" onClick={onBackToMenu} title="Return to main menu">
-          🏠 Menu
-        </button>
-
         <select
           id="providerSelect"
           className="select"
@@ -257,20 +253,8 @@ export default function Topbar({
           )}
         </div>
 
-        <button className="btn" onClick={handleSurprise} title="Jump to a random deepest life form">
-          🎲 Surprise Me
-        </button>
-
-        <button className="btn" onClick={onFit} title="Fit hovered/current into view">
-          Fit
-        </button>
-
         <button className="btn" onClick={onCopyLink} title="Copy deep link">
-          📋 Copy Link
-        </button>
-
-        <button className="btn" onClick={onReset} title="Back to root">
-          Reset
+          Share
         </button>
       </div>
     </header>
