@@ -218,6 +218,9 @@ export default function App() {
   const handleStartExploration = async () => {
     setAppState((prev: AppState) => ({ ...prev, isLanding: false, showTopbar: true }))
     
+    // Save the initial hash before loading (for deep linking)
+    const initialHash = decodePath(location.hash.slice(1))
+    
     // Wait for canvas to be ready
     await new Promise(resolve => setTimeout(resolve, 100))
     resizeCanvas()
@@ -234,12 +237,24 @@ export default function App() {
           hideLoading()
           
           state.layoutChanged = true
-          fitNodeInView(state.DATA_ROOT)
-          tick()
           
-          if (state.DATA_ROOT) {
+          // Check if there's a deep link in the URL and navigate to it
+          if (initialHash && state.DATA_ROOT) {
+            const targetNode = await findNodeByPath(initialHash)
+            if (targetNode && targetNode !== state.DATA_ROOT) {
+              // Navigate to the deep linked node
+              await goToNode(targetNode, true)
+              updateBreadcrumbs(targetNode)
+            } else {
+              fitNodeInView(state.DATA_ROOT)
+              updateBreadcrumbs(state.DATA_ROOT)
+            }
+          } else if (state.DATA_ROOT) {
+            fitNodeInView(state.DATA_ROOT)
             updateBreadcrumbs(state.DATA_ROOT)
           }
+          
+          tick()
           return
         } catch (err) {
           console.error(`Failed to load ${url}:`, err)
