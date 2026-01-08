@@ -1,15 +1,15 @@
 # 🌿 infinitespecies
 
-Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
+Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by React and D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
 
 ## 📋 Table of Contents
 
-- [🌐 Live Demo](#-live-demo)
+- [🌐 Live App](#-live-app)
 - [✨ Key Features](#-key-features)
 - [🚀 Quick Start](#-quick-start)
 - [🎮 Controls](#-controls)
 - [🖥️ UI Overview](#️-ui-overview)
-- [📊 Data Loading & Management](#-data-loading--management)
+- [📊 Data Loading](#-data-loading)
 - [🔧 Technical Architecture](#-technical-architecture)
 - [🔗 Deep Linking & Sharing](#-deep-linking--sharing)
 - [🛠️ Troubleshooting](#️-troubleshooting)
@@ -17,37 +17,49 @@ Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
-## 🌐 Live Demo
-- **🌐 Live Site**: Visit [https://infinitespecies.netlify.app/](https://infinitespecies.netlify.app/) 🚀
-- **💻 Local Development**: Run `python -m http.server 8000` and visit `http://localhost:8000`
-- Features interactive taxonomy visualization with custom data loading 📊
+## 🌐 Live App
+- **🌐 Live Site**: Visit [https://infinitespecies.com/](https://infinitespecies.com/) 🚀
+- **💻 Local Development**: Run `npm run dev` and visit `http://localhost:5173`
 
 ## ✨ Key Features
 
-- 🌍 **Landing Page**: Choose between starting exploration or loading custom data (configurable UI options)
+- 🌍 **Landing Page**: Beautiful animated landing with quick access to exploration and help
 - 🔍 **Zoomable Interface**: Smooth circle-packing visualization with mouse and keyboard controls
 - 🔎 **Smart Search**: Real-time search with multi-result dropdown and navigation
 - 🖼️ **Image Previews**: Wikipedia thumbnails for hovered organisms
 - 🧭 **Informative Tooltips**: Shows name, level, descendants, children, and ID
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - 🔗 **Deep Linking**: Share exact views via URL hash - every navigation state is preserved
-- 📊 **Custom Data Support**: Load your own JSON taxonomy data
-- ⚙️ **Configurable UI**: Customize which buttons appear on the landing page
+- 📱 **Mobile Detection**: Graceful handling for mobile devices with informative blocker
 
 ### 🚀 Quick Start
 
-**Quick Start:** 🖥️
-```bash
-# Start a local web server
-python -m http.server 8000
+**Prerequisites:** 📋
+- Node.js 18+ and npm
 
-# Then visit: http://localhost:8000/ 🌐
+**Installation:** 🖥️
+```bash
+# Clone the repository
+git clone https://github.com/Tomer2006/infinitespecies.git
+cd infinitespecies
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Then visit: http://localhost:5173/ 🌐
 ```
 
-**Windows (PowerShell) note:** 💡
-- If you see "The token '&&' is not a valid statement" error, run commands on separate lines:
-  - First: `cd C:\Users\<you>\Documents\infinitespecies` 📂
-  - Then: `python -m http.server 8000` ▶️
+**Build for Production:** 📦
+```bash
+# Create optimized build
+npm run build
+
+# Preview production build
+npm run preview
+```
 
 ### 🎮 Controls
 
@@ -58,14 +70,14 @@ python -m http.server 8000
 - **⌨️ S**: Web search for hovered/current organism
 - **⌨️ R**: Reset to root view
 - **⌨️ F**: Fit current node in view
-- **⌨️ ?**: Toggle help overlay
+- **⌨️ ?** or **F1**: Toggle help overlay
+- **⌨️ Escape**: Close modals
 
 ### 🖥️ UI Overview
 
-- **🌍 Landing Page**: Choose between "Start Exploration" (loads default data), "Load Custom Data", or test data options (configurable)
+- **🌍 Landing Page**: Animated entry point with "Start Exploration", Help, and About options
 - **📋 Top bar** (after starting):
   - `🏠 Menu`: Return to landing page
-  - `📤 Load JSON`: paste or upload custom JSON taxonomy data
   - `🔗 Provider select + 🌐 Web Search`: open selected provider for hovered/current node
   - `🔍 Search field`: find by name (supports partial matches)
   - `🎲 Surprise Me`: jump to a random deepest leaf
@@ -75,91 +87,62 @@ python -m http.server 8000
 - **🍞 Breadcrumbs**: click any crumb to navigate up (also updates the URL hash for deep linking)
 - **💬 Tooltip**: shows organism name, level, descendants count, children count, and ID
 
-### ⚙️ Configuration
+### 📊 Data Loading
 
-Customize the landing page UI by editing `modules/settings.js`:
-
-```javascript
-startPage: {
-  showLazyLoadButton: false,      // Show/hide lazy loading button
-  showEagerLoadButton: true,      // Show/hide eager loading button
-  showTestDataButton: false,      // Show/hide test data buttons
-  defaultLoadMode: 'eager'        // Default loading mode ('lazy' or 'eager')
-}
-```
-
-This allows you to tailor the user experience for different deployment scenarios.
-
-### 📊 Data Loading & Management
-
-**Automatic Loading Priority:** 📋
-1. 🌐 **URL parameter**: `?data=https://example.com/taxonomy.json`
-2. 📦 **Split files**: `data/manifest.json` (recommended for large datasets)
-3. 💾 **Local files**: `tree.json`, `taxonomy.json`, `data.json`
-4. 👆 **Manual upload** via "Load JSON" button
-
-#### 📋 Supported Data Formats
-
-**1. 🏗️ Structured Nodes (Recommended):** ⭐
-```json
-{
-  "name": "Life",
-  "level": 0,
-  "children": [
-    {
-      "name": "Eukaryota",
-      "level": 1,
-      "children": [...]
-    }
-  ]
-}
-```
-
-**2. 🔄 Nested Object Format (Auto-converted):** ♻️
-```json
-{
-  "Life": {
-    "Eukaryota": {
-      "Animalia": {
-        "Chordata": {
-          "Mammalia": {
-            "Homo sapiens": {}
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-**📝 Notes:**
-- 🧮 **Level inference**: If `level` is missing, it's automatically calculated by depth (0=Life, 1=Domain, 2=Kingdom, etc.)
-- 🔧 **Flexible structure**: Leaves can be empty objects `{}` or nodes without `children` array
-- 🌍 **Unicode support**: Full support for scientific names and international characters
-
-#### 🗂️ Custom Data Import
-
-- 📤 **Manual upload**: Click "Load JSON" → paste content or select `.json` file → "Parse & Load"
-- 🌐 **URL loading**: `index.html?data=https%3A%2F%2Fexample.com%2Ftaxonomy.json`
-- ✅ **Real-time validation**: Immediate feedback on JSON structure and format issues
+The application loads pre-baked taxonomy data from `data/manifest.json` with split files for optimal performance.
 
 #### 🚀 Large Dataset Handling
 
-This application supports **large taxonomy datasets** 📊 through intelligent data splitting and progressive loading. The current demo uses **5 split files** 📦 totaling ~110MB of taxonomy data. 🧬
+This application supports **large taxonomy datasets** 📊 through intelligent data splitting and progressive loading. The current demo uses **5 split files** 📦 totaling ~456MB of pre-baked layout data with **4.2 million nodes**. 🧬
 
 **Current Split Configuration:** ⚙️
-- 📄 **5 files** ranging from 15-25MB each
-- 🧠 **Taxonomic splitting** by data size and structure
+- 📄 **5 files** (~90MB each)
 - ⚡ **Parallel loading** with progress tracking
 - 🔗 **Seamless merging** - appears as single dataset to user
 
 **Technical Details:** 🔧
-- 📏 **Chunk size**: 15-25MB per file (optimal for web delivery)
-- 📊 **Progressive indexing**: Background processing with memory management
+- 📊 **Pre-baked layouts**: D3 circle-packing calculated offline for instant rendering
 - 💾 **Efficient memory usage**: Optimized data structures and cleanup
-- ☁️ **Web-ready**: Suitable for static hosting platforms
+- ☁️ **Web-ready**: Suitable for static hosting platforms (Netlify, Vercel)
 
 ### 🔧 Technical Architecture
+
+**Tech Stack:** 🛠️
+- ⚛️ **React 18**: Modern component-based UI architecture
+- 📘 **TypeScript**: Type-safe development experience
+- ⚡ **Vite**: Lightning-fast development and optimized builds
+- 🎬 **Framer Motion**: Smooth animations and transitions
+- 📊 **D3.js**: Hierarchical circle packing visualization
+
+**Project Structure:** 📁
+```
+src/
+├── components/          # React UI components
+│   ├── AboutModal.tsx   # About information modal
+│   ├── Breadcrumbs.tsx  # Navigation breadcrumbs
+│   ├── HelpModal.tsx    # Help/keyboard shortcuts modal
+│   ├── LandingPage.tsx  # Animated landing page
+│   ├── LoadingOverlay.tsx # Progress loading overlay
+│   ├── MobileBlocker.tsx  # Mobile device warning
+│   ├── Stage.tsx        # Main canvas container
+│   ├── Toast.tsx        # Toast notifications
+│   └── Topbar.tsx       # Top navigation bar
+├── hooks/
+│   └── useToast.ts      # Toast notification hook
+├── modules/             # Core visualization engine (JS)
+│   ├── camera.js        # Pan/zoom camera system
+│   ├── canvas.js        # Canvas management
+│   ├── data.js          # Data loading orchestration
+│   ├── deeplink.js      # URL hash navigation
+│   ├── navigation.js    # Node navigation
+│   ├── render.js        # Circle packing renderer
+│   ├── search.js        # Search functionality
+│   └── ...              # Additional modules
+├── styles/
+│   └── index.css        # Global styles
+├── App.tsx              # Main application component
+└── main.tsx             # React entry point
+```
 
 **Core Visualization Engine:** ⚙️
 - 📊 **D3.js Pack Layout**: Hierarchical circle packing with size proportional to descendant count
@@ -177,41 +160,8 @@ This application supports **large taxonomy datasets** 📊 through intelligent d
 - 💬 **Zero-Redraw UI**: Tooltip and big preview are DOM-only and don't trigger canvas re-renders
 - 🧠 **Memory Management**: Progressive cleanup and text cache optimization
 
-### 📁 Project Structure
-
-```
-infinitespecies/
-├── 🌐 index.html              # Main application entry point with landing page
-├── 🎨 styles.css              # Global styles and dark theme
-├── 🚀 app-modular.js          # Application bootstrap (ES modules)
-├── 📊 data/                   # Dataset files (split JSON files)
-│   ├── 📋 manifest.json       # Split file metadata and loading order
-│   └── 🌳 tree_deduped_part_*.json  # Taxonomy data chunks (~15-25MB each)
-└── 🧩 modules/                # Modular JavaScript architecture
-    ├── ⚙️ constants.js        # Configuration and color palettes
-    ├── 🗃️ state.js            # Central state management and node indexing
-    ├── 📥 data.js             # Data loading, parsing, and transformation
-    ├── 🎨 canvas.js           # Canvas setup, sizing, and rendering context
-    ├── 📐 layout.js           # D3 pack layout and coordinate calculations
-    ├── 📷 camera.js           # Pan/zoom camera system with animations
-    ├── 🖼️ render.js           # Main rendering engine (circles, labels, LOD)
-    ├── 👆 picking.js          # Mouse interaction and hit detection
-    ├── 🧭 navigation.js       # Breadcrumbs, navigation, and view management
-    ├── 🔍 search.js           # Local search with result list and pulse indicator
-    ├── 🔗 deeplink.js         # URL state management and sharing
-    ├── 🌐 providers.js        # External service integration (Wikipedia, NCBI, etc.)
-    ├── 🖼️ preview.js          # Image previews and thumbnails
-    ├── 💬 tooltip.js          # Interactive tooltips and hover effects
-    ├── ⏳ loading.js          # Progress tracking and loading states
-    ├── ⌨️ events.js           # Input handling (mouse, keyboard, touch)
-    ├── 📊 metrics.js          # Runtime performance monitoring
-    ├── ⚙️ settings.js         # Performance settings, UI config, and memory management
-    ├── 📝 logger.js           # Structured logging system
-    └── 🌐 dom.js              # DOM element references and utilities
-```
-
 **Key Design Principles:** 🏗️
-- 🧩 **Modular Architecture**: Each feature is a self-contained ES module
+- 🧩 **Hybrid Architecture**: React UI components + optimized JS visualization modules
 - 🎯 **Separation of Concerns**: Clear boundaries between data, rendering, and interaction
 - ⚡ **Performance First**: Optimized for large datasets with LOD and memory management
 - 🌑 **Dark UI Theme**: Consistent dark mode interface for better user experience
@@ -239,17 +189,34 @@ The application automatically tracks your navigation state in the URL for seamle
 - 📚 **Educational Tool**: Visual learning aid for biological classification
 - 🔬 **Research Reference**: Quick access to external databases (GBIF, NCBI, etc.)
 
-**Data Visualization:** 📊
-- 🗂️ **Custom Hierarchies**: Import your own nested data structures
-- 🏢 **Corporate Org Charts**: Visualize company structures or project hierarchies
-- 🌍 **Geographic Data**: Country/state/city hierarchical exploration
+
+### 🛠️ Troubleshooting
+
+**Common Issues:** 🔧
+
+- **Blank screen on load**: Check browser console for errors; ensure data files exist in `public/data/`
+- **Slow performance**: Try reducing browser zoom level; close other heavy tabs
+- **Mobile blocked**: This visualization requires a desktop browser with mouse/keyboard input
 
 ### 🤝 Contributing
 
 infinitespecies follows modern web development practices: 💻
 
-- 📦 **ES Modules**: Clean, modular architecture without build tools
-- 🟨 **Vanilla JavaScript**: No heavy frameworks - just D3.js for visualization
-- 📊 **Performance Monitoring**: Built-in FPS and memory metrics
+- ⚛️ **React 18**: Component-based UI with hooks
+- 📘 **TypeScript**: Type-safe components and interfaces
+- ⚡ **Vite**: Fast HMR and optimized builds
+- 📊 **D3.js**: Circle packing visualization
+- 🎬 **Framer Motion**: Smooth animations
 - ♿ **Accessibility**: Keyboard navigation and semantic HTML
 - 🎨 **Dark Theme**: Consistent dark UI design throughout
+
+**Development Commands:** 🖥️
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+```
+
+### 📄 License
+
+ISC License - see [LICENSE](LICENSE) for details.
