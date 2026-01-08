@@ -128,12 +128,14 @@ export default function Topbar({
 
   return (
     <header className="topbar">
-      <div className="topbar-brand" onClick={onBackToMenu} title="Return to main menu" style={{ cursor: 'pointer' }}>
-        <span className="topbar-brand-icon">🧬</span>
-        <span>infinitespecies</span>
+      <div className="topbar-left">
+        <div className="topbar-brand" onClick={onBackToMenu} title="Return to main menu" style={{ cursor: 'pointer' }}>
+          <span className="topbar-brand-icon">🧬</span>
+          <span>infinitespecies</span>
+        </div>
       </div>
 
-      <div className="topbar-controls">
+      <div className="topbar-center">
         <div className="searchbar" ref={searchRef}>
           <svg className="searchbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
@@ -178,7 +180,9 @@ export default function Topbar({
             </div>
           )}
         </div>
+      </div>
 
+      <div className="topbar-right">
         <button className="btn" onClick={onCopyLink} title="Copy deep link">
           Share
         </button>
