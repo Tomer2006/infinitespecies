@@ -20,6 +20,7 @@ let DPR = 1;
 let needRender = true;
 let rafId = null;
 let drawCallback = null;
+let onCameraChangeCallback = null;  // Callback when camera changes (for hover validation)
 let frameCounter = 0;
 let lastFpsUpdate = 0;
 let framesSinceFps = 0;
@@ -116,6 +117,9 @@ function loop() {
     if (drawCallback) drawCallback();
     lastCam = { x: cam.x, y: cam.y, k: cam.k };
     state.layoutChanged = false;
+    
+    // Notify about camera change (for hover validation - O(1) check)
+    if (onCameraChangeCallback) onCameraChangeCallback();
   }
   
   if (needRender) ensureRAF();
@@ -137,6 +141,10 @@ function loop() {
 
 export function registerDrawCallback(cb) {
   drawCallback = cb;
+}
+
+export function onCameraChange(cb) {
+  onCameraChangeCallback = cb;
 }
 
 window.addEventListener('resize', () => {

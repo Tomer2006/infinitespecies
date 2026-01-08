@@ -48,3 +48,38 @@ export function pickNodeAt(px, py) {
   }
   return null;
 }
+
+/**
+ * Check if a specific node is still valid for hover (O(1) operation)
+ * Used when camera changes to validate current hover without re-searching
+ */
+export function isNodeStillHoverable(node, px, py) {
+  if (!node || !node._vx) return false;
+  
+  const { pickMinPxRadius, minPxRadius } = perf.rendering;
+  
+  // Check screen size
+  const screenR = node._vr * state.camera.k;
+  if (screenR < (pickMinPxRadius || 0)) return false;
+  if (screenR < minPxRadius) return false;
+  
+  // Check if still in viewport
+  const frame = getFrameCounter();
+  if (frame !== _cachedFrame) {
+    _cachedViewR = viewportRadius(perf.rendering.renderDistance);
+    _cachedFrame = frame;
+  }
+  const dx1 = node._vx - state.camera.x;
+  const dy1 = node._vy - state.camera.y;
+  const r = _cachedViewR + node._vr;
+  if (dx1 * dx1 + dy1 * dy1 > r * r) return false;
+  
+  // Check if cursor is still over the node
+  const wx = state.camera.x + (px - W / 2) / state.camera.k;
+  const wy = state.camera.y + (py - H / 2) / state.camera.k;
+  const dx2 = wx - node._vx;
+  const dy2 = wy - node._vy;
+  if (dx2 * dx2 + dy2 * dy2 > node._vr * node._vr) return false;
+  
+  return true;
+}

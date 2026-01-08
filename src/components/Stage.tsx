@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { state } from '../modules/state'
-import { requestRender, screenToWorld, resizeCanvas, tick } from '../modules/canvas'
-import { pickNodeAt } from '../modules/picking'
+import { requestRender, screenToWorld, resizeCanvas, tick, onCameraChange } from '../modules/canvas'
+import { pickNodeAt, isNodeStillHoverable } from '../modules/picking'
 import { goToNode, fitNodeInView } from '../modules/navigation'
 import { openProviderSearch } from '../modules/providers'
 import { perf } from '../modules/settings'
@@ -77,6 +77,29 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       return () => clearTimeout(timer)
     }
   }, [hidden])
+
+  // O(1) hover validation when camera changes - only checks current hover node
+  useEffect(() => {
+    const validateHover = () => {
+      const currentHover = state.hoverNode
+      if (!currentHover) return  // Nothing to validate
+      
+      const { x, y } = lastMouseRef.current
+      if (x === 0 && y === 0) return  // No mouse position yet
+      
+      // Check if current hover is still valid (O(1) check, not O(n))
+      if (!isNodeStillHoverable(currentHover, x, y)) {
+        // Node is no longer hoverable - clear hover state
+        state.hoverNode = null
+        setTooltip(prev => ({ ...prev, visible: false }))
+        hidePreviewModule()
+        prevHoverIdRef.current = null
+      }
+    }
+    
+    onCameraChange(validateHover)
+    return () => onCameraChange(null)
+  }, [])
 
   const updateTooltipAndPreview = useCallback((node: any, x: number, y: number) => {
     if (!node) {
