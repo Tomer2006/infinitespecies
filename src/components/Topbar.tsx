@@ -214,7 +214,7 @@ export default function Topbar({
             ref={searchInputRef}
             className="searchbar-input"
             type="search"
-            placeholder="Search organism or group… (Enter)"
+            placeholder="Search organism or group…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
