@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { state } from '../modules/state'
 import { findAllByQuery, pulseAtNode } from '../modules/search'
-import { updateNavigation, fitNodeInView } from '../modules/navigation'
-import { openProviderSearch } from '../modules/providers'
+import { updateNavigation } from '../modules/navigation'
 import { getNodePath } from '../modules/deeplink'
 import { perf } from '../modules/settings'
 
@@ -21,8 +19,6 @@ interface TaxonomyNode {
 
 interface TopbarProps {
   onBackToMenu: () => void
-  onReset: () => void
-  onFit: () => void
   onCopyLink: () => void
   onUpdateBreadcrumbs: (node: TaxonomyNode) => void
   onShowToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error', duration?: number) => string
@@ -35,19 +31,8 @@ interface SearchResult {
   node: any
 }
 
-const providers = [
-  { value: 'google', label: 'Google' },
-  { value: 'wikipedia', label: 'Wikipedia' },
-  { value: 'gbif', label: 'GBIF' },
-  { value: 'ncbi', label: 'NCBI Taxonomy' },
-  { value: 'col', label: 'Catalogue of Life' },
-  { value: 'inat', label: 'iNaturalist' },
-]
-
 export default function Topbar({
   onBackToMenu,
-  onReset,
-  onFit,
   onCopyLink,
   onUpdateBreadcrumbs,
   onShowToast,
@@ -55,7 +40,6 @@ export default function Topbar({
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showResults, setShowResults] = useState(false)
-  const [provider, setProvider] = useState('google')
   const searchRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -142,43 +126,6 @@ export default function Topbar({
     setSearchQuery('')
   }
 
-  const handleProviderSearch = () => {
-    const target = state.hoverNode || state.current || state.DATA_ROOT
-    if (target) {
-      openProviderSearch(target)
-    }
-  }
-
-  const handleSurprise = async () => {
-    let node: TaxonomyNode | null = (state.current || state.DATA_ROOT) as TaxonomyNode | null
-    if (!node) return
-
-    let targetIndex = Math.floor(Math.random() * (node._leaves || 1))
-
-    while (node && node.children && node.children.length > 0) {
-      let found = false
-      for (const child of node.children) {
-        const w = child._leaves || 1
-        if (targetIndex < w) {
-          node = child
-          found = true
-          break
-        }
-        targetIndex -= w
-      }
-      if (!found) {
-        if (node && node.children && node.children.length > 0) node = node.children[0]
-        else break
-      }
-    }
-
-    if (node) {
-      ;(state as { current: TaxonomyNode | null }).current = node
-      fitNodeInView(node)
-      onUpdateBreadcrumbs(node)
-    }
-  }
-
   return (
     <header className="topbar">
       <div className="topbar-brand" onClick={onBackToMenu} title="Return to main menu" style={{ cursor: 'pointer' }}>
@@ -187,24 +134,6 @@ export default function Topbar({
       </div>
 
       <div className="topbar-controls">
-        <select
-          id="providerSelect"
-          className="select"
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-          title="Choose provider"
-        >
-          {providers.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-
-        <button className="btn" onClick={handleProviderSearch} title="Open provider search">
-          Web Search
-        </button>
-
         <div className="searchbar" ref={searchRef}>
           <svg className="searchbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
@@ -229,9 +158,6 @@ export default function Topbar({
           <div className="searchbar-actions">
             <button className="btn" onClick={handleSearch}>
               Search
-            </button>
-            <button className="btn btn-ghost" onClick={handleClear}>
-              Clear
             </button>
           </div>
 

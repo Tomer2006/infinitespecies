@@ -303,7 +303,20 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         <div className="big-preview-empty" id="bigPreviewEmpty" aria-hidden="true">
           No image
         </div>
-        <div className="big-preview-caption" id="bigPreviewCap"></div>
+        <div className="big-preview-footer">
+          <div className="big-preview-caption" id="bigPreviewCap"></div>
+          <button 
+            className="btn btn-small" 
+            onClick={(e) => {
+              e.stopPropagation()
+              const target = state.hoverNode || state.current
+              if (target) openProviderSearch(target)
+            }}
+            title="Search on the web (S)"
+          >
+            Web Search (S)
+          </button>
+        </div>
       </div>
 
       {/* Legend */}

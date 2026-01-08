@@ -346,8 +346,6 @@ export default function App() {
       {appState.showTopbar && (
         <Topbar
           onBackToMenu={handleBackToMenu}
-          onReset={handleReset}
-          onFit={handleFit}
           onCopyLink={handleCopyLink}
           onUpdateBreadcrumbs={updateBreadcrumbs}
           onShowToast={toast.showToast}

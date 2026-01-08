@@ -581,12 +581,25 @@ body {
   display: flex;
 }
 
-.big-preview-caption {
+.big-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
   background: rgba(0, 0, 0, 0.3);
   border-top: 1px solid var(--border-dim);
+  pointer-events: auto;
+}
+
+.big-preview-caption {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.big-preview-footer .btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
