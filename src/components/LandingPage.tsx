@@ -4,9 +4,10 @@ interface LandingPageProps {
   onStart: () => void
   onHelp: () => void
   onAbout: () => void
+  onSettings: () => void
 }
 
-export default function LandingPage({ onStart, onHelp, onAbout }: LandingPageProps) {
+export default function LandingPage({ onStart, onHelp, onAbout, onSettings }: LandingPageProps) {
   return (
     <motion.div
       className="landing-page"
@@ -54,6 +55,14 @@ export default function LandingPage({ onStart, onHelp, onAbout }: LandingPagePro
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
       >
+        <motion.button
+          className="landing-footer-btn"
+          onClick={onSettings}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          Settings
+        </motion.button>
         <motion.button
           className="landing-footer-btn"
           onClick={onAbout}

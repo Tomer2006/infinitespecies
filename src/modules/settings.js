@@ -321,6 +321,24 @@ export const perf = {
     }
   },
 
+  // Search provider settings
+  search: {
+    // Current search provider: 'google', 'wikipedia', 'gbif', 'ncbi', 'col', 'inat'
+    currentProvider: 'google',
+    
+    // Available search providers
+    providers: {
+      google: { name: 'Google', url: 'https://www.google.com/search?q=' },
+      wikipedia: { name: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Special:Search?search=' },
+      gbif: { name: 'GBIF', url: 'https://www.gbif.org/species/search?q=' },
+      ncbi: { name: 'NCBI Taxonomy', url: 'https://www.ncbi.nlm.nih.gov/taxonomy/?term=' },
+      col: { name: 'Catalogue of Life', url: 'https://www.catalogueoflife.org/data/search?q=' },
+      inat: { name: 'iNaturalist', url: 'https://www.inaturalist.org/search?q=' }
+    },
+    
+    maxResults: 50  // Maximum search results to show
+  },
+
   // Start page UI settings
   startPage: {
     showEagerLoadButton: true,     // whether to show the eager loading button

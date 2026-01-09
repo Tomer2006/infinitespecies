@@ -4,6 +4,26 @@ import App from './App'
 import './styles/index.css'
 import { perf } from './modules/settings.js'
 
+// Load saved settings from localStorage
+const savedFontPreset = localStorage.getItem('infinitespecies_fontPreset')
+const savedColorPreset = localStorage.getItem('infinitespecies_colorPreset')
+const savedSearchProvider = localStorage.getItem('infinitespecies_searchProvider')
+
+// Apply saved font preset if exists
+if (savedFontPreset && perf.fonts.presets[savedFontPreset as keyof typeof perf.fonts.presets]) {
+  perf.fonts.currentPreset = savedFontPreset
+}
+
+// Apply saved color preset if exists
+if (savedColorPreset && perf.colors.presets[savedColorPreset as keyof typeof perf.colors.presets]) {
+  perf.colors.currentPreset = savedColorPreset
+}
+
+// Apply saved search provider if exists
+if (savedSearchProvider && perf.search.providers[savedSearchProvider as keyof typeof perf.search.providers]) {
+  perf.search.currentProvider = savedSearchProvider
+}
+
 // Apply font from settings
 const fontConfig = perf.fonts.current
 if (fontConfig) {

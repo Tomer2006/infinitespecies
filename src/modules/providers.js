@@ -6,7 +6,7 @@
  * Handles provider selection UI and generates appropriate search URLs.
  */
 
-import { providerSelect } from './dom.js';
+import { perf } from './settings.js';
 
 export function providerUrl(provider, name) {
   const q = encodeURIComponent(name);
@@ -32,9 +32,18 @@ export function getSearchTargetName(forNode) {
   return forNode?.name || '';
 }
 
+export function getCurrentProvider() {
+  // First check localStorage, then fall back to settings
+  const saved = localStorage.getItem('infinitespecies_searchProvider');
+  if (saved && perf.search.providers[saved]) {
+    return saved;
+  }
+  return perf.search.currentProvider || 'google';
+}
+
 export function openProviderSearch(forNode) {
   if (!forNode) return;
-  const provider = providerSelect?.current?.value || 'google';
+  const provider = getCurrentProvider();
   const url = providerUrl(provider, forNode.name);
   window.open(url, '_blank', 'noopener,noreferrer');
 }

@@ -8,6 +8,7 @@ import LoadingOverlay from './components/LoadingOverlay'
 import HelpModal from './components/HelpModal'
 import AboutModal from './components/AboutModal'
 import JsonModal from './components/JsonModal'
+import SettingsModal from './components/SettingsModal'
 import ToastContainer from './components/Toast'
 import MobileBlocker from './components/MobileBlocker'
 import { useToast } from './hooks/useToast'
@@ -69,6 +70,7 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [jsonOpen, setJsonOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const toast = useToast()
 
@@ -354,6 +356,7 @@ export default function App() {
             onStart={handleStartExploration}
             onHelp={() => setHelpOpen(true)}
             onAbout={() => setAboutOpen(true)}
+            onSettings={() => setSettingsOpen(true)}
           />
         )}
       </AnimatePresence>
@@ -362,6 +365,7 @@ export default function App() {
         <Topbar
           onBackToMenu={handleBackToMenu}
           onCopyLink={handleCopyLink}
+          onSettings={() => setSettingsOpen(true)}
           onUpdateBreadcrumbs={updateBreadcrumbs}
           onShowToast={toast.showToast}
         />
@@ -406,6 +410,8 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
