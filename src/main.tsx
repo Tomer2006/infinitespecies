@@ -15,9 +15,12 @@ if (fontConfig) {
     document.head.appendChild(link)
   }
   
-  // Apply font to CSS variables
+  // Apply font to CSS variables (for HTML/CSS elements)
   document.documentElement.style.setProperty('--font-sans', `'${fontConfig.name}', ui-sans-serif, system-ui, -apple-system, sans-serif`)
   document.documentElement.style.setProperty('--font-mono', `'${fontConfig.name}', ui-sans-serif, system-ui, -apple-system, sans-serif`)
+  
+  // Apply font to canvas label settings (for canvas rendering)
+  perf.rendering.labelFontFamily = `'${fontConfig.name}', ui-sans-serif, system-ui, sans-serif`
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

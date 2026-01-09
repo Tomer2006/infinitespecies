@@ -273,7 +273,7 @@ export const perf = {
   // Font configuration
   fonts: {
     // Change this to switch between presets: 'inter', 'roboto', 'sourceSans', 'poppins', 'nunito', 'workSans', 'dmSans', 'lato', 'helvetica'
-    currentPreset: 'Helvetica',
+    currentPreset: 'helvetica',
     
     // Font presets (Google Fonts + System Fonts)
     presets: {
