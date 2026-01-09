@@ -159,20 +159,112 @@ export const perf = {
     pulseColor: 'rgb(113, 247, 198)'  // Pulse border color
   },
 
-  // Color palette (Tableau 10 colors for level-based assignment)
+  // Color palette configuration
   colors: {
-    palette: [
-      'rgb(31, 118, 180)', // Blue
-      'rgb(255, 126, 14)', // Orange
-      'rgb(214, 39, 39)', // Red
-      'rgb(44, 160, 44)', // Green
-      'rgb(23, 189, 207)', // Teal
-      'rgb(189, 189, 34)', // Yellow
-      'rgb(147, 103, 189)', // Purple
-      'rgb(227, 119, 195)', // Pink
-      'rgb(140, 86, 75)', // Brown
-      'rgb(127, 127, 127)'  // Gray
-    ]
+    // Change this to switch between presets: 'tableau10', 'blueGradient'
+    currentPreset: 'blueGradient',
+    
+    // Color palette presets
+    presets: {
+      // Preset 1: Original Tableau 10 colors
+      tableau10: [
+        'rgb(31, 118, 180)', // Blue
+        'rgb(255, 126, 14)', // Orange
+        'rgb(214, 39, 39)', // Red
+        'rgb(44, 160, 44)', // Green
+        'rgb(23, 189, 207)', // Teal
+        'rgb(189, 189, 34)', // Yellow
+        'rgb(147, 103, 189)', // Purple
+        'rgb(227, 119, 195)', // Pink
+        'rgb(140, 86, 75)', // Brown
+        'rgb(127, 127, 127)'  // Gray
+        ],
+      
+      // Preset 2: 35 colors from light blue to dark blue
+      blueGradient: [
+        'rgb(200, 230, 255)', // 1 - Lightest blue
+        'rgb(194, 223, 249)', // 2
+        'rgb(188, 216, 243)', // 3
+        'rgb(182, 210, 237)', // 4
+        'rgb(176, 203, 231)', // 5
+        'rgb(171, 196, 225)', // 6
+        'rgb(165, 189, 218)', // 7
+        'rgb(159, 182, 212)', // 8
+        'rgb(153, 176, 206)', // 9
+        'rgb(147, 169, 200)', // 10
+        'rgb(141, 162, 194)', // 11
+        'rgb(135, 155, 188)', // 12
+        'rgb(129, 148, 182)', // 13
+        'rgb(124, 142, 176)', // 14
+        'rgb(118, 135, 169)', // 15
+        'rgb(112, 128, 163)', // 16
+        'rgb(106, 121, 157)', // 17
+        'rgb(100, 114, 151)', // 18
+        'rgb(94, 108, 145)',  // 19
+        'rgb(88, 101, 139)',  // 20
+        'rgb(82, 94, 133)',   // 21
+        'rgb(76, 87, 126)',   // 22
+        'rgb(71, 80, 120)',   // 23
+        'rgb(65, 74, 114)',   // 24
+        'rgb(59, 67, 108)',   // 25
+        'rgb(53, 60, 102)',   // 26
+        'rgb(47, 53, 96)',    // 27
+        'rgb(41, 46, 89)',    // 28
+        'rgb(35, 40, 83)',    // 29
+        'rgb(29, 33, 77)',    // 30
+        'rgb(24, 26, 71)',    // 31
+        'rgb(18, 19, 65)',    // 32
+        'rgb(12, 12, 59)',    // 33
+        'rgb(6, 6, 52)',      // 34
+        'rgb(0, 0, 45)'       // 35 - Darkest blue (near black)
+      ],
+      
+      // Preset 3: 37 colors alternating dark-light, getting darker each flip
+      blueZigzag: [
+        'rgb(50, 80, 140)',   // 1 - Dark
+        'rgb(150, 200, 255)', // 2 - Light
+        'rgb(45, 72, 128)',   // 3 - Darker
+        'rgb(143, 191, 247)', // 4 - Less light
+        'rgb(40, 65, 117)',   // 5 - Darker
+        'rgb(136, 182, 238)', // 6 - Less light
+        'rgb(36, 58, 106)',   // 7 - Darker
+        'rgb(129, 173, 230)', // 8 - Less light
+        'rgb(32, 52, 96)',    // 9 - Darker
+        'rgb(122, 164, 221)', // 10 - Less light
+        'rgb(28, 46, 87)',    // 11 - Darker
+        'rgb(115, 155, 213)', // 12 - Less light
+        'rgb(25, 41, 78)',    // 13 - Darker
+        'rgb(108, 146, 204)', // 14 - Less light
+        'rgb(22, 36, 70)',    // 15 - Darker
+        'rgb(101, 137, 196)', // 16 - Less light
+        'rgb(19, 32, 63)',    // 17 - Darker
+        'rgb(94, 128, 187)',  // 18 - Less light
+        'rgb(17, 28, 56)',    // 19 - Darker
+        'rgb(87, 119, 179)',  // 20 - Less light
+        'rgb(15, 25, 50)',    // 21 - Darker
+        'rgb(80, 110, 170)',  // 22 - Less light
+        'rgb(13, 22, 45)',    // 23 - Darker
+        'rgb(73, 101, 162)',  // 24 - Less light
+        'rgb(11, 19, 40)',    // 25 - Darker
+        'rgb(66, 92, 153)',   // 26 - Less light
+        'rgb(9, 16, 36)',     // 27 - Darker
+        'rgb(59, 83, 145)',   // 28 - Less light
+        'rgb(8, 14, 32)',     // 29 - Darker
+        'rgb(52, 74, 136)',   // 30 - Less light
+        'rgb(6, 12, 28)',     // 31 - Darker
+        'rgb(45, 65, 128)',   // 32 - Less light
+        'rgb(5, 10, 25)',     // 33 - Darker
+        'rgb(38, 56, 119)',   // 34 - Less light
+        'rgb(4, 8, 22)',      // 35 - Darker
+        'rgb(31, 47, 111)',   // 36 - Less light
+        'rgb(2, 5, 18)'       // 37 - Darkest
+      ]
+    },
+    
+    // Helper to get the current palette (used by the app)
+    get palette() {
+      return this.presets[this.currentPreset];
+    }
   },
 
   // Start page UI settings
