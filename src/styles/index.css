@@ -334,9 +334,30 @@ body {
   display: none;
 }
 
-.searchbar-actions {
+.searchbar-btn {
   display: flex;
-  gap: var(--space-xs);
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--surface-base);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.searchbar-btn:hover {
+  background: var(--surface-bright);
+  border-color: var(--border-bright);
+}
+
+.searchbar-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Search Results Dropdown */

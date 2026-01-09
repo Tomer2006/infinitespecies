@@ -137,10 +137,6 @@ export default function Topbar({
 
       <div className="topbar-center">
         <div className="searchbar" ref={searchRef}>
-          <svg className="searchbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
           <input
             ref={searchInputRef}
             className="searchbar-input"
@@ -157,11 +153,12 @@ export default function Topbar({
               }
             }}
           />
-          <div className="searchbar-actions">
-            <button className="btn" onClick={handleSearch}>
-              Search
-            </button>
-          </div>
+          <button className="searchbar-btn" onClick={handleSearch} title="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
 
           {showResults && searchResults.length > 0 && (
             <div className="search-results">
