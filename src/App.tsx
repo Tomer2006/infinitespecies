@@ -343,10 +343,10 @@ export default function App() {
     }
   }
 
-  // Show mobile blocker if on mobile device
-  if (isMobile) {
-    return <MobileBlocker />
-  }
+  // Mobile blocker disabled
+  // if (isMobile) {
+  //   return <MobileBlocker />
+  // }
 
   return (
     <div className="app">
