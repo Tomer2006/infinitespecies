@@ -180,43 +180,46 @@ export const perf = {
         'rgb(127, 127, 127)'  // Gray
         ],
       
-      // Preset 2: 35 colors from light blue to dark blue
+      // Preset 2: 38 colors from light blue to dark blue
       blueGradient: [
         'rgb(200, 230, 255)', // 1 - Lightest blue
-        'rgb(194, 223, 249)', // 2
-        'rgb(188, 216, 243)', // 3
-        'rgb(182, 210, 237)', // 4
-        'rgb(176, 203, 231)', // 5
-        'rgb(171, 196, 225)', // 6
-        'rgb(165, 189, 218)', // 7
-        'rgb(159, 182, 212)', // 8
-        'rgb(153, 176, 206)', // 9
-        'rgb(147, 169, 200)', // 10
-        'rgb(141, 162, 194)', // 11
-        'rgb(135, 155, 188)', // 12
-        'rgb(129, 148, 182)', // 13
-        'rgb(124, 142, 176)', // 14
-        'rgb(118, 135, 169)', // 15
-        'rgb(112, 128, 163)', // 16
-        'rgb(106, 121, 157)', // 17
-        'rgb(100, 114, 151)', // 18
-        'rgb(94, 108, 145)',  // 19
-        'rgb(88, 101, 139)',  // 20
-        'rgb(82, 94, 133)',   // 21
-        'rgb(76, 87, 126)',   // 22
-        'rgb(71, 80, 120)',   // 23
-        'rgb(65, 74, 114)',   // 24
-        'rgb(59, 67, 108)',   // 25
-        'rgb(53, 60, 102)',   // 26
-        'rgb(47, 53, 96)',    // 27
-        'rgb(41, 46, 89)',    // 28
-        'rgb(35, 40, 83)',    // 29
-        'rgb(29, 33, 77)',    // 30
-        'rgb(24, 26, 71)',    // 31
-        'rgb(18, 19, 65)',    // 32
-        'rgb(12, 12, 59)',    // 33
-        'rgb(6, 6, 52)',      // 34
-        'rgb(0, 0, 45)'       // 35 - Darkest blue (near black)
+        'rgb(195, 224, 249)', // 2
+        'rgb(189, 218, 244)', // 3
+        'rgb(184, 211, 238)', // 4
+        'rgb(178, 205, 233)', // 5
+        'rgb(173, 199, 227)', // 6
+        'rgb(168, 193, 221)', // 7
+        'rgb(162, 186, 216)', // 8
+        'rgb(157, 180, 210)', // 9
+        'rgb(151, 174, 205)', // 10
+        'rgb(146, 168, 199)', // 11
+        'rgb(141, 161, 193)', // 12
+        'rgb(135, 155, 188)', // 13
+        'rgb(130, 149, 182)', // 14
+        'rgb(124, 143, 177)', // 15
+        'rgb(119, 136, 171)', // 16
+        'rgb(114, 130, 165)', // 17
+        'rgb(108, 124, 160)', // 18
+        'rgb(103, 118, 154)', // 19
+        'rgb(97, 111, 149)', // 20
+        'rgb(92, 105, 143)', // 21
+        'rgb(87, 99, 137)',  // 22
+        'rgb(81, 93, 132)',  // 23
+        'rgb(76, 86, 126)',  // 24
+        'rgb(70, 80, 121)',  // 25
+        'rgb(65, 74, 115)',  // 26
+        'rgb(59, 68, 109)',  // 27
+        'rgb(54, 61, 104)',  // 28
+        'rgb(49, 55, 98)',   // 29
+        'rgb(43, 49, 93)',   // 30
+        'rgb(38, 43, 87)',   // 31
+        'rgb(32, 36, 81)',   // 32
+        'rgb(27, 30, 76)',   // 33
+        'rgb(22, 24, 70)',   // 34
+        'rgb(16, 18, 65)',   // 35
+        'rgb(11, 11, 59)',   // 36
+        'rgb(5, 5, 53)',     // 37
+        'rgb(0, 0, 45)'      // 38 - Darkest blue (near black)
       ],
       
       // Preset 3: 37 colors alternating dark-light, getting darker each flip
@@ -263,6 +266,57 @@ export const perf = {
     
     // Helper to get the current palette (used by the app)
     get palette() {
+      return this.presets[this.currentPreset];
+    }
+  },
+
+  // Font configuration
+  fonts: {
+    // Change this to switch between presets: 'inter', 'roboto', 'sourceSans', 'poppins', 'nunito', 'workSans', 'dmSans', 'lato', 'helvetica'
+    currentPreset: 'Helvetica',
+    
+    // Font presets (Google Fonts + System Fonts)
+    presets: {
+      inter: {
+        name: 'Inter',
+        import: 'Inter:wght@300;400;500;600;700;800'
+      },
+      roboto: {
+        name: 'Roboto',
+        import: 'Roboto:wght@300;400;500;700'
+      },
+      sourceSans: {
+        name: 'Source Sans 3',
+        import: 'Source+Sans+3:wght@300;400;500;600;700'
+      },
+      poppins: {
+        name: 'Poppins',
+        import: 'Poppins:wght@300;400;500;600;700'
+      },
+      nunito: {
+        name: 'Nunito Sans',
+        import: 'Nunito+Sans:wght@300;400;500;600;700'
+      },
+      workSans: {
+        name: 'Work Sans',
+        import: 'Work+Sans:wght@300;400;500;600;700'
+      },
+      dmSans: {
+        name: 'DM Sans',
+        import: 'DM+Sans:wght@300;400;500;600;700'
+      },
+      lato: {
+        name: 'Lato',
+        import: 'Lato:wght@300;400;700'
+      },
+      helvetica: {
+        name: 'Helvetica',
+        import: null  // System font, no import needed
+      }
+    },
+    
+    // Helper to get the current font
+    get current() {
       return this.presets[this.currentPreset];
     }
   },

@@ -337,12 +337,14 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
 
       {/* Big Preview - managed by preview.js module */}
       <div className="big-preview" id="bigPreview" aria-hidden="true">
+        <div className="big-preview-header">
+          <div className="big-preview-caption" id="bigPreviewCap"></div>
+        </div>
         <img id="bigPreviewImg" alt="" decoding="async" />
         <div className="big-preview-empty" id="bigPreviewEmpty" aria-hidden="true">
           No image
         </div>
         <div className="big-preview-footer">
-          <div className="big-preview-caption" id="bigPreviewCap"></div>
           <button 
             className="btn btn-small" 
             onClick={(e) => {

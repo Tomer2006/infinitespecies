@@ -64,8 +64,8 @@
   --radius-full: 9999px;
   
   /* ─── Typography ─── */
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   
   /* ─── Transitions ─── */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -602,20 +602,31 @@ body {
   display: flex;
 }
 
+.big-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.big-preview-caption {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+}
+
 .big-preview-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: rgba(0, 0, 0, 0.3);
   border-top: 1px solid var(--border-dim);
   pointer-events: auto;
-}
-
-.big-preview-caption {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
 }
 
 .big-preview-footer .btn-small {
