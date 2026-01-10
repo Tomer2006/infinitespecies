@@ -350,16 +350,42 @@ export function draw() {
         const textWidth = metrics.width;
         const textHeight = fontSize;
         const pad = 2;
-        // Position text center at top of circle (offset from top edge)
-        const textCenterOffset = Math.max(fontSize * 0.6, 8); // distance from top edge to text center
-        const textY = sy - sr + textCenterOffset;
-        const rect = {
-          x1: sx - textWidth / 2 - pad,
-          y1: textY - textHeight / 2 - pad,
-          x2: sx + textWidth / 2 + pad,
-          y2: textY + textHeight / 2 + pad
-        };
-        labelCandidates.push({ sx, sy, sr, textY, fontSize, text, rect });
+        
+        // Calculate available space at top of circle
+        // Find the highest child (closest to top edge)
+        const ch = d.children || [];
+        let availableSpace = sr * 2; // default: full diameter if no children
+        
+        if (ch.length > 0) {
+          // Find the child whose top edge is closest to parent's top
+          const parentTop = d._vy - d._vr;
+          let highestChildTop = d._vy + d._vr; // start at bottom
+          
+          for (const child of ch) {
+            const childTop = child._vy - child._vr;
+            if (childTop < highestChildTop) {
+              highestChildTop = childTop;
+            }
+          }
+          
+          // Available space is from parent top to highest child top (in screen pixels)
+          availableSpace = (highestChildTop - parentTop) * camK;
+        }
+        
+        // Only show label if there's enough space for text (need text height + padding)
+        const requiredSpace = textHeight + 4;
+        if (availableSpace >= requiredSpace) {
+          // Position text center in the middle of available space
+          const textCenterOffset = availableSpace / 2;
+          const textY = sy - sr + textCenterOffset;
+          const rect = {
+            x1: sx - textWidth / 2 - pad,
+            y1: textY - textHeight / 2 - pad,
+            x2: sx + textWidth / 2 + pad,
+            y2: textY + textHeight / 2 + pad
+          };
+          labelCandidates.push({ sx, sy, sr, textY, fontSize, text, rect });
+        }
       }
     }
 
