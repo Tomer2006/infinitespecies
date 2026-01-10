@@ -350,13 +350,16 @@ export function draw() {
         const textWidth = metrics.width;
         const textHeight = fontSize;
         const pad = 2;
+        // Position text center at top of circle (offset from top edge)
+        const textCenterOffset = Math.max(fontSize * 0.6, 8); // distance from top edge to text center
+        const textY = sy - sr + textCenterOffset;
         const rect = {
           x1: sx - textWidth / 2 - pad,
-          y1: sy - textHeight / 2 - pad,
+          y1: textY - textHeight / 2 - pad,
           x2: sx + textWidth / 2 + pad,
-          y2: sy + textHeight / 2 + pad
+          y2: textY + textHeight / 2 + pad
         };
-        labelCandidates.push({ sx, sy, fontSize, text, rect });
+        labelCandidates.push({ sx, sy, sr, textY, fontSize, text, rect });
       }
     }
 
@@ -422,7 +425,7 @@ export function draw() {
 
         if (hit) continue;
 
-        // Render label
+        // Render label at top of circle
         ctx.save();
         ctx.font = `${labelFontWeight} ${cand.fontSize}px ${labelFontFamily}`;
         ctx.textAlign = 'center';
@@ -433,11 +436,11 @@ export function draw() {
         ctx.strokeStyle = cand.fontSize > labelLargeFontThreshold ? labelStrokeColorLarge : labelStrokeColor;
         ctx.lineJoin = 'round';
         ctx.miterLimit = 2;
-        ctx.strokeText(cand.text, cand.sx, cand.sy);
+        ctx.strokeText(cand.text, cand.sx, cand.textY);
 
         ctx.fillStyle = labelFillColor;
         ctx.globalAlpha = labelAlpha;
-        ctx.fillText(cand.text, cand.sx, cand.sy);
+        ctx.fillText(cand.text, cand.sx, cand.textY);
         ctx.restore();
 
         // Update spatial index
