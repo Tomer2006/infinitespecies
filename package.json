@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Tomer2006/infinitespecies#readme",
   "dependencies": {
+    "d3-hierarchy": "^3.1.2",
     "firebase": "^12.7.0",
     "framer-motion": "^12.23.26",
     "react": "^18.3.1",
