@@ -22,7 +22,7 @@ export default function LandingPage({ onStart, onHelp, onAbout, onSettings }: La
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="landing-title">infinitespecies</h1>
+        <h1 className="landing-title">InfiniteSpecies</h1>
         <p className="landing-tagline">
           millions of organisms<br />
           one <span className="highlight">zoomable map</span>.

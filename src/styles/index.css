@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   infinitespecies - Modern Design System
+   InfiniteSpecies - Modern Design System
    A cosmic journey through the tree of life
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -168,12 +168,10 @@ body {
   text-decoration: none;
 }
 
-.topbar-brand-icon {
-  font-size: 1.4rem;
-}
+/* topbar-brand-icon removed - no longer using emoji */
 
-.topbar-brand > span:not(.topbar-brand-icon) {
-  background: var(--gradient-primary);
+.topbar-brand > span {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #3b8d7a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

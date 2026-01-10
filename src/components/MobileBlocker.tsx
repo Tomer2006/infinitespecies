@@ -38,7 +38,7 @@ export default function MobileBlocker() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          infinitespecies is designed for desktop exploration.
+          InfiniteSpecies is designed for desktop exploration.
           <br />
           Please visit us on a computer to experience the full tree of life.
         </motion.p>

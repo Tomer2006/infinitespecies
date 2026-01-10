@@ -132,8 +132,7 @@ export default function Topbar({
     <header className="topbar">
       <div className="topbar-left">
         <div className="topbar-brand" onClick={onBackToMenu} title="Return to main menu" style={{ cursor: 'pointer' }}>
-          <span className="topbar-brand-icon">🧬</span>
-          <span>infinitespecies</span>
+          <span>InfiniteSpecies</span>
         </div>
       </div>
 
