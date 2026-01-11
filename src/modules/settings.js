@@ -141,8 +141,11 @@ export const perf = {
 
   // Search settings
   search: {
+    // Search results and UI settings
     maxResults: 150,               // maximum number of search results to return
     noMatchDisplayMs: 900,        // duration (ms) to display "No match" message
+    
+    // Pulse animation settings
     pulseMinScreenRadius: 2,       // Minimum screen radius (px) to show pulse animation
     pulsePositionMultiplier: 1.2,  // Multiplier for pulse element position offset
     pulseSizeMultiplier: 2.4,      // Multiplier for pulse element size
@@ -156,7 +159,18 @@ export const perf = {
     pulseScaleEnd: 1.2,           // Pulse animation end scale
     pulseScaleOffset: 0.2,        // Pulse scale animation offset
     pulseDurationMs: 900,         // Pulse animation duration in milliseconds
-    pulseColor: 'rgb(113, 247, 198)'  // Pulse border color
+    pulseColor: 'rgb(113, 247, 198)',  // Pulse border color
+    
+    // Search provider settings
+    currentProvider: 'google',     // Current search provider: 'google', 'wikipedia', 'gbif', 'ncbi', 'col', 'inat'
+    providers: {
+      google: { name: 'Google', url: 'https://www.google.com/search?q=' },
+      wikipedia: { name: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Special:Search?search=' },
+      gbif: { name: 'GBIF', url: 'https://www.gbif.org/species/search?q=' },
+      ncbi: { name: 'NCBI Taxonomy', url: 'https://www.ncbi.nlm.nih.gov/taxonomy/?term=' },
+      col: { name: 'Catalogue of Life', url: 'https://www.catalogueoflife.org/data/search?q=' },
+      inat: { name: 'iNaturalist', url: 'https://www.inaturalist.org/search?q=' }
+    }
   },
 
   // Color palette configuration
@@ -319,24 +333,6 @@ export const perf = {
     get current() {
       return this.presets[this.currentPreset];
     }
-  },
-
-  // Search provider settings
-  search: {
-    // Current search provider: 'google', 'wikipedia', 'gbif', 'ncbi', 'col', 'inat'
-    currentProvider: 'google',
-    
-    // Available search providers
-    providers: {
-      google: { name: 'Google', url: 'https://www.google.com/search?q=' },
-      wikipedia: { name: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Special:Search?search=' },
-      gbif: { name: 'GBIF', url: 'https://www.gbif.org/species/search?q=' },
-      ncbi: { name: 'NCBI Taxonomy', url: 'https://www.ncbi.nlm.nih.gov/taxonomy/?term=' },
-      col: { name: 'Catalogue of Life', url: 'https://www.catalogueoflife.org/data/search?q=' },
-      inat: { name: 'iNaturalist', url: 'https://www.inaturalist.org/search?q=' }
-    },
-    
-    maxResults: 50  // Maximum search results to show
   },
 
   // Start page UI settings

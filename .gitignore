@@ -5,7 +5,14 @@ node_modules/
 gh-cli/
 .venv/
 .cursor/
+.vscode/
 full data/
 data/
 dist/data/
  
+dist/data/tree_part_002.json
+dist/data/tree_part_001.json
+dist/data/tree_part_002.json
+dist/data/tree_part_003.json
+dist/data/tree_part_004.json
+/dist/data
