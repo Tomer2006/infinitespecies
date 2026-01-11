@@ -230,11 +230,13 @@ export default function App() {
     try {
       showLoading('Loading taxonomy data…')
 
-      // Try to load default data (use leading / for Vite public folder)
-      const candidates = ['/data/manifest.json']
+      // Try to load default data - try both absolute and relative paths
+      // Vite serves public/ folder from root, so both should work
+      const candidates = ['/data/manifest.json', 'data/manifest.json']
       
       for (const url of candidates) {
         try {
+          console.log(`Attempting to load data from: ${url}`)
           await loadEager(url)
           hideLoading()
           
