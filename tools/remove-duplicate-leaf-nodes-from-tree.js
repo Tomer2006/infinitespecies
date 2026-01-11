@@ -1,6 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+/**
+ * Removes duplicate leaf nodes from a nested tree structure.
+ * 
+ * When multiple leaf nodes have the same name (case-insensitive), ALL of them are removed
+ * (not just keeping one). For example, if there are 2 leaf nodes named "X" and "x",
+ * both will be removed because the comparison is case-insensitive.
+ * 
+ * Usage: node tools/remove-duplicate-leaf-nodes-from-tree.js [input.json] [output.json]
+ */
+
 async function main() {
   const [inputArg, outputArg] = process.argv.slice(2);
   const inputPath = resolve(process.cwd(), inputArg ?? 'data/tree_deduped.json');
@@ -14,6 +24,7 @@ async function main() {
   const raw = await readFile(inputPath, 'utf8');
   const root = JSON.parse(raw);
 
+  // First pass: Count occurrences of each leaf node name (case-insensitive)
   const leafCounts = new Map();
 
   const stack = [root];
@@ -22,7 +33,7 @@ async function main() {
     const children = Array.isArray(node.children) ? node.children : [];
     if (children.length === 0) {
       if (typeof node.name === 'string' && node.name.trim() !== '') {
-        const key = node.name;
+        const key = node.name.toLowerCase();
         leafCounts.set(key, (leafCounts.get(key) ?? 0) + 1);
       }
       continue;
@@ -34,10 +45,15 @@ async function main() {
 
   let removed = 0;
 
+  // Second pass: Remove ALL leaf nodes that have duplicate names (case-insensitive)
+  // (if a name appears more than once, remove all instances of it)
   function prune(node) {
     const children = Array.isArray(node.children) ? node.children : [];
     if (children.length === 0) {
-      const occurrences = leafCounts.get(node.name) ?? 0;
+      const key = typeof node.name === 'string' ? node.name.toLowerCase() : '';
+      const occurrences = leafCounts.get(key) ?? 0;
+      // If this leaf node name appears more than once (case-insensitive), remove this node
+      // (all duplicate instances will be removed)
       if (occurrences > 1) {
         removed++;
         return false;

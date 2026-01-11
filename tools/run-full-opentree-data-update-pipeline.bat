@@ -10,9 +10,9 @@ REM   2. Place taxonomy.tsv in data\opentree\
 REM
 REM This script will:
 REM   1. Convert OpenTreeofLife taxonomy.tsv to nested tree (tree_opentree.json)
-REM   2. Bake D3 circle-packing layout
+REM   2. Remove duplicate leaf nodes
 REM   3. Remove sibling_higher nodes and promote their children
-REM   4. Remove duplicate leaf nodes
+REM   4. Bake D3 circle-packing layout
 REM   5. Capitalize names (Title Case)
 REM ============================================
 
@@ -54,10 +54,9 @@ if errorlevel 1 (
 echo.
 
 echo ============================================
-echo Step 2: Baking D3 layout...
+echo Step 2: Removing duplicate leaf nodes...
 echo ============================================
-echo (This may take several minutes for large datasets)
-node tools/compute-d3-circle-packing-layout-from-opentree-tree.js
+node tools/remove-duplicate-leaf-nodes-from-tree.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 2
     pause
@@ -68,36 +67,7 @@ echo.
 echo ============================================
 echo Step 3: Removing sibling_higher nodes...
 echo ============================================
-echo [1/5] Processing tree_part_001.json...
-node tools/remove-sibling-higher-nodes-and-promote-children.js public/data/tree_part_001.json public/data/tree_part_001.json
-if errorlevel 1 (
-    echo FAILED at Step 3
-    pause
-    exit /b 1
-)
-echo [2/5] Processing tree_part_002.json...
-node tools/remove-sibling-higher-nodes-and-promote-children.js public/data/tree_part_002.json public/data/tree_part_002.json
-if errorlevel 1 (
-    echo FAILED at Step 3
-    pause
-    exit /b 1
-)
-echo [3/5] Processing tree_part_003.json...
-node tools/remove-sibling-higher-nodes-and-promote-children.js public/data/tree_part_003.json public/data/tree_part_003.json
-if errorlevel 1 (
-    echo FAILED at Step 3
-    pause
-    exit /b 1
-)
-echo [4/5] Processing tree_part_004.json...
-node tools/remove-sibling-higher-nodes-and-promote-children.js public/data/tree_part_004.json public/data/tree_part_004.json
-if errorlevel 1 (
-    echo FAILED at Step 3
-    pause
-    exit /b 1
-)
-echo [5/5] Processing tree_part_005.json...
-node tools/remove-sibling-higher-nodes-and-promote-children.js public/data/tree_part_005.json public/data/tree_part_005.json
+node tools/remove-sibling-higher-nodes-and-promote-children.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 3
     pause
@@ -106,38 +76,10 @@ if errorlevel 1 (
 echo.
 
 echo ============================================
-echo Step 4: Removing duplicate leaf nodes...
+echo Step 4: Baking D3 layout...
 echo ============================================
-echo [1/5] Processing tree_part_001.json...
-node tools/remove-duplicate-leaf-nodes-from-tree.js public/data/tree_part_001.json public/data/tree_part_001.json
-if errorlevel 1 (
-    echo FAILED at Step 4
-    pause
-    exit /b 1
-)
-echo [2/5] Processing tree_part_002.json...
-node tools/remove-duplicate-leaf-nodes-from-tree.js public/data/tree_part_002.json public/data/tree_part_002.json
-if errorlevel 1 (
-    echo FAILED at Step 4
-    pause
-    exit /b 1
-)
-echo [3/5] Processing tree_part_003.json...
-node tools/remove-duplicate-leaf-nodes-from-tree.js public/data/tree_part_003.json public/data/tree_part_003.json
-if errorlevel 1 (
-    echo FAILED at Step 4
-    pause
-    exit /b 1
-)
-echo [4/5] Processing tree_part_004.json...
-node tools/remove-duplicate-leaf-nodes-from-tree.js public/data/tree_part_004.json public/data/tree_part_004.json
-if errorlevel 1 (
-    echo FAILED at Step 4
-    pause
-    exit /b 1
-)
-echo [5/5] Processing tree_part_005.json...
-node tools/remove-duplicate-leaf-nodes-from-tree.js public/data/tree_part_005.json public/data/tree_part_005.json
+echo (This may take several minutes for large datasets)
+node tools/compute-d3-circle-packing-layout-from-opentree-tree.js
 if errorlevel 1 (
     echo FAILED at Step 4
     pause
