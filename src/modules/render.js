@@ -290,11 +290,9 @@ export function draw() {
         setGlobalAlpha(1);
         ctx.fill();
         // Simplified stroke for medium nodes
-        if (sr >= lodMediumThreshold * 2) {
-          setLineWidth(1);
-          setStrokeStyle(d.children && d.children.length ? strokeColorWithChildren : strokeColorLeaf);
-          ctx.stroke();
-        }
+        setLineWidth(1);
+        setStrokeStyle(d.children && d.children.length ? strokeColorWithChildren : strokeColorLeaf);
+        ctx.stroke();
         break;
 
       case 'detail':
@@ -303,12 +301,10 @@ export function draw() {
         setFillStyle(getNodeColor(d.data));
         setGlobalAlpha(1);
         ctx.fill();
-        if (sr >= strokeMinPxRadius) {
-          const lineWidth = Math.max(strokeLineWidthMin, Math.min(strokeLineWidthMax, strokeLineWidthBase * Math.sqrt(Math.max(sr / gridTileSize, strokeLineWidthMinRatio))));
-          setLineWidth(lineWidth);
-          setStrokeStyle(d.children && d.children.length ? strokeColorWithChildrenDetail : strokeColorLeafDetail);
-          ctx.stroke();
-        }
+        const lineWidth = Math.max(strokeLineWidthMin, Math.min(strokeLineWidthMax, strokeLineWidthBase * Math.sqrt(Math.max(sr / gridTileSize, strokeLineWidthMinRatio))));
+        setLineWidth(lineWidth);
+        setStrokeStyle(d.children && d.children.length ? strokeColorWithChildrenDetail : strokeColorLeafDetail);
+        ctx.stroke();
         break;
     }
 

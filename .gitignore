@@ -6,4 +6,6 @@ gh-cli/
 .venv/
 .cursor/
 full data/
+data/
+dist/data/
  
