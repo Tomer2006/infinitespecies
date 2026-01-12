@@ -178,6 +178,17 @@ function showBigPreview(src, caption) {
   
   if (!bigPreview) return;
   const myToken = ++previewReqToken;
+  
+  // Update position based on current breadcrumbs height
+  const breadcrumbsEl = document.querySelector('.breadcrumbs');
+  const topbarEl = document.querySelector('.topbar');
+  if (breadcrumbsEl && topbarEl) {
+    const breadcrumbsHeight = breadcrumbsEl.offsetHeight;
+    const topbarHeight = topbarEl.offsetHeight;
+    const topPosition = topbarHeight + breadcrumbsHeight + 16; // 16px = var(--space-md)
+    bigPreview.style.top = `${topPosition}px`;
+  }
+  
   if (bigPreviewCap) bigPreviewCap.textContent = caption || '';
   if (bigPreviewImg) {
     bigPreviewImg.alt = caption || '';

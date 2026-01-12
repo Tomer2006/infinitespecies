@@ -20,8 +20,9 @@ const isReactMode = () => typeof window !== 'undefined' && window.__reactCanvas;
 
 export function setBreadcrumbs(node) {
   // In React mode, breadcrumbs are managed by React state - skip DOM manipulation
+  // Don't update URL here - URL updates only happen from breadcrumb hover updates, not from clicks
   if (isReactMode()) {
-    updateDeepLinkFromNode(node);
+    // updateDeepLinkFromNode(node); // Removed - URL updates only on breadcrumb hover
     return;
   }
   
@@ -51,7 +52,8 @@ export function setBreadcrumbs(node) {
       breadcrumbsEl.appendChild(sep);
     }
   });
-  updateDeepLinkFromNode(node);
+  // Don't update URL here - URL updates only happen from breadcrumb hover updates, not from clicks
+  // updateDeepLinkFromNode(node);
 }
 
 export function fitNodeInView(node) {

@@ -104,11 +104,13 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .app {
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto auto 1fr;
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-primary);
   position: relative;
+  overflow: hidden;
 }
 
 .app::before {
@@ -134,6 +136,9 @@ body {
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+  height: auto;
+  max-height: 4rem;
 }
 
 .topbar-left,
@@ -428,17 +433,16 @@ body {
   position: relative;
   z-index: 5;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  align-content: flex-start;
   flex-wrap: wrap;
   gap: var(--space-xs) var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(13, 15, 26, 0.6);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-dim);
-  max-height: 120px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--surface-bright) transparent;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  flex-shrink: 0;
+  overflow-y: visible;
 }
 
 .breadcrumbs::-webkit-scrollbar {
@@ -474,6 +478,8 @@ body {
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
+  height: 1.75rem; /* Fixed height for each crumb to ensure consistent row height */
+  box-sizing: border-box;
 }
 
 .crumb:hover {
@@ -483,7 +489,7 @@ body {
 }
 
 .crumb-separator {
-  color: var(--text-muted);
+  color: var(--surface-dim);
   font-size: 0.625rem;
   flex-shrink: 0;
 }
@@ -493,11 +499,27 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .stage {
-  position: relative;
-  flex: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  background: var(--bg-primary);
+  background: transparent;
+  z-index: 1;
+  pointer-events: none;
 }
+
+.stage:not(.hidden) {
+  pointer-events: auto;
+}
+
+.stage.hidden {
+  display: none;
+}
+
 
 .stage::before {
   content: '';
@@ -507,12 +529,14 @@ body {
     radial-gradient(ellipse 1200px 900px at 20% 10%, rgba(91, 141, 239, 0.06) 0%, transparent 60%),
     radial-gradient(ellipse 1000px 700px at 80% 30%, rgba(110, 231, 183, 0.04) 0%, transparent 60%);
   pointer-events: none;
+  z-index: -1;
 }
 
 .stage canvas {
   display: block;
   width: 100%;
   height: 100%;
+  background: transparent;
 }
 
 .stage canvas.loading {
@@ -589,8 +613,8 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .big-preview {
-  position: absolute;
-  top: var(--space-md);
+  position: fixed;
+  top: calc(4rem + var(--breadcrumbs-height, 7rem) + var(--space-md));
   right: var(--space-md);
   z-index: 15;
   display: none;
@@ -601,7 +625,7 @@ body {
   border-radius: var(--radius-lg);
   overflow: hidden;
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-fast), top var(--transition-fast);
 }
 
 .big-preview.visible {

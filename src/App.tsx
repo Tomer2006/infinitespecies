@@ -33,7 +33,7 @@ import { state } from './modules/state'
 import { resizeCanvas, registerDrawCallback, tick } from './modules/canvas'
 import { draw } from './modules/render'
 import { loadEager, loadFromJSONText } from './modules/data'
-import { decodePath, findNodeByPath, getNodePath } from './modules/deeplink'
+import { decodePath, findNodeByPath, getNodePath, updateDeepLinkFromNode } from './modules/deeplink'
 import { updateNavigation, fitNodeInView, goToNode } from './modules/navigation'
 import { openProviderSearch } from './modules/providers'
 
@@ -156,6 +156,17 @@ export default function App() {
   }, [helpOpen, aboutOpen, jsonOpen])
 
   const updateBreadcrumbs = useCallback((node: any) => {
+    if (!node) {
+      // Clear breadcrumbs and URL when node is null
+      setAppState((prev: AppState) => ({ ...prev, breadcrumbs: [], currentNode: null }))
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+      }
+      // Update CSS variable for breadcrumbs height
+      document.documentElement.style.setProperty('--breadcrumbs-height', '0px')
+      return
+    }
+    
     const crumbs: Array<{ id: number; name: string; node: any }> = []
     let current = node
     while (current) {
@@ -167,7 +178,35 @@ export default function App() {
       current = current.parent
     }
     setAppState((prev: AppState) => ({ ...prev, breadcrumbs: crumbs, currentNode: node }))
+    
+    // Update URL hash when breadcrumbs change (only from mouse hover, not from clicks)
+    updateDeepLinkFromNode(node)
   }, [])
+  
+  // Update CSS variable for breadcrumbs height when breadcrumbs change
+  useEffect(() => {
+    const updateBreadcrumbsHeight = () => {
+      const breadcrumbsEl = document.querySelector('.breadcrumbs') as HTMLElement
+      if (breadcrumbsEl) {
+        const height = breadcrumbsEl.offsetHeight
+        document.documentElement.style.setProperty('--breadcrumbs-height', `${height}px`)
+      } else {
+        document.documentElement.style.setProperty('--breadcrumbs-height', '0px')
+      }
+    }
+    
+    // Update immediately and after a short delay to account for rendering
+    updateBreadcrumbsHeight()
+    const timer = setTimeout(updateBreadcrumbsHeight, 100)
+    
+    // Also update on window resize
+    window.addEventListener('resize', updateBreadcrumbsHeight)
+    
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', updateBreadcrumbsHeight)
+    }
+  }, [appState.breadcrumbs])
 
   const showLoading = useCallback((title: string) => {
     loadingStartTime.current = performance.now()
