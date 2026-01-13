@@ -30,7 +30,7 @@ Welcome to **InfiniteSpecies**! 🧬 An interactive circle-packing visualization
 - 🧭 **Informative Tooltips**: Shows name, formatted leaf count (e.g., "1,000,000 leaves"), and level
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - 🔗 **Deep Linking**: Share exact views via URL hash - every navigation state is preserved
-- 📱 **Mobile Detection**: Graceful handling for mobile devices with informative blocker
+- 📱 **Mobile Support**: Full touch support with pan, pinch zoom, tap, and long press gestures
 
 ### 🚀 Quick Start
 
@@ -63,10 +63,11 @@ npm run preview
 
 ### 🎮 Controls
 
-- **🖱️ Left Click**: Update tree view to show only clicked subtree (no camera movement) 🌳
-- **🖱️ Right Click**: Navigate to parent node ⬆️
-- **🖱️ Mouse Wheel**: Smooth zoom 🔄
-- **🖱️ Middle Drag**: Pan the view 📍
+- **🖱️ Left Click / 📱 Tap**: Update tree view to show only clicked subtree (no camera movement) 🌳
+- **🖱️ Right Click / 📱 Long Press**: Navigate to parent node ⬆️
+- **🖱️ Mouse Wheel / 📱 Pinch**: Smooth zoom 🔄
+- **🖱️ Middle Drag / 📱 Drag**: Pan the view 📍
+- **📱 Double Tap**: Fit current node in view
 - **⌨️ S**: Web search for hovered/current organism
 - **⌨️ R**: Reset to root view
 - **⌨️ F**: Fit current node in view

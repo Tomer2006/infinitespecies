@@ -1794,3 +1794,179 @@ body {
   filter: blur(2px);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile Support & Touch Optimizations
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent text selection during touch interactions */
+#view {
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Larger touch targets for mobile */
+@media (max-width: 768px) {
+  /* Buttons - minimum 44x44px touch target */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1.25rem;
+    font-size: 15px;
+  }
+  
+  .btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Tooltip buttons */
+  .tooltip-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 18px;
+  }
+  
+  /* Topbar buttons */
+  .topbar-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Breadcrumbs - larger touch targets */
+  .breadcrumbs {
+    padding: 0.75rem 1rem;
+  }
+  
+  .breadcrumb-item {
+    padding: 0.5rem 0.75rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Search input - larger for easier typing */
+  .searchbar-input {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Modal buttons */
+  .modal-header-actions .btn {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  /* Legend - make it more compact on mobile */
+  .legend {
+    font-size: 12px;
+    padding: 0.75rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .legend ul {
+    gap: 0.5rem;
+  }
+  
+  .legend kbd {
+    padding: 0.25rem 0.5rem;
+    font-size: 11px;
+  }
+  
+  /* Big preview - adjust for mobile */
+  .big-preview {
+    max-width: 95vw;
+    max-height: 60vh;
+  }
+  
+  .big-preview-footer .btn {
+    min-height: 44px;
+    width: 100%;
+  }
+  
+  /* Landing page buttons */
+  .landing-start-btn {
+    min-height: 56px;
+    padding: 1rem 2rem;
+    font-size: 16px;
+  }
+  
+  .landing-footer-btn {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+    font-size: 15px;
+  }
+  
+  /* Help grid - stack on mobile */
+  .help-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .help-item {
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+  
+  /* Toast notifications - larger on mobile */
+  .toast {
+    min-height: 48px;
+    padding: 0.875rem 1rem;
+    font-size: 15px;
+  }
+  
+  /* Prevent double-tap zoom on buttons */
+  button, .btn, a {
+    touch-action: manipulation;
+  }
+  
+  /* Improve touch feedback */
+  .btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+  
+  /* Topbar - stack on very small screens */
+  @media (max-width: 480px) {
+    .topbar {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .topbar-left,
+    .topbar-right {
+      flex: 1 1 100%;
+    }
+    
+    .searchbar {
+      width: 100%;
+    }
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Hide hover effects on touch devices */
+  .btn:hover {
+    background: var(--surface-base);
+    transform: none;
+  }
+  
+  /* Show active state more prominently */
+  .btn:active {
+    background: var(--surface-hover);
+    transform: scale(0.95);
+  }
+  
+  /* Tooltip - adjust positioning for touch */
+  .tooltip {
+    pointer-events: none;
+  }
+  
+  /* Big preview - show on touch devices */
+  .big-preview {
+    display: block;
+  }
+}
+

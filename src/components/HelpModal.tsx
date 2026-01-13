@@ -5,11 +5,12 @@ interface HelpModalProps {
 }
 
 const controls = [
-  { key: 'Left Click', description: 'Zoom into a group' },
-  { key: 'Right Click', description: 'Zoom out to parent' },
-  { key: 'Mouse Wheel', description: 'Smooth zoom in/out' },
-  { key: 'Middle Drag', description: 'Pan the view' },
-  { key: 'Hover', description: 'Show image preview' },
+  { key: 'Left Click / Tap', description: 'Zoom into a group' },
+  { key: 'Right Click / Long Press', description: 'Zoom out to parent' },
+  { key: 'Mouse Wheel / Pinch', description: 'Smooth zoom in/out' },
+  { key: 'Middle Drag / Drag', description: 'Pan the view' },
+  { key: 'Double Tap', description: 'Fit current node in view' },
+  { key: 'Hover / Touch', description: 'Show image preview' },
   { key: 'Enter', description: 'Search and navigate' },
   { key: 'S', description: 'Web search current/hovered' },
   { key: 'R', description: 'Reset to root' },

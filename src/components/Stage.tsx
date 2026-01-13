@@ -5,7 +5,7 @@ import { pickNodeAt, isNodeStillHoverable } from '../modules/picking'
 import { openProviderSearch } from '../modules/providers'
 import { perf } from '../modules/settings'
 import { showBigFor, hideBigPreview as hidePreviewModule } from '../modules/preview'
-import { updateCurrentNodeOnly } from '../modules/navigation'
+import { updateCurrentNodeOnly, fitNodeInView } from '../modules/navigation'
 
 // Type for taxonomy nodes from the state module
 interface TaxonomyNode {
@@ -59,6 +59,18 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
   const prevHoverIdRef = useRef<number | null>(null)
   const breadcrumbTimerRef = useRef<number | null>(null)
   const pendingBreadcrumbNodeIdRef = useRef<number | null>(null)
+  
+  // Touch handling refs
+  const touchStateRef = useRef({
+    isPanning: false,
+    isZooming: false,
+    lastTouch: null as { x: number; y: number } | null,
+    initialDistance: 0,
+    initialZoom: 1,
+    initialCenter: null as { x: number; y: number } | null,
+    lastTapTime: 0,
+    longPressTimer: null as number | null,
+  })
 
   // Set up canvas reference in DOM module and initialize
   useEffect(() => {
@@ -279,6 +291,206 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     return () => canvas.removeEventListener('wheel', handleWheel)
   }, [])
 
+  // Touch event handlers for mobile support
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const touchState = touchStateRef.current
+
+    const getTouchPos = (touch: Touch) => {
+      const rect = canvas.getBoundingClientRect()
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      }
+    }
+
+    const getDistance = (t1: Touch, t2: Touch) => {
+      const dx = t1.clientX - t2.clientX
+      const dy = t1.clientY - t2.clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    const getCenter = (t1: Touch, t2: Touch) => {
+      const rect = canvas.getBoundingClientRect()
+      return {
+        x: ((t1.clientX + t2.clientX) / 2) - rect.left,
+        y: ((t1.clientY + t2.clientY) / 2) - rect.top,
+      }
+    }
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        // Single touch - prepare for pan or tap
+        const touch = e.touches[0]
+        const pos = getTouchPos(touch)
+        touchState.lastTouch = pos
+        touchState.isPanning = false
+        
+        // Clear any existing long press timer
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer)
+          touchState.longPressTimer = null
+        }
+        
+        // Set up long press timer (500ms)
+        touchState.longPressTimer = window.setTimeout(() => {
+          // Long press - trigger context menu (go to parent)
+          const current = state.current as TaxonomyNode | null
+          if (current && current.parent && !isLoading) {
+            updateCurrentNodeOnly(current.parent as any)
+            onUpdateBreadcrumbs(current.parent)
+            // Visual feedback
+            canvas.style.opacity = '0.8'
+            setTimeout(() => {
+              canvas.style.opacity = '1'
+            }, 200)
+          }
+          touchState.longPressTimer = null
+        }, 500)
+        
+        // Update hover on touch start
+        const n = pickNodeAt(pos.x, pos.y)
+        state.hoverNode = n
+        if (n) {
+          updateTooltipAndPreview(n, pos.x, pos.y)
+        }
+      } else if (e.touches.length === 2) {
+        // Two touches - prepare for pinch zoom
+        touchState.isZooming = true
+        touchState.isPanning = false
+        const distance = getDistance(e.touches[0], e.touches[1])
+        touchState.initialDistance = distance
+        touchState.initialZoom = state.camera.k
+        touchState.initialCenter = getCenter(e.touches[0], e.touches[1])
+        
+        // Cancel long press timer
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer)
+          touchState.longPressTimer = null
+        }
+      }
+      e.preventDefault()
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1 && touchState.lastTouch) {
+        // Single touch move - panning
+        const touch = e.touches[0]
+        const pos = getTouchPos(touch)
+        
+        // Cancel long press if moved
+        if (touchState.longPressTimer) {
+          clearTimeout(touchState.longPressTimer)
+          touchState.longPressTimer = null
+        }
+        
+        if (!touchState.isPanning) {
+          // Check if moved enough to start panning (5px threshold)
+          const dx = pos.x - touchState.lastTouch.x
+          const dy = pos.y - touchState.lastTouch.y
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            touchState.isPanning = true
+            setTooltip(prev => ({ ...prev, visible: false }))
+            hidePreviewModule()
+          }
+        }
+        
+        if (touchState.isPanning) {
+          const dx = pos.x - touchState.lastTouch.x
+          const dy = pos.y - touchState.lastTouch.y
+          state.camera.x -= dx / state.camera.k
+          state.camera.y -= dy / state.camera.k
+          touchState.lastTouch = pos
+          requestRender()
+        }
+      } else if (e.touches.length === 2 && touchState.isZooming) {
+        // Two touches - pinch zoom
+        const distance = getDistance(e.touches[0], e.touches[1])
+        const scale = distance / touchState.initialDistance
+        const newZoom = touchState.initialZoom * scale
+        
+        if (touchState.initialCenter) {
+          const center = getCenter(e.touches[0], e.touches[1])
+          const [wx, wy] = screenToWorld(center.x, center.y)
+          
+          state.camera.k = newZoom
+          state.camera.x = wx - (center.x - canvas.width / 2) / state.camera.k
+          state.camera.y = wy - (center.y - canvas.height / 2) / state.camera.k
+          
+          requestRender()
+        }
+      }
+      e.preventDefault()
+    }
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      // Cancel long press timer
+      if (touchState.longPressTimer) {
+        clearTimeout(touchState.longPressTimer)
+        touchState.longPressTimer = null
+      }
+      
+      if (e.touches.length === 0) {
+        // All touches ended
+        if (!touchState.isPanning && !touchState.isZooming && touchState.lastTouch) {
+          // Single tap - treat as click
+          const now = Date.now()
+          const timeSinceLastTap = now - touchState.lastTapTime
+          
+          if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+            // Double tap - fit current node
+            const target = state.hoverNode || state.current || state.DATA_ROOT
+            if (target) {
+              // @ts-ignore - JS module import
+              fitNodeInView(target)
+            }
+          } else {
+            // Single tap - navigate into node
+            if (!isLoading && touchState.lastTouch) {
+              const n = pickNodeAt(touchState.lastTouch.x, touchState.lastTouch.y)
+              if (n) {
+                updateCurrentNodeOnly(n as any)
+                onUpdateBreadcrumbs(n)
+              }
+            }
+          }
+          
+          touchState.lastTapTime = now
+        }
+        
+        touchState.isPanning = false
+        touchState.isZooming = false
+        touchState.lastTouch = null
+        touchState.initialDistance = 0
+        touchState.initialCenter = null
+      } else if (e.touches.length === 1) {
+        // One touch remaining - switch to single touch mode
+        touchState.isZooming = false
+        const touch = e.touches[0]
+        touchState.lastTouch = getTouchPos(touch)
+      }
+      
+      e.preventDefault()
+    }
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false })
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false })
+    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false })
+    
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart)
+      canvas.removeEventListener('touchmove', handleTouchMove)
+      canvas.removeEventListener('touchend', handleTouchEnd)
+      canvas.removeEventListener('touchcancel', handleTouchEnd)
+      if (touchState.longPressTimer) {
+        clearTimeout(touchState.longPressTimer)
+      }
+    }
+  }, [isLoading, onUpdateBreadcrumbs])
+
   const handleContextMenu = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (isLoading) return
@@ -381,10 +593,11 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         <div className="legend">
           <div className="legend-title">Controls</div>
           <ul>
-            <li><kbd>Left Click</kbd> Zoom into a group</li>
-            <li><kbd>Right Click</kbd> Zoom out to parent</li>
-            <li><kbd>Wheel</kbd> Smooth zoom</li>
-            <li><kbd>Middle Drag</kbd> Pan the view</li>
+            <li><kbd>Left Click</kbd> / <kbd>Tap</kbd> Zoom into a group</li>
+            <li><kbd>Right Click</kbd> / <kbd>Long Press</kbd> Zoom out to parent</li>
+            <li><kbd>Wheel</kbd> / <kbd>Pinch</kbd> Smooth zoom</li>
+            <li><kbd>Middle Drag</kbd> / <kbd>Drag</kbd> Pan the view</li>
+            <li><kbd>Double Tap</kbd> Fit hovered/current</li>
             <li><kbd>Enter</kbd> Search; pick a result</li>
             <li><kbd>F</kbd> Fit hovered/current</li>
             <li><kbd>R</kbd> Reset to root</li>
