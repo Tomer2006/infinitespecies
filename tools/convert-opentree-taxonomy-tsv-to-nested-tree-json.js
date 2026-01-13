@@ -4,16 +4,19 @@
  * 
  * Prerequisites:
  *   1. Download taxonomy.tsv from https://tree.opentreeoflife.org/about/taxonomy-version
- *   2. Place it in data/opentree/ folder
+ *   2. (Optional) Download synonyms.tsv from the same page for common names
+ *   3. Place both files in data/opentree/ folder
  * 
  * Usage:
  *   node tools/convert-opentree-taxonomy-tsv-to-nested-tree-json.js
  * 
  * Input files (in data/opentree/):
  *   - taxonomy.tsv: ott_id | parent_id | name | rank | sources | unique_name | flags
+ *   - synonyms.tsv (optional): ott_id | synonym | source (contains common names)
  * 
  * Output:
  *   - data/tree_opentree.json: Nested tree structure ready for bake-layout.js
+ *   - Each node includes ottId field for matching with synonyms
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -143,6 +146,7 @@ function buildNestedTreeIterative(nodes, rootOttId) {
   
   const root = {
     name: rootNode.name,
+    ottId: rootOttId,
     level: 0,
     children: []
   };
@@ -164,6 +168,7 @@ function buildNestedTreeIterative(nodes, rootOttId) {
       const childName = childNode.name || `Unknown_${childOttId}`;
       const childTreeNode = {
         name: childName,
+        ottId: childOttId,
         level: treeNode.level + 1
       };
       
@@ -189,6 +194,201 @@ function buildNestedTreeIterative(nodes, rootOttId) {
   
   console.log(`  Total processed: ${processed.toLocaleString()} nodes`);
   return root;
+}
+
+/**
+ * Check if a synonym is likely a common name based on source and pattern
+ */
+function isCommonName(synonym, source) {
+  if (!synonym || synonym.length === 0) return false;
+  
+  const name = synonym.trim();
+  
+  // Sources that are typically scientific only - exclude these
+  const scientificOnlySources = [
+    'NCBI', 'NCBI Taxonomy', 'NCBI:txid', 'NCBI Taxonomy Browser',
+    'Catalogue of Life', 'COL', 'ITIS', 'Integrated Taxonomic Information System'
+  ];
+  
+  // If source is known to be scientific-only, skip it
+  if (source && scientificOnlySources.some(s => source.toUpperCase().includes(s.toUpperCase()))) {
+    return false;
+  }
+  
+  // For all other sources (including GBIF, iNaturalist, Wikipedia, etc.),
+  // use pattern matching to filter out scientific names
+  // This is more permissive - we accept anything that doesn't look scientific
+  return !isScientificNamePattern(name);
+}
+
+/**
+ * Check if a name matches scientific name patterns
+ */
+function isScientificNamePattern(name) {
+  if (!name || name.length === 0) return false;
+  
+  const words = name.trim().split(/\s+/);
+  
+  // Single word - could be either, but if it's capitalized and looks Latin, it's likely scientific
+  if (words.length === 1) {
+    const word = words[0];
+    // If it's all lowercase or has unusual capitalization, likely common name
+    if (word === word.toLowerCase() || word === word.toUpperCase()) {
+      return false; // Likely common name
+    }
+    // If it starts with capital and looks like Latin (ends with common scientific suffixes)
+    if (/^[A-Z][a-z]+(us|um|a|is|es|ae|i|ii|iii)$/i.test(word)) {
+      return true; // Likely scientific genus
+    }
+    return false; // Default to common name for single words
+  }
+  
+  // Check if it looks like binomial (genus species) - most reliable indicator
+  if (words.length === 2) {
+    const first = words[0];
+    const second = words[1];
+    // Scientific binomial: first word capitalized, second word lowercase
+    if (first[0] === first[0].toUpperCase() && 
+        first.slice(1) === first.slice(1).toLowerCase() &&
+        second === second.toLowerCase()) {
+      return true; // Likely scientific binomial
+    }
+  }
+  
+  // Three words - likely trinomial (subspecies) - scientific
+  if (words.length === 3) {
+    const first = words[0];
+    const second = words[1];
+    const third = words[2];
+    if (first[0] === first[0].toUpperCase() && 
+        first.slice(1) === first.slice(1).toLowerCase() &&
+        second === second.toLowerCase() &&
+        third === third.toLowerCase()) {
+      return true; // Likely scientific trinomial
+    }
+  }
+  
+  // More than 3 words or doesn't match scientific patterns - likely common name
+  return false;
+}
+
+/**
+ * Parse synonyms.tsv and extract common names
+ * Actual format: name | uid | type | uniqname | sourceinfo
+ * Where: name = synonym, uid = OTT ID, sourceinfo = source
+ */
+async function parseSynonyms(filePath) {
+  console.log('Parsing synonyms.tsv for common names...');
+  const commonNames = new Map(); // ottId -> commonName
+  
+  if (!existsSync(filePath)) {
+    console.log('  synonyms.tsv not found - skipping common names');
+    return commonNames;
+  }
+  
+  const fileStream = createReadStream(filePath);
+  const rl = createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+  
+  let count = 0;
+  let commonNameCount = 0;
+  let isFirstLine = true;
+  
+  for await (const line of rl) {
+    // Skip header line
+    if (isFirstLine && (line.startsWith('name') || line.startsWith('#') || line.trim() === '')) {
+      isFirstLine = false;
+      continue;
+    }
+    isFirstLine = false;
+    
+    // Parse tab-separated values with pipe separators (tab|tab format)
+    // Format: name | uid | type | uniqname | sourceinfo
+    let parts = line.split('\t|\t');
+    if (parts.length < 2) {
+      // Fall back to regular tabs
+      parts = line.split('\t');
+    }
+    if (parts.length < 2) continue;
+    
+    const synonym = parts[0].trim();
+    const ottId = parts[1].trim();
+    const source = parts.length >= 5 ? parts[4].trim() : '';
+    
+    if (!ottId || ottId === '' || isNaN(parseInt(ottId, 10))) continue;
+    if (!synonym || synonym.length === 0) continue;
+    
+    const ottIdNum = parseInt(ottId, 10);
+    
+    // Check if this looks like a common name (pass source for better detection)
+    if (isCommonName(synonym, source)) {
+      // Track if this is a new OTT ID we're adding
+      const isNew = !commonNames.has(ottIdNum);
+      
+      // Only store if we don't have a common name for this OTT ID yet
+      // or if this one is shorter (prefer shorter common names)
+      if (isNew || (commonNames.get(ottIdNum).length > synonym.length)) {
+        commonNames.set(ottIdNum, synonym);
+        // Only increment count when we add a new OTT ID (not when replacing)
+        if (isNew) {
+          commonNameCount++;
+        }
+      }
+    }
+    
+    count++;
+    if (count % 500000 === 0) {
+      console.log(`  Parsed ${count.toLocaleString()} synonyms, found ${commonNameCount.toLocaleString()} common names...`);
+    }
+  }
+  
+  console.log(`  Total synonyms: ${count.toLocaleString()}, common names: ${commonNameCount.toLocaleString()}`);
+  return commonNames;
+}
+
+/**
+ * Add common names to tree nodes and combine with scientific names
+ * Format: "Common Name (Scientific Name)" or just "Scientific Name" if no common name
+ * Returns the count of nodes that were actually modified
+ */
+function addCommonNamesToTree(node, commonNames) {
+  if (!node) return 0;
+  
+  let modified = 0;
+  
+  // Combine common name with scientific name if available
+  if (node.ottId && commonNames.has(node.ottId)) {
+    const commonName = commonNames.get(node.ottId);
+    const scientificName = node.name; // Original scientific name
+    // Format: "Common Name (Scientific Name)"
+    node.name = `${commonName} (${scientificName})`;
+    modified = 1;
+  }
+  
+  // Recursively process children
+  if (node.children && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      modified += addCommonNamesToTree(child, commonNames);
+    }
+  }
+  
+  return modified;
+}
+
+/**
+ * Count nodes with common names (names that contain parentheses)
+ */
+function countNodesWithCommonNames(node) {
+  // Check if name contains parentheses, indicating it has a common name combined
+  let count = (node.name && node.name.includes('(') && node.name.includes(')')) ? 1 : 0;
+  if (node.children) {
+    for (const child of node.children) {
+      count += countNodesWithCommonNames(child);
+    }
+  }
+  return count;
 }
 
 /**
@@ -246,6 +446,33 @@ async function main() {
   console.log(`Root ott_id: ${rootOttId} (${rootNode.name})`);
   
   const tree = buildNestedTreeIterative(nodes, rootOttId);
+  
+  // Parse synonyms and add common names
+  const synonymsPath = resolve(OPENTREE_DIR, 'synonyms.tsv');
+  const commonNames = await parseSynonyms(synonymsPath);
+  if (commonNames.size > 0) {
+    console.log(`\nFound ${commonNames.size.toLocaleString()} unique OTT IDs with common names`);
+    console.log('Adding common names to tree...');
+    
+    // Count how many OTT IDs from common names actually exist in the tree
+    const treeOttIds = new Set();
+    function collectOttIds(node) {
+      if (node && node.ottId) {
+        treeOttIds.add(node.ottId);
+      }
+      if (node && node.children) {
+        for (const child of node.children) {
+          collectOttIds(child);
+        }
+      }
+    }
+    collectOttIds(tree);
+    const matchingOttIds = Array.from(commonNames.keys()).filter(id => treeOttIds.has(id));
+    console.log(`  ${matchingOttIds.length.toLocaleString()} common names match OTT IDs in tree (out of ${treeOttIds.size.toLocaleString()} tree nodes)`);
+    
+    const nodesModified = addCommonNamesToTree(tree, commonNames);
+    console.log(`  Added common names to ${nodesModified.toLocaleString()} nodes`);
+  }
   
   // Count nodes
   const totalNodes = countNodes(tree);

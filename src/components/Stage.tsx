@@ -298,8 +298,17 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
 
     const current = state.current as TaxonomyNode | null
     if (current && current.parent) {
-      await goToNode(current.parent, true)
-      onUpdateBreadcrumbs(current)
+      // In click mode, only update breadcrumbs to parent (go up one level), don't zoom
+      // Example: if breadcrumbs are "1 dog > 2 fish > 3 cat", 
+      // right click updates to "1 dog > 2 fish" (removes last item)
+      if (perf.breadcrumbs.updateMode === 'click') {
+        // Update state.current to parent so internal state is consistent
+        state.current = current.parent as any
+        onUpdateBreadcrumbs(current.parent)
+      } else {
+        await goToNode(current.parent, true)
+        onUpdateBreadcrumbs(current)
+      }
     }
   }
 
@@ -316,16 +325,18 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     const n = pickNodeAt(x, y)
     if (!n) return
 
-    // Navigate to the node
-    if (n === state.current) {
-      fitNodeInView(n)
-    } else {
-      await goToNode(n, true)
-    }
-    
-    // Update breadcrumbs on click if in 'click' mode (old way)
+    // In click mode, only update breadcrumbs, don't zoom
     if (perf.breadcrumbs.updateMode === 'click') {
+      // Update state.current to clicked node so internal state is consistent
+      state.current = n as any
       onUpdateBreadcrumbs(n)
+    } else {
+      // Navigate to the node
+      if (n === state.current) {
+        fitNodeInView(n)
+      } else {
+        await goToNode(n, true)
+      }
     }
   }
 
