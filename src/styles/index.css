@@ -492,6 +492,10 @@ body {
   color: var(--surface-dim);
   font-size: 0.625rem;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
