@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { findAllByQuery, pulseAtNode } from '../modules/search'
 import { updateNavigation } from '../modules/navigation'
 import { getNodePath } from '../modules/deeplink'
@@ -30,6 +30,50 @@ interface SearchResult {
   name: string
   path: string
   node: any
+}
+
+/**
+ * Highlight matching text in a string (returns JSX elements)
+ */
+function highlightMatchJSX(text: string, query: string): (string | JSX.Element)[] {
+  if (!query) return [text]
+  const queryLower = query.toLowerCase()
+  const textLower = text.toLowerCase()
+  const index = textLower.indexOf(queryLower)
+  
+  if (index === -1) {
+    // Try fuzzy highlighting - find characters in order
+    const parts: (string | JSX.Element)[] = []
+    let lastIdx = 0
+    let queryIdx = 0
+    
+    for (let i = 0; i < text.length && queryIdx < query.length; i++) {
+      if (textLower[i] === queryLower[queryIdx]) {
+        if (i > lastIdx) {
+          parts.push(text.slice(lastIdx, i))
+        }
+        parts.push(<mark key={`${i}-${queryIdx}`}>{text[i]}</mark>)
+        lastIdx = i + 1
+        queryIdx++
+      }
+    }
+    
+    if (queryIdx === query.length && lastIdx < text.length) {
+      parts.push(text.slice(lastIdx))
+    }
+    
+    return queryIdx === query.length ? parts : [text]
+  }
+  
+  // Direct match - highlight the substring
+  const before = text.slice(0, index)
+  const match = text.slice(index, index + query.length)
+  const after = text.slice(index + query.length)
+  return [
+    before,
+    <mark key="match">{match}</mark>,
+    after
+  ]
 }
 
 export default function Topbar({
@@ -169,9 +213,13 @@ export default function Topbar({
                   className="search-result-item"
                   onClick={() => handleResultClick(result)}
                 >
-                  <div className="search-result-name">{result.name}</div>
+                  <div className="search-result-name">
+                    {highlightMatchJSX(result.name, searchQuery)}
+                  </div>
                   {result.path && (
-                    <div className="search-result-path">{result.path}</div>
+                    <div className="search-result-path">
+                      {highlightMatchJSX(result.path, searchQuery)}
+                    </div>
                   )}
                 </div>
               ))}

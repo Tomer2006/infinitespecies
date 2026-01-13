@@ -425,6 +425,43 @@ body {
   color: var(--text-muted);
 }
 
+/* Legacy search result classes (used by search.js module) */
+.search-results .item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.search-results .item:hover {
+  background: var(--surface-hover);
+}
+
+.search-results .item .name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.search-results .item .path {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Search result highlighting */
+.search-results mark,
+.search-result-name mark,
+.search-result-path mark,
+.search-results .item .name mark,
+.search-results .item .path mark {
+  background: rgba(113, 247, 197, 0.3);
+  color: var(--text-primary);
+  font-weight: 700;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Breadcrumbs
    ═══════════════════════════════════════════════════════════════════════════ */
