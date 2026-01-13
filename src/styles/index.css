@@ -1924,15 +1924,57 @@ body {
     display: none !important;
   }
   
-  /* Big preview - adjust for mobile */
+  /* Big preview - mobile optimizations */
   .big-preview {
-    max-width: 95vw;
-    max-height: 60vh;
+    position: fixed;
+    top: calc(4rem + var(--breadcrumbs-height, 0px) + var(--space-md));
+    right: var(--space-md);
+    left: var(--space-md);
+    bottom: auto;
+    max-width: calc(100vw - 2 * var(--space-md));
+    width: auto;
+    max-height: calc(100vh - 4rem - var(--breadcrumbs-height, 0px) - 3 * var(--space-md));
+    pointer-events: auto;
+  }
+  
+  .big-preview img {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 4rem - var(--breadcrumbs-height, 0px) - 3 * var(--space-md) - 120px);
+    object-fit: contain;
+    height: auto;
+  }
+  
+  .big-preview-empty {
+    width: 100%;
+    min-height: 120px;
+    max-height: 200px;
+  }
+  
+  .big-preview-header {
+    padding: var(--space-sm);
+    min-height: 44px;
+  }
+  
+  .big-preview-caption {
+    font-size: 0.875rem;
+    padding: 0 var(--space-sm);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .big-preview-footer {
+    padding: var(--space-sm);
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-height: auto;
   }
   
   .big-preview-footer .btn {
     min-height: 44px;
     width: 100%;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
   }
   
   /* Landing page buttons */
@@ -1997,6 +2039,28 @@ body {
       height: 40px;
       min-width: 40px;
       min-height: 40px;
+    }
+    
+    /* Big preview - extra small screens */
+    .big-preview {
+      top: calc(3.5rem + var(--breadcrumbs-height, 0px) + var(--space-sm));
+      right: var(--space-sm);
+      left: var(--space-sm);
+      max-width: calc(100vw - 2 * var(--space-sm));
+      max-height: calc(100vh - 3.5rem - var(--breadcrumbs-height, 0px) - 2 * var(--space-sm) - 100px);
+    }
+    
+    .big-preview img {
+      max-height: calc(100vh - 3.5rem - var(--breadcrumbs-height, 0px) - 2 * var(--space-sm) - 100px);
+    }
+    
+    .big-preview-header,
+    .big-preview-footer {
+      padding: 0.5rem;
+    }
+    
+    .big-preview-caption {
+      font-size: 0.8rem;
     }
   }
 }
