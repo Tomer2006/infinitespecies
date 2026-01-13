@@ -176,7 +176,7 @@ body {
 /* topbar-brand-icon removed - no longer using emoji */
 
 .topbar-brand > span {
-  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #3b8d7a 100%);
+  background: linear-gradient(135deg, #5b8def 0%, #4a7dd8 50%, #3a6dc3 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

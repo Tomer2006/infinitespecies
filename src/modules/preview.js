@@ -20,6 +20,7 @@ const thumbCache = new Map();
 const MAX_THUMBS = perf.preview.maxThumbnails;
 let lastThumbNodeId = null;
 let previewReqToken = 0;
+let currentPreviewNode = null; // Store current node for breadcrumb updates
 
 async function fetchWikipediaThumb(title) {
   const key = title.toLowerCase();
@@ -133,6 +134,9 @@ export async function showBigFor(node) {
   
   if (!bigPreview) return;
   
+  // Store current node for breadcrumb updates
+  currentPreviewNode = node;
+  
   lastThumbNodeId = node._id;
   const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
   const query = node.name;
@@ -167,6 +171,11 @@ export async function showBigFor(node) {
     bigPreview.style.display = 'block';
     bigPreview.style.opacity = '1';
     bigPreview.setAttribute('aria-hidden', 'false');
+    
+    // Update breadcrumbs when preview is shown immediately (no image case)
+    if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs && currentPreviewNode) {
+      window.__reactUpdateBreadcrumbs(currentPreviewNode);
+    }
   }
 }
 
@@ -220,6 +229,14 @@ function showBigPreview(src, caption) {
       // eslint-disable-next-line no-unused-expressions
       preview.offsetHeight;
       preview.style.opacity = '1';
+      
+      // Update breadcrumbs when image is displayed (sync with image preview)
+      if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs) {
+        const currentNode = state.hoverNode || state.current;
+        if (currentNode) {
+          window.__reactUpdateBreadcrumbs(currentNode);
+        }
+      }
     }
   };
   loader.onerror = () => {
@@ -242,6 +259,11 @@ function showBigPreview(src, caption) {
       preview.style.display = 'block';
       preview.style.opacity = '1';
       preview.setAttribute('aria-hidden', 'false');
+      
+      // Update breadcrumbs when empty state is shown (sync with preview display)
+      if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs && currentPreviewNode) {
+        window.__reactUpdateBreadcrumbs(currentPreviewNode);
+      }
     }
   };
   loader.referrerPolicy = 'no-referrer';

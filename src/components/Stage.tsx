@@ -67,14 +67,24 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       window.__reactCanvas = canvasRef.current
     }
     
+    // Store breadcrumb update callback globally so preview module can access it
+    // @ts-ignore
+    window.__reactUpdateBreadcrumbs = (node: any) => {
+      if (perf.breadcrumbs.updateMode === 'hover') {
+        onUpdateBreadcrumbs(node)
+      }
+    }
+    
     // Cleanup: clear breadcrumb timer on unmount
     return () => {
       if (breadcrumbTimerRef.current !== null) {
         clearTimeout(breadcrumbTimerRef.current)
         breadcrumbTimerRef.current = null
       }
+      // @ts-ignore
+      delete window.__reactUpdateBreadcrumbs
     }
-  }, [])
+  }, [onUpdateBreadcrumbs])
   
   // Initialize canvas when it becomes visible
   useEffect(() => {
@@ -196,41 +206,8 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         state.hoverNode = n
         updateTooltipAndPreview(n, lastMouseRef.current.x, lastMouseRef.current.y)
         
-        // Update breadcrumbs after 4 seconds of hovering on the same node
-        if (n) {
-          const nodeId = n._id || 0
-          
-          // If we're already waiting for this node, don't restart the timer
-          if (pendingBreadcrumbNodeIdRef.current === nodeId) {
-            return
-          }
-          
-          // Clear any existing timer
-          if (breadcrumbTimerRef.current !== null) {
-            clearTimeout(breadcrumbTimerRef.current)
-            breadcrumbTimerRef.current = null
-          }
-          
-          // Set the pending node
-          pendingBreadcrumbNodeIdRef.current = nodeId
-          
-          // Start a 3-second timer to update breadcrumbs
-          breadcrumbTimerRef.current = window.setTimeout(() => {
-            // Only update if we're still on the same node
-            const currentHover = state.hoverNode as any
-            if (pendingBreadcrumbNodeIdRef.current === nodeId && currentHover?._id === nodeId) {
-              onUpdateBreadcrumbs(n)
-            }
-            breadcrumbTimerRef.current = null
-          }, 3000)
-        } else {
-          // No node - clear any pending breadcrumb update
-          if (breadcrumbTimerRef.current !== null) {
-            clearTimeout(breadcrumbTimerRef.current)
-            breadcrumbTimerRef.current = null
-          }
-          pendingBreadcrumbNodeIdRef.current = null
-        }
+        // Breadcrumbs will update when preview image loads (handled in preview.js)
+        // No timer needed - breadcrumbs sync with image preview display
       })
     }
   }
@@ -339,12 +316,16 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     const n = pickNodeAt(x, y)
     if (!n) return
 
-    // Navigate to the node but don't update breadcrumbs (they update on mouse move)
+    // Navigate to the node
     if (n === state.current) {
       fitNodeInView(n)
     } else {
       await goToNode(n, true)
-      // Don't call onUpdateBreadcrumbs here - breadcrumbs update on mouse move
+    }
+    
+    // Update breadcrumbs on click if in 'click' mode (old way)
+    if (perf.breadcrumbs.updateMode === 'click') {
+      onUpdateBreadcrumbs(n)
     }
   }
 

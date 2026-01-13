@@ -340,6 +340,13 @@ export const perf = {
     showEagerLoadButton: true,     // whether to show the eager loading button
     showTestDataButton: false,     // whether to show the test data button
     defaultLoadMode: 'eager'        // default loading mode
+  },
+
+  // Breadcrumb behavior settings
+  breadcrumbs: {
+    // 'hover' = breadcrumbs update on mouse hover (after 3 second delay) - new way
+    // 'click' = breadcrumbs update on click - old way
+    updateMode: 'hover'  // Change to 'click' for old behavior
   }
 };
 
