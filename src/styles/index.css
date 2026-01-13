@@ -388,6 +388,14 @@ body {
   z-index: 100;
 }
 
+@media (max-width: 768px) {
+  .search-results {
+    max-height: 40vh;
+    left: -0.5rem;
+    right: -0.5rem;
+  }
+}
+
 .search-results::-webkit-scrollbar {
   width: 8px;
 }
@@ -1828,10 +1836,69 @@ body {
     font-size: 18px;
   }
   
-  /* Topbar buttons */
-  .topbar-btn {
+  /* Topbar - mobile optimizations */
+  .topbar {
+    padding: var(--space-sm);
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    max-height: none;
+  }
+  
+  .topbar-left {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+  
+  .topbar-brand {
+    font-size: 0.9rem;
+  }
+  
+  .topbar-brand > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+  }
+  
+  .topbar-center {
+    flex: 1 1 100%;
+    order: 3;
+    min-width: 0;
+  }
+  
+  .topbar-right {
+    flex: 0 0 auto;
+    gap: var(--space-sm);
+  }
+  
+  /* Search bar - full width on mobile */
+  .searchbar {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .searchbar-input {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.5rem;
+  }
+  
+  .searchbar-btn {
     min-width: 44px;
     min-height: 44px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  /* Topbar buttons */
+  .topbar-btn,
+  .topbar-right .btn {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
   }
   
   /* Breadcrumbs - larger touch targets */
@@ -1844,12 +1911,6 @@ body {
     min-height: 44px;
     display: flex;
     align-items: center;
-  }
-  
-  /* Search input - larger for easier typing */
-  .searchbar-input {
-    min-height: 44px;
-    font-size: 16px; /* Prevents zoom on iOS */
   }
   
   /* Modal buttons */
@@ -1916,20 +1977,26 @@ body {
     transition: transform 0.1s;
   }
   
-  /* Topbar - stack on very small screens */
+  /* Topbar - extra small screens */
   @media (max-width: 480px) {
     .topbar {
-      flex-wrap: wrap;
+      padding: 0.5rem;
+    }
+    
+    .topbar-brand > span {
+      max-width: 100px;
+      font-size: 0.85rem;
+    }
+    
+    .topbar-right {
       gap: 0.5rem;
     }
     
-    .topbar-left,
-    .topbar-right {
-      flex: 1 1 100%;
-    }
-    
-    .searchbar {
-      width: 100%;
+    .topbar-right .btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      min-height: 40px;
     }
   }
 }
