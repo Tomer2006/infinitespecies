@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { state } from '../modules/state'
 import { requestRender, screenToWorld, resizeCanvas, tick, onCameraChange } from '../modules/canvas'
 import { pickNodeAt, isNodeStillHoverable } from '../modules/picking'
-import { goToNode, fitNodeInView } from '../modules/navigation'
 import { openProviderSearch } from '../modules/providers'
 import { perf } from '../modules/settings'
 import { showBigFor, hideBigPreview as hidePreviewModule } from '../modules/preview'
+import { updateCurrentNodeOnly } from '../modules/navigation'
 
 // Type for taxonomy nodes from the state module
 interface TaxonomyNode {
@@ -67,22 +67,12 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       window.__reactCanvas = canvasRef.current
     }
     
-    // Store breadcrumb update callback globally so preview module can access it
-    // @ts-ignore
-    window.__reactUpdateBreadcrumbs = (node: any) => {
-      if (perf.breadcrumbs.updateMode === 'hover') {
-        onUpdateBreadcrumbs(node)
-      }
-    }
-    
     // Cleanup: clear breadcrumb timer on unmount
     return () => {
       if (breadcrumbTimerRef.current !== null) {
         clearTimeout(breadcrumbTimerRef.current)
         breadcrumbTimerRef.current = null
       }
-      // @ts-ignore
-      delete window.__reactUpdateBreadcrumbs
     }
   }, [onUpdateBreadcrumbs])
   
@@ -151,11 +141,8 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     const name = node.name || 'Unknown'
     let meta = ''
     
-    if (node.children?.length) {
-      meta = `${node.children.length} children`
-    }
     if (node._leaves) {
-      meta += meta ? ` • ${node._leaves} leaves` : `${node._leaves} leaves`
+      meta = `${node._leaves.toLocaleString()} leaves`
     }
     if (node.level !== undefined) {
       meta += meta ? ` • Level ${node.level}` : `Level ${node.level}`
@@ -298,17 +285,11 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
 
     const current = state.current as TaxonomyNode | null
     if (current && current.parent) {
-      // In click mode, only update breadcrumbs to parent (go up one level), don't zoom
+      // Update breadcrumbs to parent (go up one level), don't zoom
       // Example: if breadcrumbs are "1 dog > 2 fish > 3 cat", 
       // right click updates to "1 dog > 2 fish" (removes last item)
-      if (perf.breadcrumbs.updateMode === 'click') {
-        // Update state.current to parent so internal state is consistent
-        state.current = current.parent as any
-        onUpdateBreadcrumbs(current.parent)
-      } else {
-        await goToNode(current.parent, true)
-        onUpdateBreadcrumbs(current)
-      }
+      updateCurrentNodeOnly(current.parent as any)
+      onUpdateBreadcrumbs(current.parent)
     }
   }
 
@@ -325,19 +306,9 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     const n = pickNodeAt(x, y)
     if (!n) return
 
-    // In click mode, only update breadcrumbs, don't zoom
-    if (perf.breadcrumbs.updateMode === 'click') {
-      // Update state.current to clicked node so internal state is consistent
-      state.current = n as any
-      onUpdateBreadcrumbs(n)
-    } else {
-      // Navigate to the node
-      if (n === state.current) {
-        fitNodeInView(n)
-      } else {
-        await goToNode(n, true)
-      }
-    }
+    // Update tree view to show only this subtree, don't move camera
+    updateCurrentNodeOnly(n as any)
+    onUpdateBreadcrumbs(n)
   }
 
   const handleTooltipSearch = (e: React.MouseEvent) => {

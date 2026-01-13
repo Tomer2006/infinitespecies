@@ -228,6 +228,7 @@ export function draw() {
 
   function visit(d) {
     if (drawn >= maxNodes) return;
+    
     // Optimized viewport culling
     if (!isInViewport(d._vx, d._vy, d._vr)) return;
     const sr = d._vr * camK;
@@ -392,7 +393,13 @@ export function draw() {
     }
   }
 
-  visit(state.layout.root);
+  // Determine which node to start rendering from
+  // If there's a current node, start from its layout node; otherwise, start from root
+  const startNode = state.current
+    ? state.nodeLayoutMap.get(state.current._id) || state.layout.root
+    : state.layout.root;
+
+  visit(startNode);
 
   // Optimized label placement with early rejection and reduced computation
   if (labelCandidates.length) {

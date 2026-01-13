@@ -344,9 +344,7 @@ export const perf = {
 
   // Breadcrumb behavior settings
   breadcrumbs: {
-    // 'hover' = breadcrumbs update on mouse hover (after 3 second delay) - new way
-    // 'click' = breadcrumbs update on click - old way
-    updateMode: 'click' // Change to 'click' for old behavior
+    // Breadcrumbs update on click only
   }
 };
 

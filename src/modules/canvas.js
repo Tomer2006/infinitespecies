@@ -111,10 +111,11 @@ function loop() {
   const sameCam = cam.x === lastCam.x && cam.y === lastCam.y && cam.k === lastCam.k;
   const layoutChanged = state.layoutChanged;
 
-  if (!drawCallback || (sameCam && !layoutChanged)) {
-    // Still update FPS timing
-  } else {
-    if (drawCallback) drawCallback();
+  // Render if: drawCallback exists AND (camera moved OR layout changed)
+  const shouldRender = drawCallback && (!sameCam || layoutChanged);
+  
+  if (shouldRender) {
+    drawCallback();
     lastCam = { x: cam.x, y: cam.y, k: cam.k };
     state.layoutChanged = false;
     

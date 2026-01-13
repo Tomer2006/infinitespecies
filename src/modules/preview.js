@@ -172,10 +172,7 @@ export async function showBigFor(node) {
     bigPreview.style.opacity = '1';
     bigPreview.setAttribute('aria-hidden', 'false');
     
-    // Update breadcrumbs when preview is shown immediately (no image case)
-    if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs && currentPreviewNode) {
-      window.__reactUpdateBreadcrumbs(currentPreviewNode);
-    }
+    // Breadcrumbs are no longer updated on hover - only on click
   }
 }
 
@@ -230,13 +227,7 @@ function showBigPreview(src, caption) {
       preview.offsetHeight;
       preview.style.opacity = '1';
       
-      // Update breadcrumbs when image is displayed (sync with image preview)
-      if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs) {
-        const currentNode = state.hoverNode || state.current;
-        if (currentNode) {
-          window.__reactUpdateBreadcrumbs(currentNode);
-        }
-      }
+      // Breadcrumbs are no longer updated on hover - only on click
     }
   };
   loader.onerror = () => {
@@ -260,10 +251,7 @@ function showBigPreview(src, caption) {
       preview.style.opacity = '1';
       preview.setAttribute('aria-hidden', 'false');
       
-      // Update breadcrumbs when empty state is shown (sync with preview display)
-      if (typeof window !== 'undefined' && window.__reactUpdateBreadcrumbs && currentPreviewNode) {
-        window.__reactUpdateBreadcrumbs(currentPreviewNode);
-      }
+      // Breadcrumbs are no longer updated on hover - only on click
     }
   };
   loader.referrerPolicy = 'no-referrer';

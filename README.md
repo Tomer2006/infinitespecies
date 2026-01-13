@@ -1,6 +1,6 @@
-# 🌿 infinitespecies
+# 🌿 InfiniteSpecies
 
-Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by React and D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
+Welcome to **InfiniteSpecies**! 🧬 An interactive circle-packing visualization for exploring biological taxonomy data, powered by React and D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources. 🎯
 
 ## 📋 Table of Contents
 
@@ -19,15 +19,15 @@ Welcome to **infinitespecies**! 🧬 An interactive circle-packing visualization
 
 ## 🌐 Live App
 - **🌐 Live Site**: Visit [https://infinitespecies.com/](https://infinitespecies.com/) 🚀
-- **💻 Local Development**: Run `npm run dev` and visit `http://localhost:5173`
+- **💻 Local Development**: Run `npm run dev` and visit `http://localhost:3000`
 
 ## ✨ Key Features
 
 - 🌍 **Landing Page**: Beautiful animated landing with quick access to exploration and help
-- 🔍 **Zoomable Interface**: Smooth circle-packing visualization with mouse and keyboard controls
+- 🔍 **Interactive Tree Navigation**: Click nodes to filter view to specific subtrees without camera movement
 - 🔎 **Smart Search**: Real-time search with multi-result dropdown and navigation
 - 🖼️ **Image Previews**: Wikipedia thumbnails for hovered organisms
-- 🧭 **Informative Tooltips**: Shows name, level, descendants, children, and ID
+- 🧭 **Informative Tooltips**: Shows name, formatted leaf count (e.g., "1,000,000 leaves"), and level
 - 🌐 **External Integration**: Quick access to Google, Wikipedia, GBIF, NCBI, CoL, and iNaturalist
 - 🔗 **Deep Linking**: Share exact views via URL hash - every navigation state is preserved
 - 📱 **Mobile Detection**: Graceful handling for mobile devices with informative blocker
@@ -63,10 +63,10 @@ npm run preview
 
 ### 🎮 Controls
 
-- **🖱️ Left Click**: Zoom into a group 🔍
-- **🖱️ Right Click**: Zoom to parent ⬆️
+- **🖱️ Left Click**: Update tree view to show only clicked subtree (no camera movement) 🌳
+- **🖱️ Right Click**: Navigate to parent node ⬆️
 - **🖱️ Mouse Wheel**: Smooth zoom 🔄
-- **🖱️ Middle Drag**: Pan 📍
+- **🖱️ Middle Drag**: Pan the view 📍
 - **⌨️ S**: Web search for hovered/current organism
 - **⌨️ R**: Reset to root view
 - **⌨️ F**: Fit current node in view
@@ -80,20 +80,18 @@ npm run preview
   - `🏠 Menu`: Return to landing page
   - `🔗 Provider select + 🌐 Web Search`: open selected provider for hovered/current node
   - `🔍 Search field`: find by name (supports partial matches)
-  - `🎲 Surprise Me`: jump to a random deepest leaf
-  - `👁️ Fit`: fit hovered/current node into view
   - `📋 Copy Link`: copy a deep link to the current view (URL hash)
   - `🔄 Reset`: back to root
 - **🍞 Breadcrumbs**: click any crumb to navigate up (also updates the URL hash for deep linking)
-- **💬 Tooltip**: shows organism name, level, descendants count, children count, and ID
+- **💬 Tooltip**: shows organism name, formatted leaf count (e.g., "1,000,000 leaves"), and level
 
 ### 📊 Data Loading
 
-The application loads pre-baked taxonomy data from `data/manifest.json` with split files for optimal performance.
+The application loads pre-baked taxonomy data from `public/data/manifest.json` with split files for optimal performance. The default dataset uses the **OpenTree of Life** taxonomy, but the application also supports NCBI taxonomy and custom JSON data formats.
 
 #### 🚀 Large Dataset Handling
 
-This application supports **large taxonomy datasets** 📊 through intelligent data splitting and progressive loading. The current demo uses **5 split files** 📦 totaling ~456MB of pre-baked layout data with **4.2 million nodes**. 🧬
+This application supports **large taxonomy datasets** 📊 through intelligent data splitting and progressive loading. The current demo uses **5 split files** 📦 totaling ~456MB of pre-baked layout data with **4.5 million nodes** from the OpenTree of Life taxonomy. 🧬
 
 **Current Split Configuration:** ⚙️
 - 📄 **5 files** (~90MB each)
@@ -185,22 +183,14 @@ The application automatically tracks your navigation state in the URL for seamle
 ### 🎯 Use Cases
 
 **Research & Education:** 🔬
-- 🌳 **Taxonomy Exploration**: Navigate NCBI's complete tree of life
+- 🌳 **Taxonomy Exploration**: Navigate the OpenTree of Life's complete taxonomy (4.5+ million nodes)
 - 📚 **Educational Tool**: Visual learning aid for biological classification
-- 🔬 **Research Reference**: Quick access to external databases (GBIF, NCBI, etc.)
+- 🔬 **Research Reference**: Quick access to external databases (GBIF, NCBI, Wikipedia, iNaturalist, etc.)
+- 🔄 **Multiple Data Sources**: Supports OpenTree of Life, NCBI taxonomy, and custom JSON data
 
 
-### 🛠️ Troubleshooting
 
-**Common Issues:** 🔧
-
-- **Blank screen on load**: Check browser console for errors; ensure data files exist in `public/data/`
-- **Slow performance**: Try reducing browser zoom level; close other heavy tabs
-- **Mobile blocked**: This visualization requires a desktop browser with mouse/keyboard input
-
-### 🤝 Contributing
-
-infinitespecies follows modern web development practices: 💻
+InfiniteSpecies follows modern web development practices: 💻
 
 - ⚛️ **React 18**: Component-based UI with hooks
 - 📘 **TypeScript**: Type-safe components and interfaces
@@ -216,7 +206,3 @@ npm run dev      # Start development server
 npm run build    # Build for production
 npm run preview  # Preview production build
 ```
-
-### 📄 License
-
-ISC License - see [LICENSE](LICENSE) for details.

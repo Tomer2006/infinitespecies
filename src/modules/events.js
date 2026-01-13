@@ -36,7 +36,7 @@ import { state } from './state.js';
 import { updateTooltip } from './tooltip.js';
 import { logInfo, logDebug, logTrace } from './logger.js';
 import { openProviderSearch } from './providers.js';
-import { fitNodeInView, goToNode } from './navigation.js';
+import { fitNodeInView, goToNode, updateCurrentNodeOnly } from './navigation.js';
 import { handleSearch } from './search.js';
 import { showLoading, hideLoading, isCurrentlyLoading } from './loading.js';
 import { loadFromJSONText } from './data.js';
@@ -152,8 +152,8 @@ export function initEvents() {
       logDebug('Fitting current node in view');
       fitNodeInView(n);
     } else {
-      logDebug('Navigating to new node');
-      await goToNode(n, true);
+      logDebug('Updating tree view to show subtree without moving camera');
+      updateCurrentNodeOnly(n);
     }
   });
 

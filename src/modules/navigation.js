@@ -42,7 +42,7 @@ export function setBreadcrumbs(node) {
     el.className = 'crumb';
     el.textContent = n.name;
     el.title = `Go to ${n.name}`;
-    el.addEventListener('click', () => updateNavigation(n, true));
+    el.addEventListener('click', () => updateNavigation(n, false));
     breadcrumbsEl.appendChild(el);
     if (i < path.length - 1) {
       const sep = document.createElement('div');
@@ -54,6 +54,9 @@ export function setBreadcrumbs(node) {
   });
   // Don't update URL here - URL updates only happen from breadcrumb hover updates, not from clicks
   // updateDeepLinkFromNode(node);
+
+  // Request render whenever breadcrumbs change for any reason
+  requestRender();
 }
 
 export function fitNodeInView(node) {
@@ -65,7 +68,11 @@ export function fitNodeInView(node) {
   const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
   const k = targetRadiusPx / d._vr;
   console.log(`[fitNodeInView] node="${node.name}" _id=${node._id} _vr=${d._vr} W=${W} H=${H} mult=${perf.navigation.fitTargetRadiusMultiplier} targetR=${targetRadiusPx} k=${k} currentK=${state.camera.k}`);
-  animateToCam(d._vx, d._vy, k);
+  // Set camera position instantly instead of animating
+  state.camera.x = d._vx;
+  state.camera.y = d._vy;
+  state.camera.k = k;
+  requestRender();
 }
 
 // Centralized navigation update function - handles all navigation changes and canvas updates
@@ -76,6 +83,8 @@ export async function updateNavigation(node, animate = true) {
 
   logDebug(`Setting current node to "${node.name}"`);
   state.current = node;
+  // Force layout changed to ensure render happens even if camera doesn't move
+  state.layoutChanged = true;
 
   // Must have pre-baked layout - no runtime D3 calculation
   if (state.rootLayout) {
@@ -91,6 +100,9 @@ export async function updateNavigation(node, animate = true) {
   }
 
   setBreadcrumbs(state.current);
+
+  // Force render update when current node changes, even if camera doesn't move much
+  requestRender();
 
   // Check if layout was successfully computed before using it
   if (!state.layout || !state.layout.diameter) {
@@ -110,15 +122,21 @@ export async function updateNavigation(node, animate = true) {
         const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
         const targetK = targetRadiusPx / d._vr;
         console.log(`[updateNavigation] node="${state.current.name}" _id=${state.current._id} _vr=${d._vr} W=${W} H=${H} mult=${perf.navigation.fitTargetRadiusMultiplier} targetR=${targetRadiusPx} k=${targetK} currentK=${state.camera.k}`);
+        // Render the new subtree immediately before starting animation
+        requestRender();
         animateToCam(d._vx, d._vy, targetK);
       } else {
         // Fallback for root or error
         const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+        // Render the new subtree immediately before starting animation
+        requestRender();
         animateToCam(0, 0, targetK);
       }
     } else {
       // Local layout: center at 0,0
       const targetK = Math.min(W / state.layout.diameter, H / state.layout.diameter);
+      // Render the new subtree immediately before starting animation
+      requestRender();
       animateToCam(0, 0, targetK);
     }
   } else {
@@ -139,8 +157,11 @@ export async function updateNavigation(node, animate = true) {
       state.camera.y = 0;
       state.camera.k = Math.min(W, H) / state.layout.diameter;
     }
+    // Request render immediately after setting camera position in non-animated navigation
+    requestRender();
   }
 
+  // Request render after camera positioning to show the new focused subtree immediately
   requestRender();
 
   const endTime = performance.now();
@@ -150,4 +171,23 @@ export async function updateNavigation(node, animate = true) {
 // Legacy function for backward compatibility
 export async function goToNode(node, animate = true) {
   return updateNavigation(node, animate);
+}
+
+// Update the current node without moving the camera - just changes the visible subtree
+export function updateCurrentNodeOnly(node) {
+  logInfo(`Updating current node to "${node.name}" without camera movement`);
+  
+  state.current = node;
+  state.layoutChanged = true;
+  
+  // Ensure layout is set
+  if (state.rootLayout) {
+    if (state.layout !== state.rootLayout) {
+      state.layout = state.rootLayout;
+      state.layoutChanged = true;
+    }
+  }
+  
+  setBreadcrumbs(state.current);
+  requestRender();
 }
