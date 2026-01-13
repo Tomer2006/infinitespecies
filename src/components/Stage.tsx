@@ -245,11 +245,17 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     return () => window.removeEventListener('mouseup', handleMouseUp)
   }, [])
 
-  // Keyboard shortcut to toggle legend visibility
+  // Keyboard shortcut to toggle legend visibility (desktop only)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input field
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+      
+      // Disable on mobile/touch devices
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      if (isTouchDevice) {
         return
       }
       

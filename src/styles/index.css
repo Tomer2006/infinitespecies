@@ -1858,20 +1858,9 @@ body {
     padding: 0.75rem 1.5rem;
   }
   
-  /* Legend - make it more compact on mobile */
+  /* Legend - hide on mobile */
   .legend {
-    font-size: 12px;
-    padding: 0.75rem;
-    max-width: calc(100vw - 2rem);
-  }
-  
-  .legend ul {
-    gap: 0.5rem;
-  }
-  
-  .legend kbd {
-    padding: 0.25rem 0.5rem;
-    font-size: 11px;
+    display: none !important;
   }
   
   /* Big preview - adjust for mobile */
