@@ -435,7 +435,8 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       if (e.touches.length === 0) {
         // All touches ended
         if (!touchState.isPanning && !touchState.isZooming && touchState.lastTouch) {
-          // Single tap - treat as click
+          // Single tap - disabled on mobile to prevent accidental navigation
+          // Only double tap is enabled for fitting nodes
           const now = Date.now()
           const timeSinceLastTap = now - touchState.lastTapTime
           
@@ -446,16 +447,8 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
               // @ts-ignore - JS module import
               fitNodeInView(target)
             }
-          } else {
-            // Single tap - navigate into node
-            if (!isLoading && touchState.lastTouch) {
-              const n = pickNodeAt(touchState.lastTouch.x, touchState.lastTouch.y)
-              if (n) {
-                updateCurrentNodeOnly(n as any)
-                onUpdateBreadcrumbs(n)
-              }
-            }
           }
+          // Single tap navigation removed - prevents accidental clicks while panning/zooming
           
           touchState.lastTapTime = now
         }
@@ -593,7 +586,7 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         <div className="legend">
           <div className="legend-title">Controls</div>
           <ul>
-            <li><kbd>Left Click</kbd> / <kbd>Tap</kbd> Zoom into a group</li>
+            <li><kbd>Left Click</kbd> Zoom into a group (desktop only)</li>
             <li><kbd>Right Click</kbd> / <kbd>Long Press</kbd> Zoom out to parent</li>
             <li><kbd>Wheel</kbd> / <kbd>Pinch</kbd> Smooth zoom</li>
             <li><kbd>Middle Drag</kbd> / <kbd>Drag</kbd> Pan the view</li>

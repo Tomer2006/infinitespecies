@@ -63,7 +63,7 @@ npm run preview
 
 ### 🎮 Controls
 
-- **🖱️ Left Click / 📱 Tap**: Update tree view to show only clicked subtree (no camera movement) 🌳
+- **🖱️ Left Click**: Update tree view to show only clicked subtree (no camera movement) 🌳
 - **🖱️ Right Click / 📱 Long Press**: Navigate to parent node ⬆️
 - **🖱️ Mouse Wheel / 📱 Pinch**: Smooth zoom 🔄
 - **🖱️ Middle Drag / 📱 Drag**: Pan the view 📍

@@ -5,7 +5,7 @@ interface HelpModalProps {
 }
 
 const controls = [
-  { key: 'Left Click / Tap', description: 'Zoom into a group' },
+  { key: 'Left Click', description: 'Zoom into a group (desktop only)' },
   { key: 'Right Click / Long Press', description: 'Zoom out to parent' },
   { key: 'Mouse Wheel / Pinch', description: 'Smooth zoom in/out' },
   { key: 'Middle Drag / Drag', description: 'Pan the view' },
