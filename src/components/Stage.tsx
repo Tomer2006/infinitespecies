@@ -209,10 +209,10 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
       if (rect) {
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
-        const panState = handleMouseDownJS(1, x, y)
-        if (panState) {
+        const result = handleMouseDownJS(1, x, y)
+        if (result && typeof result === 'object' && 'x' in result && 'y' in result) {
           isPanningRef.current = true
-          lastPanRef.current = { x: panState.x, y: panState.y }
+          lastPanRef.current = { x: (result as { x: number; y: number }).x, y: (result as { x: number; y: number }).y }
         }
       }
       e.preventDefault()
