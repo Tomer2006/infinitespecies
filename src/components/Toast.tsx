@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect } from 'react'
+import { useEffect, forwardRef } from 'react'
 
 export interface Toast {
   id: string
@@ -13,7 +13,7 @@ interface ToastProps {
   onRemove: (id: string) => void
 }
 
-function ToastItem({ toast, onRemove }: ToastProps) {
+const ToastItem = forwardRef<HTMLDivElement, ToastProps>(({ toast, onRemove }, ref) => {
   useEffect(() => {
     const duration = toast.duration ?? 3000
     const timer = setTimeout(() => {
@@ -24,6 +24,7 @@ function ToastItem({ toast, onRemove }: ToastProps) {
 
   return (
     <motion.div
+      ref={ref}
       className={`toast toast-${toast.type || 'info'}`}
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -36,7 +37,9 @@ function ToastItem({ toast, onRemove }: ToastProps) {
       </div>
     </motion.div>
   )
-}
+})
+
+ToastItem.displayName = 'ToastItem'
 
 interface ToastContainerProps {
   toasts: Toast[]

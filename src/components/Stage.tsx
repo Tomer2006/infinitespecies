@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { state } from '../modules/state'
 import { requestRender, screenToWorld, resizeCanvas, tick, onCameraChange } from '../modules/canvas'
-import { pickNodeAt, isNodeStillHoverable } from '../modules/picking'
 import { openProviderSearch } from '../modules/providers'
-import { perf } from '../modules/settings'
 import { showBigFor, hideBigPreview as hidePreviewModule } from '../modules/preview'
 import { updateCurrentNodeOnly, fitNodeInView } from '../modules/navigation'
+import { handleWheelEvent, handleMouseMovePan, handleMouseMovePick, handleMouseLeaveEvent, handleMouseDown as handleMouseDownJS, validateHoverOnCameraChange } from '../modules/mouse-handler'
+import { pickNodeAt } from '../modules/picking'
+import { handleCameraPan } from '../modules/camera'
 
 // Type for taxonomy nodes from the state module
 interface TaxonomyNode {
@@ -100,44 +101,6 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     }
   }, [hidden])
 
-  // O(1) hover validation when camera changes - only checks current hover node
-  // Only does full pick when current hover becomes invalid (rare)
-  useEffect(() => {
-    const validateHover = () => {
-      const { x, y } = lastMouseRef.current
-      if (x === 0 && y === 0) return  // No mouse position yet
-      
-      const currentHover = state.hoverNode
-      
-      // If no current hover, try to pick one (user might have zoomed into a node)
-      if (!currentHover) {
-        const n = pickNodeAt(x, y)
-        if (n) {
-          state.hoverNode = n
-          updateTooltipAndPreview(n, x, y)
-        }
-        return
-      }
-      
-      // Check if current hover is still valid (O(1) check)
-      if (!isNodeStillHoverable(currentHover, x, y)) {
-        // Node is no longer hoverable - find the new node under cursor
-        const n = pickNodeAt(x, y)
-        state.hoverNode = n
-        if (n) {
-          updateTooltipAndPreview(n, x, y)
-        } else {
-          setTooltip(prev => ({ ...prev, visible: false }))
-          hidePreviewModule()
-          prevHoverIdRef.current = null
-        }
-      }
-    }
-    
-    onCameraChange(validateHover)
-    return () => onCameraChange(null)
-  }, [])
-
   const updateTooltipAndPreview = useCallback((node: any, x: number, y: number) => {
     if (!node) {
       setTooltip(prev => ({ ...prev, visible: false }))
@@ -174,6 +137,25 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     }
   }, [])
 
+  // O(1) hover validation when camera changes - use vanilla JS function
+  useEffect(() => {
+    const validateHover = () => {
+      const { x, y } = lastMouseRef.current
+      validateHoverOnCameraChange(x, y, (node: any, px: number, py: number) => {
+        if (node) {
+          updateTooltipAndPreview(node, px, py)
+        } else {
+          setTooltip(prev => ({ ...prev, visible: false }))
+          hidePreviewModule()
+          prevHoverIdRef.current = null
+        }
+      })
+    }
+    
+    onCameraChange(validateHover)
+    return () => onCameraChange(null)
+  }, [updateTooltipAndPreview])
+
   const handleMouseMove = (e: React.MouseEvent) => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -183,38 +165,34 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
     const y = e.clientY - rect.top
     lastMouseRef.current = { x, y }
 
-    // Handle panning
+    // Handle panning - use vanilla JS function
     if (isPanningRef.current && lastPanRef.current) {
-      const dx = x - lastPanRef.current.x
-      const dy = y - lastPanRef.current.y
-      state.camera.x -= dx / state.camera.k
-      state.camera.y -= dy / state.camera.k
-      lastPanRef.current = { x, y }
-      requestRender()
-      setTooltip(prev => ({ ...prev, visible: false }))
-      hidePreviewModule()
-      return
+      const newPan = handleMouseMovePan(x, y, isPanningRef.current, lastPanRef.current) as { x: number; y: number } | null
+      if (newPan) {
+        lastPanRef.current = newPan
+        setTooltip(prev => ({ ...prev, visible: false }))
+        hidePreviewModule()
+        return
+      }
     }
 
-    // Throttle picking
+    // Throttle picking for non-panning moves
     if (!pickingScheduledRef.current) {
       pickingScheduledRef.current = true
       requestAnimationFrame(() => {
         pickingScheduledRef.current = false
-        const n = pickNodeAt(lastMouseRef.current.x, lastMouseRef.current.y)
-        state.hoverNode = n
-        updateTooltipAndPreview(n, lastMouseRef.current.x, lastMouseRef.current.y)
-        
-        // Breadcrumbs will update when preview image loads (handled in preview.js)
-        // No timer needed - breadcrumbs sync with image preview display
+        const n = handleMouseMovePick(lastMouseRef.current.x, lastMouseRef.current.y)
+        if (n) {
+          updateTooltipAndPreview(n, lastMouseRef.current.x, lastMouseRef.current.y)
+        }
       })
     }
   }
 
   const handleMouseLeave = () => {
-    state.hoverNode = null
+    // Use vanilla JS function
+    handleMouseLeaveEvent()
     setTooltip(prev => ({ ...prev, visible: false }))
-    hidePreviewModule()
     
     // Clear any pending breadcrumb update when mouse leaves
     if (breadcrumbTimerRef.current !== null) {
@@ -226,11 +204,16 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 1) {
-      // Middle mouse button
-      isPanningRef.current = true
+      // Middle mouse button - use vanilla JS function
       const rect = canvasRef.current?.getBoundingClientRect()
       if (rect) {
-        lastPanRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        const panState = handleMouseDownJS(1, x, y)
+        if (panState) {
+          isPanningRef.current = true
+          lastPanRef.current = { x: panState.x, y: panState.y }
+        }
       }
       e.preventDefault()
     }
@@ -274,27 +257,17 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
   }, [legendVisible])
 
   // Use native wheel event listener to enable preventDefault (React's onWheel is passive)
+  // Use vanilla JS function for performance-critical wheel handling
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const handleWheel = (e: WheelEvent) => {
-      const scale = Math.exp(-e.deltaY * perf.input.zoomSensitivity)
-      const rect = canvas.getBoundingClientRect()
-      const mx = e.clientX - rect.left
-      const my = e.clientY - rect.top
-      const [wx, wy] = screenToWorld(mx, my)
-
-      state.camera.k *= scale
-      state.camera.x = wx - (mx - rect.width / 2) / state.camera.k
-      state.camera.y = wy - (my - rect.height / 2) / state.camera.k
-
-      requestRender()
-      e.preventDefault()
+    const handleWheelEventWrapper = (e: WheelEvent) => {
+      handleWheelEvent(e, canvas)
     }
 
-    canvas.addEventListener('wheel', handleWheel, { passive: false })
-    return () => canvas.removeEventListener('wheel', handleWheel)
+    canvas.addEventListener('wheel', handleWheelEventWrapper, { passive: false })
+    return () => canvas.removeEventListener('wheel', handleWheelEventWrapper)
   }, [])
 
   // Touch event handlers for mobile support
@@ -406,10 +379,8 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         if (touchState.isPanning) {
           const dx = pos.x - touchState.lastTouch.x
           const dy = pos.y - touchState.lastTouch.y
-          state.camera.x -= dx / state.camera.k
-          state.camera.y -= dy / state.camera.k
+          handleCameraPan(dx, dy)
           touchState.lastTouch = pos
-          requestRender()
         }
       } else if (e.touches.length === 2 && touchState.isZooming) {
         // Two touches - pinch zoom

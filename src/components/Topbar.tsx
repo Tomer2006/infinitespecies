@@ -1,8 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { findAllByQuery, pulseAtNode } from '../modules/search'
-import { updateNavigation } from '../modules/navigation'
-import { getNodePath } from '../modules/deeplink'
-import { perf } from '../modules/settings'
+import { useState, useRef, useEffect } from 'react'
+import { processSearchResults } from '../modules/search'
+import { performSearch, handleSingleSearchResult, handleSearchResultClick } from '../modules/search-handler'
 
 // Type for taxonomy nodes from the state module
 interface TaxonomyNode {
@@ -123,51 +121,37 @@ export default function Topbar({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showResults])
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) return
 
-    // Show searching toast
-    onShowToast('Searching...', 'info', 1000)
-
-    const matches = findAllByQuery(searchQuery, perf.search.maxResults)
+    // Use vanilla JS function for all search logic
+    const result = await performSearch(searchQuery, onShowToast)
     
-    if (matches.length === 0) {
+    if (!result.hasResults) {
       setSearchResults([])
       setShowResults(false)
       onShowToast('No results found', 'warning')
       return
     }
 
-    if (matches.length === 1) {
-      const node = matches[0]
-      updateNavigation(node, false)
-      pulseAtNode(node)
-      onUpdateBreadcrumbs(node)
+    if (result.singleResult) {
+      // Single result - navigate to it
+      handleSingleSearchResult(result.matches[0], onUpdateBreadcrumbs)
       setShowResults(false)
       setSearchQuery('')
     } else {
-      const results: SearchResult[] = matches.map((node: any) => {
-        let path = ''
-        try {
-          const parts = getNodePath(node)
-          path = parts.slice(0, -1).join(' / ')
-        } catch {}
-        return {
-          _id: node._id,
-          name: node.name,
-          path,
-          node,
-        }
-      })
+      // Multiple results - show list
+      const results: SearchResult[] = processSearchResults(result.matches, searchQuery)
       setSearchResults(results)
       setShowResults(true)
     }
   }
 
   const handleResultClick = (result: SearchResult) => {
-    updateNavigation(result.node, false)
-    pulseAtNode(result.node)
-    onUpdateBreadcrumbs(result.node)
+    // Use vanilla JS function - handles zoom and pulse
+    handleSearchResultClick(result.node)
+    
+    // Just update UI state
     setShowResults(false)
     setSearchQuery('')
   }

@@ -6,7 +6,7 @@
  */
 
 import { state } from './state.js';
-import { requestRender } from './canvas.js';
+import { requestRender, screenToWorld } from './canvas.js';
 import { perf } from './settings.js';
 
 // Native cubic-in-out easing function (replaces d3-ease)
@@ -47,5 +47,36 @@ export function animateToCam(nx, ny, nk, dur = perf.animation.cameraAnimationMs)
     }
   }
   requestAnimationFrame(step);
+}
+
+/**
+ * Handle wheel zoom (performance-critical - runs on every scroll)
+ * @param {WheelEvent} e - The wheel event
+ * @param {HTMLElement} canvas - The canvas element
+ */
+export function handleWheelZoom(e, canvas) {
+  const scale = Math.exp(-e.deltaY * perf.input.zoomSensitivity);
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const [wx, wy] = screenToWorld(mx, my);
+
+  state.camera.k *= scale;
+  state.camera.x = wx - (mx - rect.width / 2) / state.camera.k;
+  state.camera.y = wy - (my - rect.height / 2) / state.camera.k;
+
+  requestRender();
+  e.preventDefault();
+}
+
+/**
+ * Handle camera panning (performance-critical - runs during drag)
+ * @param {number} dx - Delta X in screen pixels
+ * @param {number} dy - Delta Y in screen pixels
+ */
+export function handleCameraPan(dx, dy) {
+  state.camera.x -= dx / state.camera.k;
+  state.camera.y -= dy / state.camera.k;
+  requestRender();
 }
 

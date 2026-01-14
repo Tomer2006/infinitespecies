@@ -10,7 +10,6 @@ import AboutModal from './components/AboutModal'
 import JsonModal from './components/JsonModal'
 import SettingsModal from './components/SettingsModal'
 import ToastContainer from './components/Toast'
-import MobileBlocker from './components/MobileBlocker'
 import { useToast } from './hooks/useToast'
 
 // Detect if user is on a mobile or tablet device
