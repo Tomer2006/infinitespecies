@@ -25,6 +25,23 @@ function nodeInView(d) {
   return dx * dx + dy * dy <= r * r;
 }
 
+// Check if a node is within the current subtree (is state.current or a descendant of it)
+export function isNodeInCurrentSubtree(nodeData) {
+  if (!state.current) return true; // If no current node, allow all nodes
+  
+  // If the node is state.current itself, it's in the subtree
+  if (nodeData._id === state.current._id) return true;
+  
+  // Walk up the parent chain to see if state.current is an ancestor
+  let current = nodeData;
+  while (current && current.parent) {
+    if (current.parent._id === state.current._id) return true;
+    current = current.parent;
+  }
+  
+  return false;
+}
+
 export function pickNodeAt(px, py) {
   const nodes = state.pickOrder && state.pickOrder.length ? state.pickOrder : (state.layout && state.layout.root ? state.layout.root.descendants().slice().sort((a, b) => b.depth - a.depth) : []);
   const wx = state.camera.x + (px - W / 2) / state.camera.k;
@@ -41,6 +58,9 @@ export function pickNodeAt(px, py) {
     if (screenR < (pickMinPxRadius || 0)) continue;
     if (screenR < minPxRadius) continue;
     
+    // Only pick nodes within the current subtree
+    if (!isNodeInCurrentSubtree(d.data)) continue;
+    
     // Point-in-circle check
     const dx = wx - d._vx,
       dy = wy - d._vy;
@@ -55,6 +75,9 @@ export function pickNodeAt(px, py) {
  */
 export function isNodeStillHoverable(node, px, py) {
   if (!node || !node._vx) return false;
+  
+  // Check if node is within the current subtree
+  if (!isNodeInCurrentSubtree(node)) return false;
   
   const { pickMinPxRadius, minPxRadius } = perf.rendering;
   

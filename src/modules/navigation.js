@@ -14,6 +14,7 @@ import { animateToCam } from './camera.js';
 import { requestRender, W, H } from './canvas.js';
 import { logInfo, logDebug, logWarn, logError } from './logger.js';
 import { perf } from './settings.js';
+import { isNodeInCurrentSubtree } from './picking.js';
 
 // Check if we're in React mode (breadcrumbs handled by React component)
 const isReactMode = () => typeof window !== 'undefined' && window.__reactCanvas;
@@ -179,6 +180,11 @@ export function updateCurrentNodeOnly(node) {
   
   state.current = node;
   state.layoutChanged = true;
+  
+  // Clear hover node if it's outside the new current subtree
+  if (state.hoverNode && !isNodeInCurrentSubtree(state.hoverNode)) {
+    state.hoverNode = null;
+  }
   
   // Ensure layout is set
   if (state.rootLayout) {
