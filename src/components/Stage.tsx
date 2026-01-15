@@ -184,6 +184,11 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
         const n = handleMouseMovePick(lastMouseRef.current.x, lastMouseRef.current.y)
         if (n) {
           updateTooltipAndPreview(n, lastMouseRef.current.x, lastMouseRef.current.y)
+        } else {
+          // No node found - hide tooltip and preview
+          setTooltip(prev => ({ ...prev, visible: false }))
+          hidePreviewModule()
+          prevHoverIdRef.current = null
         }
       })
     }

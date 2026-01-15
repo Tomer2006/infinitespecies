@@ -13,7 +13,6 @@ import { searchResultsEl } from './dom.js';
 import { getNodePath } from './deeplink.js';
 import { perf } from './settings.js';
 import { logWarn } from './logger.js';
-import { lookupScientificName, isLikelyCommonName } from './scientific-name-lookup.js';
 
 /**
  * Calculate relevance score for a search match (fast version without path lookup)
@@ -395,70 +394,6 @@ export async function handleSearch(progressLabelEl) {
   if (!searchInput) return;
   let q = searchInput.value;
   let matches = findAllByQuery(q, perf.search.maxResults);
-  
-  // If it looks like a common name, OR if no results were found, try to look up scientific name
-  const shouldLookupScientificName = isLikelyCommonName(q) || matches.length === 0;
-  
-  if (shouldLookupScientificName) {
-    if (progressLabelEl) {
-      progressLabelEl.textContent = 'Looking up scientific name...';
-      progressLabelEl.style.color = '';
-    }
-    
-    try {
-      const scientificName = await lookupScientificName(q);
-      
-      if (scientificName) {
-        console.log(`Looking up scientific name for "${q}": found "${scientificName}"`);
-        if (progressLabelEl) {
-          progressLabelEl.textContent = `Found: ${scientificName}`;
-          progressLabelEl.style.color = '';
-        }
-        // Search with the scientific name
-        let scientificMatches = findAllByQuery(scientificName, perf.search.maxResults);
-        console.log(`Search results for "${scientificName}": ${scientificMatches.length} matches`);
-        
-        // If no results with full scientific name, try variations
-        if (scientificMatches.length === 0) {
-          // Try just genus and species (first two words)
-          const parts = scientificName.split(' ');
-          if (parts.length >= 2) {
-            const genusSpecies = `${parts[0]} ${parts[1]}`;
-            console.log(`Trying genus+species: "${genusSpecies}"`);
-            scientificMatches = findAllByQuery(genusSpecies, perf.search.maxResults);
-            console.log(`Search results for "${genusSpecies}": ${scientificMatches.length} matches`);
-          }
-          
-          // If still no results, try just the genus (first word)
-          if (scientificMatches.length === 0) {
-            const genus = scientificName.split(' ')[0];
-            if (genus && genus.length > 2) {
-              console.log(`Trying genus only: "${genus}"`);
-              scientificMatches = findAllByQuery(genus, perf.search.maxResults);
-              console.log(`Search results for "${genus}": ${scientificMatches.length} matches`);
-            }
-          }
-        }
-        
-        // Merge results, prioritizing scientific name matches at the top
-        // Remove duplicates by node ID, keeping scientific matches
-        const scientificIds = new Set(scientificMatches.map(n => n._id));
-        const originalMatchesWithoutDupes = matches.filter(n => !scientificIds.has(n._id));
-        
-        // Put scientific name matches first, then original matches
-        matches = [...scientificMatches, ...originalMatchesWithoutDupes];
-        
-        console.log(`Total matches after merging: ${matches.length} (${scientificMatches.length} scientific, ${originalMatchesWithoutDupes.length} original)`);
-        
-        // Limit to max results
-        matches = matches.slice(0, perf.search.maxResults);
-      } else {
-        console.log(`No scientific name found for "${q}"`);
-      }
-    } catch (error) {
-      console.warn('Failed to lookup scientific name:', error);
-    }
-  }
   
   if (!matches.length) {
     if (progressLabelEl) {

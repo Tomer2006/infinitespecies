@@ -140,12 +140,6 @@ export async function showBigFor(node) {
   // Store current node for breadcrumb updates
   currentPreviewNode = node;
   
-  // Update path display
-  if (bigPreviewPath && node) {
-    const path = getNodePath(node);
-    bigPreviewPath.textContent = path.join(' > ');
-  }
-  
   lastThumbNodeId = node._id;
   const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
   const query = node.name;
@@ -158,6 +152,9 @@ export async function showBigFor(node) {
     caption += ` (${result.taxonomicRank})`;
   }
 
+  // Get path for this node
+  const path = node ? getNodePath(node).join(' > ') : '';
+
   if (result && result.thumbnail && isProbablyImageAllowed(result.thumbnail)) {
     // ensure placeholder hidden when we do have an image
     if (bigPreviewEmpty) {
@@ -165,12 +162,14 @@ export async function showBigFor(node) {
       bigPreviewEmpty.setAttribute('aria-hidden', 'true');
     }
     if (bigPreviewImg) bigPreviewImg.style.display = 'block';
-    showBigPreview(result.thumbnail, caption, node);
+    showBigPreview(result.thumbnail, caption, node, path);
   } else {
-    // Show fallback box with centered text even when not pinned
+    // Show fallback box with centered text - update everything together
     if (bigPreviewCap) bigPreviewCap.textContent = caption;
+    if (bigPreviewPath) bigPreviewPath.textContent = path;
     if (bigPreviewImg) {
-      bigPreviewImg.removeAttribute('src');
+      // Use transparent placeholder instead of removing src to prevent broken icon
+      bigPreviewImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
       bigPreviewImg.style.display = 'none';
     }
     if (bigPreviewEmpty) {
@@ -185,7 +184,7 @@ export async function showBigFor(node) {
   }
 }
 
-function showBigPreview(src, caption, node) {
+function showBigPreview(src, caption, node, path) {
   const bigPreview = getBigPreview();
   const bigPreviewImg = getBigPreviewImg();
   const bigPreviewCap = getBigPreviewCap();
@@ -194,12 +193,6 @@ function showBigPreview(src, caption, node) {
   
   if (!bigPreview) return;
   const myToken = ++previewReqToken;
-  
-  // Update path display
-  if (bigPreviewPath && node) {
-    const path = getNodePath(node);
-    bigPreviewPath.textContent = path.join(' > ');
-  }
   
   // Update position based on current breadcrumbs height
   const breadcrumbsEl = document.querySelector('.breadcrumbs');
@@ -211,19 +204,32 @@ function showBigPreview(src, caption, node) {
     bigPreview.style.top = `${topPosition}px`;
   }
   
-  if (bigPreviewCap) bigPreviewCap.textContent = caption || '';
-  if (bigPreviewImg) {
-    bigPreviewImg.alt = caption || '';
-    bigPreviewImg.removeAttribute('src');
-    bigPreviewImg.style.display = 'block';
-  }
+  // Keep empty state hidden while loading - only show when confirmed no image exists
   if (bigPreviewEmpty) {
     bigPreviewEmpty.style.display = 'none';
     bigPreviewEmpty.setAttribute('aria-hidden', 'true');
   }
+  
+  // Keep the previous image visible while loading the new one
+  // Use transparent placeholder to prevent broken image icon
+  if (bigPreviewImg) {
+    bigPreviewImg.alt = caption || '';
+    const currentSrc = bigPreviewImg.src;
+    // If no valid src, use transparent 1x1 pixel placeholder to prevent broken icon
+    if (!currentSrc || currentSrc === '' || currentSrc === window.location.href) {
+      // Use transparent data URI to prevent broken image icon
+      bigPreviewImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
+      bigPreviewImg.style.display = 'none'; // Hide until new image loads
+    } else {
+      // Keep old image visible while new one loads
+      bigPreviewImg.style.display = 'block';
+    }
+  }
+  
   bigPreview.style.display = 'block';
-  bigPreview.style.opacity = '0';
+  bigPreview.style.opacity = '1'; // Keep preview visible with old image
   bigPreview.setAttribute('aria-hidden', 'false');
+  
   const loader = new Image();
   loader.decoding = 'async';
   loader.onload = async () => {
@@ -235,39 +241,46 @@ function showBigPreview(src, caption, node) {
     }
     if (myToken !== previewReqToken) return;
     const img = getBigPreviewImg();
+    const cap = getBigPreviewCap();
+    const pathEl = getBigPreviewPath();
     const preview = getBigPreview();
-    if (img) img.src = src;
-    // Force reflow then fade in
-    if (preview) {
-      // eslint-disable-next-line no-unused-expressions
-      preview.offsetHeight;
-      preview.style.opacity = '1';
-      
-      // Breadcrumbs are no longer updated on hover - only on click
+    if (img) {
+      // Update everything together when image is ready
+      img.src = src;
+      img.style.display = 'block'; // Ensure image is visible
+      if (cap) cap.textContent = caption || '';
+      if (pathEl) pathEl.textContent = path || '';
+      // Force reflow then ensure it's visible
+      if (preview) {
+        // eslint-disable-next-line no-unused-expressions
+        preview.offsetHeight;
+        preview.style.opacity = '1';
+      }
     }
   };
   loader.onerror = () => {
     if (myToken !== previewReqToken) return;
     const img = getBigPreviewImg();
     const cap = getBigPreviewCap();
+    const pathEl = getBigPreviewPath();
     const empty = getBigPreviewEmpty();
     const preview = getBigPreview();
-    // Fall back to placeholder text instead of hiding
+    // Fall back to placeholder text - update everything together
     if (img) {
-      img.removeAttribute('src');
+      // Use transparent placeholder instead of removing src to prevent broken icon
+      img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
       img.style.display = 'none';
     }
+    if (cap) cap.textContent = caption || '';
+    if (pathEl) pathEl.textContent = path || '';
     if (empty) {
       empty.style.display = 'flex';
       empty.setAttribute('aria-hidden', 'false');
     }
-    if (cap) cap.textContent = caption || '';
     if (preview) {
       preview.style.display = 'block';
       preview.style.opacity = '1';
       preview.setAttribute('aria-hidden', 'false');
-      
-      // Breadcrumbs are no longer updated on hover - only on click
     }
   };
   loader.referrerPolicy = 'no-referrer';
@@ -290,7 +303,8 @@ export function hideBigPreview() {
   }, 60);
   bigPreview.setAttribute('aria-hidden', 'true');
   if (bigPreviewImg) {
-    bigPreviewImg.src = '';
+    // Use transparent placeholder instead of empty string to prevent broken icon
+    bigPreviewImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"%3E%3C/svg%3E';
     bigPreviewImg.alt = '';
   }
   if (bigPreviewCap) bigPreviewCap.textContent = '';

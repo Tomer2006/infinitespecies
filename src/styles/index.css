@@ -694,7 +694,7 @@ body {
 .big-preview-empty {
   display: none;
   width: 240px;
-  height: 140px;
+  height: 180px; /* 4:3 aspect ratio (240 * 3/4 = 180) */
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
@@ -1966,8 +1966,9 @@ body {
   
   .big-preview-empty {
     width: 100%;
+    aspect-ratio: 4 / 3; /* Maintain 4:3 aspect ratio */
     min-height: 100px;
-    max-height: 100px;
+    max-height: 180px;
   }
   
   .big-preview-header {
@@ -2083,8 +2084,9 @@ body {
     }
     
     .big-preview-empty {
+      aspect-ratio: 4 / 3; /* Maintain 4:3 aspect ratio */
       min-height: 80px;
-      max-height: 80px;
+      max-height: 120px;
     }
     
     .big-preview-header,
