@@ -555,6 +555,7 @@ export default function Stage({ isLoading, onUpdateBreadcrumbs, hidden = false }
           >
             Web Search (S)
           </button>
+          <div className="big-preview-path" id="bigPreviewPath"></div>
         </div>
       </div>
 

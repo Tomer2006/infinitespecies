@@ -9,12 +9,14 @@
 import { state } from './state.js';
 import { logInfo, logWarn, logError, logDebug } from './logger.js';
 import { perf } from './settings.js';
+import { getNodePath } from './deeplink.js';
 
 // Direct DOM access functions for React compatibility
 const getBigPreview = () => document.getElementById('bigPreview');
 const getBigPreviewImg = () => document.getElementById('bigPreviewImg');
 const getBigPreviewCap = () => document.getElementById('bigPreviewCap');
 const getBigPreviewEmpty = () => document.getElementById('bigPreviewEmpty');
+const getBigPreviewPath = () => document.getElementById('bigPreviewPath');
 
 const thumbCache = new Map();
 const MAX_THUMBS = perf.preview.maxThumbnails;
@@ -131,11 +133,18 @@ export async function showBigFor(node) {
   const bigPreviewImg = getBigPreviewImg();
   const bigPreviewCap = getBigPreviewCap();
   const bigPreviewEmpty = getBigPreviewEmpty();
+  const bigPreviewPath = getBigPreviewPath();
   
   if (!bigPreview) return;
   
   // Store current node for breadcrumb updates
   currentPreviewNode = node;
+  
+  // Update path display
+  if (bigPreviewPath && node) {
+    const path = getNodePath(node);
+    bigPreviewPath.textContent = path.join(' > ');
+  }
   
   lastThumbNodeId = node._id;
   const isSpecific = node.level === 'Species' || !node.children || node.children.length === 0;
@@ -156,7 +165,7 @@ export async function showBigFor(node) {
       bigPreviewEmpty.setAttribute('aria-hidden', 'true');
     }
     if (bigPreviewImg) bigPreviewImg.style.display = 'block';
-    showBigPreview(result.thumbnail, caption);
+    showBigPreview(result.thumbnail, caption, node);
   } else {
     // Show fallback box with centered text even when not pinned
     if (bigPreviewCap) bigPreviewCap.textContent = caption;
@@ -176,14 +185,21 @@ export async function showBigFor(node) {
   }
 }
 
-function showBigPreview(src, caption) {
+function showBigPreview(src, caption, node) {
   const bigPreview = getBigPreview();
   const bigPreviewImg = getBigPreviewImg();
   const bigPreviewCap = getBigPreviewCap();
   const bigPreviewEmpty = getBigPreviewEmpty();
+  const bigPreviewPath = getBigPreviewPath();
   
   if (!bigPreview) return;
   const myToken = ++previewReqToken;
+  
+  // Update path display
+  if (bigPreviewPath && node) {
+    const path = getNodePath(node);
+    bigPreviewPath.textContent = path.join(' > ');
+  }
   
   // Update position based on current breadcrumbs height
   const breadcrumbsEl = document.querySelector('.breadcrumbs');
@@ -263,6 +279,7 @@ export function hideBigPreview() {
   const bigPreview = getBigPreview();
   const bigPreviewImg = getBigPreviewImg();
   const bigPreviewCap = getBigPreviewCap();
+  const bigPreviewPath = getBigPreviewPath();
   
   if (!bigPreview) return;
   previewReqToken++; // cancel in-flight load
@@ -277,5 +294,6 @@ export function hideBigPreview() {
     bigPreviewImg.alt = '';
   }
   if (bigPreviewCap) bigPreviewCap.textContent = '';
+  if (bigPreviewPath) bigPreviewPath.textContent = '';
 }
 
