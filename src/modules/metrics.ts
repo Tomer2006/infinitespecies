@@ -51,6 +51,7 @@ function getHeapLine() {
 }
 
 export function initRuntimeMetrics() {
+  if (typeof window === 'undefined') return;
   if (!gpuInfo) gpuInfo = detectGpuInfo();
   // Track event loop lag via interval drift
   lastIntervalTs = performance.now();

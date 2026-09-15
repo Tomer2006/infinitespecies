@@ -1,3 +1,5 @@
+import { nameDistance } from '../src/modules/taxon-names.js';
+
 const DEFAULT_CACHE_SIZE = 500;
 const MAX_QUERY_LENGTH = 100;
 const MAX_RESULTS = 20;
@@ -105,6 +107,27 @@ export class TaxonomySearchIndex {
 
     const bucket = query.length >= 3 ? this.#smallestTrigramBucket(query) : null;
     if (bucket) this.#collectMatches(bucket, query, limit, results);
+
+    if (!results.length && query.length >= 4) {
+      const candidates = new Map();
+      // Bound work independently of tree size; uncommon trigrams first.
+      const buckets = [...uniqueTrigrams(query)].map(key => this.trigramBuckets.get(key))
+        .filter(Boolean).sort((a, b) => a.length - b.length);
+      let visited = 0;
+      for (const ids of buckets) {
+        for (const id of ids) {
+          if (++visited > 50000) break;
+          candidates.set(id, (candidates.get(id) || 0) + 1);
+        }
+        if (visited > 50000) break;
+      }
+      const maxDistance = query.length >= 8 ? 2 : 1;
+      for (const [id] of [...candidates].sort((a, b) => b[1] - a[1]).slice(0, 300)) {
+        const name = this.namesById[id];
+        const distance = nameDistance(query, name, maxDistance);
+        if (distance <= maxDistance) insertBounded(results, { id, score: 200 - distance * 25 }, limit, this.namesById);
+      }
+    }
 
     this.cache.set(cacheKey, results);
     if (this.cache.size > this.maxCacheEntries) {

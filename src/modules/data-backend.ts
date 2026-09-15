@@ -31,14 +31,14 @@ interface BackendResponse {
 
 interface ViewportOptions { force?: boolean; immediate?: boolean }
 
-const API_BASE = (import.meta.env.VITE_DATA_API_URL || '/api').replace(/\/$/, '');
+const API_BASE = (process.env.NEXT_PUBLIC_DATA_API_URL || '/api').replace(/\/$/, '');
 const nodeCache = new Map<number, TaxonomyNode>();
 const hydratedNodeIds = new Set<number>();
 const nodeLoadPromises = new Map<number, Promise<TaxonomyNode | null>>();
 const VIEWPORT_PAD_PX = 120;
 const VIEWPORT_LIMIT = 12000;
 const VIEWPORT_DEBOUNCE_MS = 160;
-let viewportTimer: number | null = null;
+let viewportTimer: ReturnType<typeof setTimeout> | null = null;
 let viewportLoadingRegistered = false;
 let lastViewportKey = '';
 let inFlightViewportKey = '';
@@ -71,9 +71,8 @@ export async function loadBackend(apiBase = API_BASE): Promise<TaxonomyNode> {
   }
 
   registerViewportLoader();
-  scheduleBackendViewportLoad({ immediate: true, force: true });
 
-  setProgress(1, 'Taxonomy ready', 1, 1);
+  setProgress(1, 'Preparing map…', 1, 1);
   logInfo(`Backend taxonomy loaded with ${nodeCache.size.toLocaleString()} cached nodes`);
   return root;
 }
@@ -120,13 +119,13 @@ function scheduleBackendViewportLoad(options: ViewportOptions = {}) {
   }
 
   if (options.immediate) {
-    void ensureBackendViewport({ force: options.force });
+    void ensureBackendViewport({ force: options.force }).catch(error => console.warn('Viewport loading failed:', error));
     return;
   }
 
   viewportTimer = setTimeout(() => {
     viewportTimer = null;
-    void ensureBackendViewport({ force: options.force });
+    void ensureBackendViewport({ force: options.force }).catch(error => console.warn('Viewport loading failed:', error));
   }, VIEWPORT_DEBOUNCE_MS);
 }
 
@@ -166,7 +165,10 @@ export async function randomBackendNode(fromId?: number): Promise<TaxonomyNode |
 
 export async function findBackendNodeByPath(path: string): Promise<TaxonomyNode | null> {
   if (state.loadMode !== 'backend') return null;
-  const response = await fetchJson<BackendResponse>(`${state.backendApiBase}/tree/path?path=${encodeURIComponent(path)}&depth=0`);
+  const httpResponse = await fetch(`${state.backendApiBase}/tree/path?path=${encodeURIComponent(path)}&depth=0`, { signal: AbortSignal.timeout(perf.loading.fetchTimeoutMs) });
+  if (httpResponse.status === 404) return null;
+  if (!httpResponse.ok) throw new Error(`Path lookup failed: ${httpResponse.status}`);
+  const response = await httpResponse.json() as BackendResponse;
   stitchResponse(response);
   refreshBackendLayout();
   return response.requested_id == null ? null : nodeCache.get(response.requested_id) || null;
@@ -249,6 +251,15 @@ function registerViewportLoader() {
   onCameraChange(() => scheduleBackendViewportLoad());
 }
 
+export async function loadChildGroups(node: TaxonomyNode, offset = 0, signal?: AbortSignal): Promise<{ nodes: TaxonomyNode[]; total: number }> {
+  if (state.loadMode !== 'backend') return { nodes: node.children.slice(offset, offset + 50), total: node.children.length };
+  const response = await fetchJson<BackendResponse & { child_ids: number[]; total: number }>(
+    `${state.backendApiBase}/tree/children/${node._id}?offset=${offset}`, { signal });
+  stitchResponse(response);
+  refreshBackendLayout();
+  return { nodes: response.child_ids.map(id => nodeCache.get(id)).filter((item): item is TaxonomyNode => !!item), total: response.total };
+}
+
 function viewportKey() {
   const bucketWorld = 32 / Math.max(state.camera.k, 0.0001);
   return [
@@ -309,7 +320,9 @@ function refreshBackendLayout(rootOverride?: TaxonomyNode) {
 }
 
 async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(url, { cache: 'no-store', ...options });
+  const timeout = AbortSignal.timeout(perf.loading.fetchTimeoutMs);
+  const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
+  const response = await fetch(url, { cache: 'no-store', ...options, signal });
   if (!response.ok) throw new Error(`Backend request failed: ${response.status} ${response.statusText}`);
   return response.json() as Promise<T>;
 }

@@ -4,41 +4,41 @@
   "layout_size": 4000,
   "layout_padding": 0,
   "single_leaf_radius_scale": 0.5,
-  "total_nodes": 4479382,
+  "total_nodes": 4479207,
   "total_files": 5,
   "files": [
     {
       "filename": "tree_part_001.json",
-      "nodes_count": 895877,
-      "size_bytes": 50836377,
+      "nodes_count": 895842,
+      "size_bytes": 50836267,
       "start_id": 1
     },
     {
       "filename": "tree_part_002.json",
-      "nodes_count": 895877,
-      "size_bytes": 49069785,
-      "start_id": 895878
+      "nodes_count": 895842,
+      "size_bytes": 49066362,
+      "start_id": 895843
     },
     {
       "filename": "tree_part_003.json",
-      "nodes_count": 895877,
-      "size_bytes": 50659239,
-      "start_id": 1791755
+      "nodes_count": 895842,
+      "size_bytes": 50659593,
+      "start_id": 1791685
     },
     {
       "filename": "tree_part_004.json",
-      "nodes_count": 895877,
-      "size_bytes": 51889661,
-      "start_id": 2687632
+      "nodes_count": 895842,
+      "size_bytes": 51886045,
+      "start_id": 2687527
     },
     {
       "filename": "tree_part_005.json",
-      "nodes_count": 895874,
-      "size_bytes": 50530000,
-      "start_id": 3583509
+      "nodes_count": 895839,
+      "size_bytes": 50528319,
+      "start_id": 3583369
     }
   ],
-  "created_at": "2026-03-09T11:09:10.035Z",
+  "created_at": "2026-09-02T14:03:38.405Z",
   "format": "compact-rows-v1",
   "columns": [
     "parent_id",

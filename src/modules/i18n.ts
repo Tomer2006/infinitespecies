@@ -95,7 +95,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       middleDragKey: 'Middle Drag',
       middleDragDescription: 'Pan the view',
       hoverKey: 'Hover',
-      hoverDescription: 'Show image preview',
+      hoverDescription: 'See a name; click to open its card',
       enterKey: 'Enter',
       enterDescription: 'Search and navigate',
       searchKey: 'W',
@@ -107,7 +107,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       toggleKey: '?',
       toggleDescription: 'Toggle this help panel',
       tapKey: 'Tap',
-      tapDescription: 'Preview a group (touch)',
+      tapDescription: 'Explore a circle and open its card',
       doubleTapKey: 'Double-tap',
       doubleTapDescription: 'Zoom into a group (touch)',
       longPressKey: 'Long press',
@@ -115,7 +115,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       pinchKey: 'Pinch',
       pinchDescription: 'Zoom in / out (touch)',
       dragKey: 'Drag',
-      dragDescription: 'Pan the view (touch)',
+      dragDescription: 'Move the map with a mouse or touch',
     },
     settings: {
       title: 'Settings',
@@ -236,7 +236,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       middleDragKey: 'גרירה אמצעית',
       middleDragDescription: 'הזזת התצוגה',
       hoverKey: 'ריחוף',
-      hoverDescription: 'הצגת תצוגת תמונה',
+      hoverDescription: 'הצגת שם; לחצו לפתיחת כרטיס מידע',
       enterKey: 'Enter',
       enterDescription: 'חיפוש וניווט',
       searchKey: 'W',
@@ -248,7 +248,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       toggleKey: '?',
       toggleDescription: 'פתיחה או סגירה של חלון העזרה',
       tapKey: 'הקשה',
-      tapDescription: 'תצוגה מקדימה של קבוצה (מגע)',
+      tapDescription: 'חקירת עיגול ופתיחת כרטיס מידע',
       doubleTapKey: 'הקשה כפולה',
       doubleTapDescription: 'התקרבות לקבוצה (מגע)',
       longPressKey: 'לחיצה ארוכה',
@@ -256,7 +256,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
       pinchKey: 'צביטה',
       pinchDescription: 'זום פנימה / החוצה (מגע)',
       dragKey: 'גרירה',
-      dragDescription: 'הזזת התצוגה (מגע)',
+      dragDescription: 'הזזת המפה בעכבר או במגע',
     },
     settings: {
       title: 'הגדרות',
@@ -323,16 +323,6 @@ function resolveTranslation(language: AppLanguage, key: string): TranslationValu
   return current
 }
 
-function isSupportedLanguage(value: string | null | undefined): value is AppLanguage {
-  return value === 'en' || value === 'he'
-}
-
-function getStoredLanguage(): AppLanguage | null {
-  if (typeof window === 'undefined') return null
-  const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
-  return isSupportedLanguage(value) ? value : null
-}
-
 export function getCurrentLanguage(): AppLanguage {
   return currentLanguage
 }
@@ -351,16 +341,15 @@ function applyDocumentLanguage(language: AppLanguage) {
 }
 
 export function initializeLanguage() {
-  currentLanguage = getStoredLanguage() ?? 'en'
+  currentLanguage = 'en'
+  if (typeof window !== 'undefined') {
+    try { window.localStorage.removeItem(LANGUAGE_STORAGE_KEY) } catch { /* English also works without storage. */ }
+  }
   applyDocumentLanguage(currentLanguage)
 }
 
-export function setCurrentLanguage(language: AppLanguage) {
-  currentLanguage = language
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language)
-  }
-  applyDocumentLanguage(language)
+export function setCurrentLanguage(_language: AppLanguage) {
+  initializeLanguage()
 }
 
 export function translate(key: string, params?: TranslationParams, language: AppLanguage = currentLanguage): string {

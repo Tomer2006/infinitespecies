@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "Welcome to **infinitespecies**! An interactive circle-packing visualization for exploring biological taxonomy data, powered by React and D3.js. Navigate from high-level domains down to individual species with smooth zooming, search capabilities, and integrated web resources.",
   "type": "module",
+  "engines": { "node": "^22.22.2 || ^24.15.0 || >=26.0.0" },
   "scripts": {
-    "dev": "vite",
+    "dev": "next dev --hostname 127.0.0.1 --port 3000",
     "backend": "node --expose-gc --max-old-space-size=4096 server/taxonomy-server.js",
-    "start": "node --expose-gc --max-old-space-size=4096 server/taxonomy-server.js",
+    "start": "next start",
     "compact-data": "node tools/compact-baked-data.js",
-    "test": "node --test",
-    "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && vite build",
-    "preview": "vite preview"
+    "test": "node --import tsx --test server/*.test.js",
+    "check:pages": "node build/verify-pages.js",
+    "typecheck": "next typegen && tsc --noEmit",
+    "build": "next build",
+    "preview": "next start"
   },
   "repository": {
     "type": "git",
@@ -26,15 +28,21 @@
   "homepage": "https://github.com/Tomer2006/infinitespecies#readme",
   "dependencies": {
     "d3-hierarchy": "^3.1.2",
-    "framer-motion": "^12.23.26",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "framer-motion": "^13.3.0",
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.7.0",
-    "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.5.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.28",
+    "react-test-renderer": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.13",
+    "typescript": "~5.9.3"
   }
 }

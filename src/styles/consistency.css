@@ -1,0 +1,106 @@
+/* Shared presentation for app controls and reading pages. Layout lives in the
+   component styles; keep colors, typography and interaction states here. */
+.reading-page { font-family: var(--font-sans); }
+:is(button, input, select, textarea) { font-family: var(--font-sans); }
+
+.landing-brand, .reading-brand, .topbar-brand {
+  font-weight: 650;
+  letter-spacing: -.035em;
+  color: var(--text-primary);
+}
+.topbar-brand > span, .loading-brand-title {
+  background: none;
+  color: var(--text-primary);
+  -webkit-text-fill-color: currentColor;
+}
+.loading-brand-title { font-weight: 650; letter-spacing: -.035em; }
+.reading-brand { @apply no-underline; }
+.loading-overlay { background: var(--bg-glass); }
+.app > .topbar { max-height: none; }
+
+.modal, .settings-lab-panel, .topbar-menu-dropdown, .search-results {
+  background: var(--bg-elevated);
+  border-color: var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.map-tip, .group-browser, .species-card.big-preview {
+  border-radius: var(--radius-lg);
+  border-color: var(--border-base);
+  background: var(--bg-elevated);
+}
+.modal-header, .modal-footer, .settings-lab-header { @apply shrink-0; }
+.modal-header h2, .settings-lab-header h2 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.modal-body, .modal-content, .settings-lab-body { @apply min-h-0; }
+.modal-header-actions { @apply flex-wrap; }
+.settings-lab-panel { top: calc(var(--hud-height, 0px) + 1rem); }
+
+.btn, .searchbar-btn, .modal-close, .settings-modal .modal-close,
+.topbar-right .btn, .simple-trail .crumb, .full-taxonomy-path .crumb,
+.location-back, .map-controls button, .group-browser button,
+.species-card button, .search-suggestions button {
+  min-height: var(--control-height);
+  border-radius: var(--radius-md);
+}
+.btn-icon, .topbar-right .btn, .modal-close, .settings-modal .modal-close, .searchbar-btn {
+  width: var(--control-height);
+  height: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0;
+  @apply shrink-0;
+}
+.map-controls button, .group-browser button, .species-card button,
+.search-suggestions button, .discovery-starts button { font-size: .8125rem; @apply font-medium; }
+.hero-start, .btn-primary {
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  font-weight: 650;
+}
+.hero-start:hover, .btn-primary:hover { background: var(--accent-hover); filter: none; }
+.topbar-menu-item { text-align: start; }
+.topbar-menu-item svg { color: var(--accent-primary); }
+.topbar-menu-item:hover, .topbar-menu-item:focus-visible,
+.search-result-item.active, .search-result-item:hover {
+  background: var(--surface-selected);
+  border-color: var(--border-selected);
+}
+
+.settings-select, .settings-input, .settings-lab-textarea, .select, .json-textarea {
+  min-height: var(--control-height);
+  max-width: 100%;
+  background-color: var(--surface-base);
+  border-color: var(--border-base);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+:is(.app, .reading-page) :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 3px;
+  @apply shadow-none;
+}
+:is(.app, .reading-page) button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+.landing-learn a:hover, .landing-bottom a:hover, .reading-page a:not(.hero-start):hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+@media (hover: hover) {
+  .btn:hover, .language-option:hover { transform: none; }
+}
+@media (max-width: 768px) {
+  .settings-select, .settings-input, .settings-lab-textarea { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.app, .reading-page) :is(button, a, input, select, textarea) { transition: none; }
+}

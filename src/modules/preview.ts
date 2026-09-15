@@ -3,6 +3,7 @@ import { getNodePath } from './deeplink'
 import { logError, logWarn } from './logger'
 import { perf } from './settings'
 import type { TaxonomyNode } from './types'
+import { getCommonName } from './taxon-names.js'
 
 export interface PreviewData {
   node: TaxonomyNode
@@ -10,19 +11,29 @@ export interface PreviewData {
   path: string
   thumbnail: string | null
   description: string | null
+  commonName: string | null
+  rank: string | null
+  sourceUrl: string | null
+  loading?: boolean
 }
 
 interface WikipediaPreview {
   thumbnail: string | null
   taxonomicRank: string | null
   description: string | null
+  title: string | null
+  sourceUrl: string | null
+  wikidataId?: string
+  rankRequest?: Promise<string | null>
 }
 
 interface WikipediaPage {
+  title?: string
+  fullurl?: string
   missing?: unknown
   thumbnail?: { source?: string }
   extract?: string
-  pageprops?: { wikibase_item?: string }
+  pageprops?: { wikibase_item?: string; disambiguation?: string }
 }
 
 interface WikipediaResponse {
@@ -46,12 +57,12 @@ function remember(key: string, value: Promise<WikipediaPreview | null> | Wikiped
 }
 
 async function getTaxonomicRank(wikidataId?: string): Promise<string | null> {
-  if (!wikidataId) return null
+  if (!wikidataId || !/^Q\d+$/.test(wikidataId)) return null
   try {
     const query = `SELECT ?rank ?rankLabel WHERE { wd:${wikidataId} wdt:P105 ?rank . ?rank rdfs:label ?rankLabel . FILTER(LANG(?rankLabel) = "en") }`
     const response = await fetch(
       `https://query.wikidata.org/sparql?query=${encodeURIComponent(query)}&format=json`,
-      { headers: { Accept: 'application/json' } },
+      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(2000) },
     )
     if (!response.ok) return null
     const data = await response.json() as WikidataResponse
@@ -72,19 +83,22 @@ async function fetchWikipediaPreview(title: string): Promise<WikipediaPreview | 
 
   const pending = (async (): Promise<WikipediaPreview | null> => {
     try {
-      const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages|extracts|pageprops&titles=${encodeURIComponent(title)}&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&redirects=1`
-      const response = await fetch(url)
+      const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages|extracts|pageprops|info&inprop=url&titles=${encodeURIComponent(title)}&piprop=thumbnail&pithumbsize=500&exintro=1&explaintext=1&exsentences=3&redirects=1`
+      const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
       if (!response.ok) return null
       const data = await response.json() as WikipediaResponse
       const pages = data.query?.pages
       if (!pages) return null
       const [pageId] = Object.keys(pages)
       const page = pageId ? pages[pageId] : undefined
-      if (!page || pageId === '-1' || page.missing) return null
+      if (!page || pageId === '-1' || page.missing !== undefined || page.pageprops?.disambiguation !== undefined) return null
       return {
         thumbnail: page.thumbnail?.source ?? null,
-        taxonomicRank: await getTaxonomicRank(page.pageprops?.wikibase_item),
+        taxonomicRank: null,
+        wikidataId: page.pageprops?.wikibase_item,
         description: page.extract ?? null,
+        title: page.title ?? null,
+        sourceUrl: page.fullurl?.startsWith('https://en.wikipedia.org/') ? page.fullurl : null,
       }
     } catch (error) {
       logError('Error fetching Wikipedia data', error)
@@ -94,12 +108,12 @@ async function fetchWikipediaPreview(title: string): Promise<WikipediaPreview | 
 
   remember(key, pending)
   const result = await pending
-  remember(key, result)
+  if (result) remember(key, result)
+  else if (thumbnailCache.get(key) === pending) thumbnailCache.delete(key)
   return result
 }
 
-export async function loadPreview(node: TaxonomyNode): Promise<PreviewData> {
-  const result = await fetchWikipediaPreview(node.name)
+function presentPreview(node: TaxonomyNode, result: WikipediaPreview | null): PreviewData {
   const rank = result?.taxonomicRank
   return {
     node,
@@ -107,5 +121,33 @@ export async function loadPreview(node: TaxonomyNode): Promise<PreviewData> {
     path: getNodePath(node).join(' > '),
     thumbnail: result?.thumbnail && /^https?:\/\//i.test(result.thumbnail) ? result.thumbnail : null,
     description: result?.description ?? null,
+    commonName: getCommonName(node.name) || (result?.title !== node.name ? result?.title ?? null : null),
+    rank: rank ?? null,
+    sourceUrl: result?.sourceUrl ?? null,
+    loading: false,
   }
+}
+
+export async function loadPreview(node: TaxonomyNode, onUpdate?: (preview: PreviewData) => void): Promise<PreviewData> {
+  const result = await fetchWikipediaPreview(node.name)
+  if (result?.wikidataId && result.taxonomicRank === null) {
+    result.rankRequest ??= getTaxonomicRank(result.wikidataId).then(rank => {
+      result.taxonomicRank = rank
+      return rank
+    })
+    // Optional rank enrichment never holds up the image or description.
+    void result.rankRequest.then(rank => { if (rank) onUpdate?.(presentPreview(node, result)) })
+  }
+  return presentPreview(node, result)
+}
+
+export function prefetchPreview(node: TaxonomyNode) {
+  void fetchWikipediaPreview(node.name)
+}
+
+export function initialPreview(node: TaxonomyNode): PreviewData {
+  const cached = thumbnailCache.get(node.name.toLocaleLowerCase())
+  if (cached !== undefined && !(cached instanceof Promise)) return presentPreview(node, cached)
+  return { node, caption: node.name, path: getNodePath(node).join(' > '), thumbnail: null,
+    description: null, commonName: getCommonName(node.name), rank: null, sourceUrl: null, loading: true }
 }

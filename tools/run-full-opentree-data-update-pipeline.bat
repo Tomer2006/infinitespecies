@@ -8,14 +8,15 @@ REM   1. Download taxonomy.tsv from:
 REM      https://tree.opentreeoflife.org/about/taxonomy-version
 REM   2. Place taxonomy.tsv in data\opentree\
 REM
-REM This script will (optimized order for efficiency):
+REM This script will (ordered to keep the final tree clean):
 REM   1. Convert OpenTreeofLife taxonomy.tsv to nested tree (tree_opentree.json)
-REM   2. Remove duplicate leaf nodes (reduces nodes early - efficient!)
-REM   3. Remove sibling_higher nodes (reduces nodes early - efficient!)
-REM   4. Remove nodes containing "unidentified" or "unclassified"
+REM   2. Remove sibling_higher nodes and promote their children
+REM   3. Remove nodes containing "unidentified" or "unclassified"
+REM   4. Remove duplicate leaf nodes repeatedly until stable
 REM   5. Lowercase all names in main tree (before expensive layout)
 REM   6. Bake D3 circle-packing layout (expensive operation on processed tree)
 REM   7. Capitalize names in split files (final formatting step)
+REM   8. Compact split files for production loading
 REM ============================================
 
 cd /d "%~dp0.."
@@ -47,7 +48,7 @@ if not exist "data\opentree\taxonomy.tsv" (
 echo ============================================
 echo Step 1: Converting OpenTreeofLife taxonomy.tsv to tree...
 echo ============================================
-node tools/convert-opentree-taxonomy-tsv-to-nested-tree-json.js
+node --max-old-space-size=8192 tools/convert-opentree-taxonomy-tsv-to-nested-tree-json.js
 if errorlevel 1 (
     echo FAILED at Step 1
     pause
@@ -56,9 +57,9 @@ if errorlevel 1 (
 echo.
 
 echo ============================================
-echo Step 2: Removing duplicate leaf nodes...
+echo Step 2: Removing sibling_higher nodes...
 echo ============================================
-node tools/remove-duplicate-leaf-nodes-from-tree.js data/tree_opentree.json data/tree_opentree.json
+node --max-old-space-size=8192 tools/remove-sibling-higher-nodes-and-promote-children.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 2
     pause
@@ -67,9 +68,9 @@ if errorlevel 1 (
 echo.
 
 echo ============================================
-echo Step 3: Removing sibling_higher nodes...
+echo Step 3: Removing unidentified and unclassified nodes...
 echo ============================================
-node tools/remove-sibling-higher-nodes-and-promote-children.js data/tree_opentree.json data/tree_opentree.json
+node --max-old-space-size=8192 tools/remove-unidentified-nodes-from-tree.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 3
     pause
@@ -78,9 +79,9 @@ if errorlevel 1 (
 echo.
 
 echo ============================================
-echo Step 4: Removing unidentified and unclassified nodes...
+echo Step 4: Removing duplicate leaf nodes until stable...
 echo ============================================
-node tools/remove-unidentified-nodes-from-tree.js data/tree_opentree.json data/tree_opentree.json
+node --max-old-space-size=8192 tools/remove-duplicate-leaf-nodes-from-tree.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 4
     pause
@@ -92,7 +93,7 @@ echo ============================================
 echo Step 5: Lowercasing all names in main tree...
 echo ============================================
 echo (Processing before layout for efficiency)
-node tools/lowercase-all-names.js data/tree_opentree.json data/tree_opentree.json
+node --max-old-space-size=8192 tools/lowercase-all-names.js data/tree_opentree.json data/tree_opentree.json
 if errorlevel 1 (
     echo FAILED at Step 5
     pause
@@ -104,7 +105,7 @@ echo ============================================
 echo Step 6: Baking D3 layout...
 echo ============================================
 echo (This may take several minutes for large datasets)
-node tools/compute-d3-circle-packing-layout-from-opentree-tree.js
+node --max-old-space-size=8192 tools/compute-d3-circle-packing-layout-from-opentree-tree.js
 if errorlevel 1 (
     echo FAILED at Step 6
     pause
@@ -147,6 +148,17 @@ echo [5/5] Processing tree_part_005.json...
 node tools/capitalize-first-letter-of-each-word-in-names.js public/data/tree_part_005.json public/data/tree_part_005.json
 if errorlevel 1 (
     echo FAILED at Step 7
+    pause
+    exit /b 1
+)
+echo.
+
+echo ============================================
+echo Step 8: Compacting split files...
+echo ============================================
+node --max-old-space-size=8192 tools/compact-baked-data.js
+if errorlevel 1 (
+    echo FAILED at Step 8
     pause
     exit /b 1
 )

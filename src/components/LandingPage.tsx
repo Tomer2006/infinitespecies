@@ -1,96 +1,58 @@
 import { motion } from 'framer-motion'
 import { translate, type AppLanguage } from '../modules/i18n'
+import { discoveryCopy } from '../modules/discovery-copy'
 
 interface LandingPageProps {
   language: AppLanguage
   colorPreset: string
   isStarting: boolean
   onStart: () => void
-  onLanguage: () => void
+  onDiscover: (destination: string) => void
   onHelp: () => void
   onSettings: () => void
 }
 
-const landingTreeImages: Record<string, string> = {
-  tableau10: '/landing-tree-bg.png',
-  blueGradient: '/landing-tree-bg1.png',
-}
-
-export default function LandingPage({
-  language,
-  colorPreset,
-  isStarting,
-  onStart,
-  onLanguage,
-  onHelp,
-  onSettings,
-}: LandingPageProps) {
-  const landingTreeImage = landingTreeImages[colorPreset] || landingTreeImages.tableau10
-
+export default function LandingPage({ language, colorPreset, isStarting, onStart, onDiscover, onHelp, onSettings }: LandingPageProps) {
+  const copy = discoveryCopy(language)
   return (
-    <motion.div
-      className="landing-page"
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div className="landing-art" aria-hidden="true">
-        <img className="landing-art-image" src={landingTreeImage} alt="" />
-      </div>
-
-      <motion.div
-        className="landing-header"
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <h1 className="landing-title">InfiniteSpecies</h1>
-        <p className="landing-tagline">
-          {translate('landing.taglineLine1', undefined, language)}
-          <br />
-          {translate('landing.taglineLine2Prefix', undefined, language)}{' '}
-          <span className="highlight">{translate('landing.taglineHighlight', undefined, language)}</span>
-          {translate('landing.taglineLine2Suffix', undefined, language)}
-        </p>
-      </motion.div>
-
-      <motion.div
-        className="landing-center"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <motion.button
-          className="landing-start-btn"
-          type="button"
-          disabled={isStarting}
-          aria-busy={isStarting}
-          onClick={onStart}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <span className="landing-start-text">
-            {translate(isStarting ? 'loading.loadingLabel' : 'landing.start', undefined, language)}
-          </span>
-        </motion.button>
-      </motion.div>
-
-      <motion.div
-        className="landing-footer-buttons"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
-        <motion.button type="button" className="landing-footer-btn landing-footer-icon-btn" onClick={onLanguage} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} title={translate('common.language', undefined, language)}>
-          <span aria-hidden="true">🌐</span>
-        </motion.button>
-        <motion.button type="button" className="landing-footer-btn" onClick={onSettings} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          {translate('common.settings', undefined, language)}
-        </motion.button>
-        <motion.button type="button" className="landing-footer-btn" onClick={onHelp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          {translate('common.help', undefined, language)}
-        </motion.button>
-      </motion.div>
-    </motion.div>
+    <motion.main className="landing-page discovery-landing" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+      <header className="landing-nav">
+        <span className="landing-brand">InfiniteSpecies<span aria-hidden="true"> ↗</span></span>
+        <nav aria-label={translate('common.settings', undefined, language)}>
+          <button type="button" onClick={onHelp}>{translate('common.help', undefined, language)}</button>
+          <button type="button" onClick={onSettings}>{translate('common.settings', undefined, language)}</button>
+        </nav>
+      </header>
+      <section className="discovery-hero">
+        <div className="hero-copy" dir={language === 'he' ? 'rtl' : 'ltr'}>
+          <h1>{copy.headline}</h1>
+          <p className="hero-intro">{copy.intro}</p>
+          <button className="hero-start" type="button" disabled={isStarting} aria-busy={isStarting} onClick={onStart}>
+            {isStarting ? copy.loading : copy.start}<span aria-hidden="true"> ↗</span>
+          </button>
+          <p className="hero-reassurance">{copy.free}</p>
+          <div className="discovery-starts">
+            <div>
+              <button type="button" disabled={isStarting} onClick={() => onDiscover('Homo sapiens')}>{copy.humans}</button>
+              <button type="button" disabled={isStarting} onClick={() => onDiscover('Aves')}>{copy.birds}</button>
+              <button type="button" disabled={isStarting} onClick={() => onDiscover('random')}>{copy.random} <span aria-hidden="true">✧</span></button>
+            </div>
+          </div>
+        </div>
+        <figure className="hero-art">
+          <img src={colorPreset === 'blueGradient' ? '/landing-tree-bg1.png' : '/landing-tree-bg.png'} alt="" />
+          <figcaption>{copy.explanation}</figcaption>
+        </figure>
+      </section>
+      <section className="landing-learn" dir={language === 'he' ? 'rtl' : 'ltr'}>
+        <div><h2><a href="/tree-of-life/">{copy.guide} →</a></h2><p>{copy.dataNote}</p></div>
+        <nav aria-label={copy.learn}>
+          <a href="/explore/humans/"><span>01</span>{copy.humanGuide}<span aria-hidden="true">↗</span></a>
+          <a href="/explore/birds/"><span>02</span>{copy.birdGuide}<span aria-hidden="true">↗</span></a>
+          <a href="/explore/oaks/"><span>03</span>{copy.oakGuide}<span aria-hidden="true">↗</span></a>
+        </nav>
+      </section>
+      <footer className="landing-bottom"><span>InfiniteSpecies</span><a href="/about/">{copy.about}</a></footer>
+    </motion.main>
   )
 }

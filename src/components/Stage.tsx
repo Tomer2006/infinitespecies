@@ -1,533 +1,211 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { setHoverNode, state } from '../modules/state'
-import { attachCanvas, detachCanvas, requestRender, screenToWorld, resizeCanvas, tick, onCameraChange, W, H } from '../modules/canvas'
+import { state, setHoverNode } from '../modules/state'
+import { attachCanvas, detachCanvas, requestRender, screenToWorld, resizeCanvas, onCameraChange, W, H } from '../modules/canvas'
 import { openProviderSearch } from '../modules/providers'
-import { loadPreview, type PreviewData } from '../modules/preview'
-import { updateCurrentNodeOnly } from '../modules/navigation'
-import {
-  handleWheelEvent,
-  handleMouseMovePan,
-  handleMouseMovePick,
-  handleMouseLeaveEvent,
-  handleMouseDown as handleMouseDownJS,
-  validateHoverOnCameraChange,
-} from '../modules/mouse-handler'
+import { initialPreview, loadPreview, prefetchPreview, type PreviewData } from '../modules/preview'
+import { goToNode } from '../modules/navigation'
+import { handleWheelEvent, handleMouseMovePick, handleMouseLeaveEvent } from '../modules/mouse-handler'
 import { pickNodeAt } from '../modules/picking'
 import { handleCameraPan, clampCameraZoom, stopCameraAnimation } from '../modules/camera'
 import { ensureBackendViewport } from '../modules/data-backend'
-import { formatNumber, translate, type AppLanguage } from '../modules/i18n'
+import { type AppLanguage } from '../modules/i18n'
 import { subscribeToPulse } from '../modules/visual-events'
 import type { TaxonomyNode } from '../modules/types'
+import { MapGesture } from '../modules/map-gesture.js'
+import { getCommonName } from '../modules/taxon-names.js'
 import PulseOverlay from './PulseOverlay'
 import BigPreview from './BigPreview'
+import MapControls from './MapControls'
+import { discoveryCopy } from '../modules/discovery-copy'
+import { getTooltipPosition } from '../modules/ui-layout'
 
 interface StageProps {
   language: AppLanguage
   isLoading: boolean
   onUpdateBreadcrumbs: (node: TaxonomyNode) => void
   hidden?: boolean
+  onRandom: () => Promise<void>
 }
 
-export default function Stage({ language, isLoading, onUpdateBreadcrumbs, hidden = false }: StageProps) {
+export default function Stage({ language, isLoading, onUpdateBreadcrumbs, hidden = false, onRandom }: StageProps) {
+  const copy = discoveryCopy(language)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
-  // Tooltip is updated imperatively via refs (not React state) so hovering over
-  // nodes doesn't re-render the whole Stage subtree ~60x/sec.
   const tooltipRef = useRef<HTMLDivElement>(null)
   const tooltipNameRef = useRef<HTMLDivElement>(null)
   const tooltipMetaRef = useRef<HTMLDivElement>(null)
-  const isPanningRef = useRef(false)
-  const lastPanRef = useRef<{ x: number; y: number } | null>(null)
-  const pickingScheduledRef = useRef(false)
-  const lastMouseRef = useRef({ x: 0, y: 0 })
-  const prevHoverIdRef = useRef<number | null>(null)
-  const breadcrumbTimerRef = useRef<number | null>(null)
-  const previewRequestRef = useRef(0)
+  const gesture = useRef(new MapGesture())
+  const previewRequest = useRef(0)
+  const previewPrefetch = useRef<{ node: TaxonomyNode; timer: ReturnType<typeof setTimeout> } | null>(null)
+  const pinnedRef = useRef(false)
+  const selectionRequest = useRef(0)
   const [preview, setPreview] = useState<PreviewData | null>(null)
+  const [pinned, setPinned] = useState(false)
+  const [error, setError] = useState(false)
   const [pulse, setPulse] = useState<{ node: TaxonomyNode; sequence: number } | null>(null)
 
-  const touchStateRef = useRef({
-    isPanning: false,
-    isZooming: false,
-    multiTouch: false,
-    lastTouch: null as { x: number; y: number } | null,
-    initialDistance: 0,
-    initialZoom: 1,
-    initialCenter: null as { x: number; y: number } | null,
-    lastTapTime: 0,
-    longPressTimer: null as number | null,
-    longPressFired: false,
-  })
+  const hideTooltip = useCallback(() => {
+    if (previewPrefetch.current) clearTimeout(previewPrefetch.current.timer)
+    previewPrefetch.current = null
+    if (tooltipRef.current) tooltipRef.current.style.opacity = '0'
+  }, [])
+
+  const showPreview = useCallback((node: TaxonomyNode, force = false) => {
+    if (pinnedRef.current && !force) return
+    const request = ++previewRequest.current
+    setPreview(initialPreview(node))
+    const update = (result: PreviewData) => {
+      if (request === previewRequest.current) setPreview(result)
+    }
+    void loadPreview(node, update).then(update)
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
     const stage = stageRef.current
     if (canvas && stage) attachCanvas(canvas, stage)
-
-    const handleResize = () => {
-      resizeCanvas()
-      requestRender()
-      void ensureBackendViewport({ force: true })
-    }
-    window.addEventListener('resize', handleResize)
-
+    const resize = () => { resizeCanvas(); requestRender(); void ensureBackendViewport({ force: true }).catch(() => setError(true)) }
+    // Navigation can change height without a window resize (mobile or expanded path).
+    const observer = new ResizeObserver(resize)
+    if (stage) observer.observe(stage)
+    const cancel = () => { gesture.current.cancel(); if (canvas) canvas.style.cursor = 'grab' }
+    window.addEventListener('resize', resize)
+    window.addEventListener('blur', cancel)
     return () => {
-      window.removeEventListener('resize', handleResize)
+      observer.disconnect()
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('blur', cancel)
       if (canvas) detachCanvas(canvas)
-      if (breadcrumbTimerRef.current !== null) {
-        clearTimeout(breadcrumbTimerRef.current)
-        breadcrumbTimerRef.current = null
-      }
+      gesture.current.cancel()
+      previewRequest.current++
+      if (previewPrefetch.current) clearTimeout(previewPrefetch.current.timer)
     }
-  }, [onUpdateBreadcrumbs])
-
-  useEffect(() => subscribeToPulse((node) => {
-    setPulse((previous) => ({ node, sequence: (previous?.sequence ?? 0) + 1 }))
-  }), [])
-
-  const hidePreview = useCallback(() => {
-    previewRequestRef.current += 1
-    setPreview(null)
   }, [])
 
-  const showPreview = useCallback((node: TaxonomyNode) => {
-    const request = ++previewRequestRef.current
-    void loadPreview(node).then((nextPreview) => {
-      if (previewRequestRef.current === request) setPreview(nextPreview)
-    })
-  }, [])
+  useEffect(() => subscribeToPulse(node => {
+    setPulse(previous => ({ node, sequence: (previous?.sequence ?? 0) + 1 }))
+    showPreview(node)
+  }), [showPreview])
+
+  useEffect(() => onCameraChange(hideTooltip), [hideTooltip])
 
   useEffect(() => {
-    if (!hidden && canvasRef.current) {
-      const timer = setTimeout(() => {
-        resizeCanvas()
-        tick()
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [hidden])
-
-  const buildTooltipMeta = useCallback((node: TaxonomyNode) => {
-    const parts: string[] = []
-    const isLeafNode = !node.children || node.children.length === 0
-
-    if (isLeafNode && node._leaves === 1) {
-      parts.push(translate('stage.oneSpecies', undefined, language))
-    } else if (node._leaves && node._leaves > 1) {
-      parts.push(translate('stage.speciesCount', { count: formatNumber(node._leaves, language) }, language))
-    }
-
-    return parts.join(' • ')
-  }, [language])
-
-  const hideTooltip = useCallback(() => {
-    const el = tooltipRef.current
-    if (el) el.style.opacity = '0'
-  }, [])
-
-  const showTooltip = useCallback((node: TaxonomyNode, x: number, y: number) => {
-    const el = tooltipRef.current
-    if (!el) return
-    el.style.left = `${x}px`
-    el.style.top = `${y}px`
-    el.style.opacity = '1'
-    if (tooltipNameRef.current) {
-      tooltipNameRef.current.textContent = node.name || translate('stage.unknown', undefined, language)
-    }
-    if (tooltipMetaRef.current) {
-      const meta = buildTooltipMeta(node)
-      tooltipMetaRef.current.textContent = meta
-      tooltipMetaRef.current.style.display = meta ? '' : 'none'
-    }
-  }, [language, buildTooltipMeta])
-
-  const updateTooltipAndPreview = useCallback((node: TaxonomyNode | null, x: number, y: number) => {
-    if (!node) {
-      hideTooltip()
-      hidePreview()
-      return
-    }
-
-    const nodeId = node._id || 0
-    const changedNode = nodeId !== prevHoverIdRef.current
-    prevHoverIdRef.current = nodeId
-
-    showTooltip(node, x, y)
-
-    if (changedNode) {
-      showPreview(node)
-    }
-  }, [showTooltip, hideTooltip, hidePreview, showPreview])
-
-  useEffect(() => {
-    const validateHover = () => {
-      const { x, y } = lastMouseRef.current
-      validateHoverOnCameraChange(x, y, (node, px, py) => {
-        if (node) {
-          updateTooltipAndPreview(node, px, py)
-        } else {
-          hideTooltip()
-          hidePreview()
-          prevHoverIdRef.current = null
-        }
-      })
-    }
-
-    return onCameraChange(validateHover)
-  }, [updateTooltipAndPreview])
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    lastMouseRef.current = { x, y }
-
-    if (isPanningRef.current && lastPanRef.current) {
-      const newPan = handleMouseMovePan(x, y, isPanningRef.current, lastPanRef.current) as { x: number; y: number } | null
-      if (newPan) {
-        lastPanRef.current = newPan
-        hideTooltip()
-        hidePreview()
-        return
-      }
-    }
-
-    if (!pickingScheduledRef.current) {
-      pickingScheduledRef.current = true
-      requestAnimationFrame(() => {
-        pickingScheduledRef.current = false
-        const node = handleMouseMovePick(lastMouseRef.current.x, lastMouseRef.current.y)
-        if (node) {
-          updateTooltipAndPreview(node, lastMouseRef.current.x, lastMouseRef.current.y)
-        } else {
-          hideTooltip()
-          hidePreview()
-          prevHoverIdRef.current = null
-        }
-      })
-    }
-  }
-
-  const handleMouseLeave = () => {
-    handleMouseLeaveEvent()
+    gesture.current.cancel()
     hideTooltip()
-
-    if (breadcrumbTimerRef.current !== null) {
-      clearTimeout(breadcrumbTimerRef.current)
-      breadcrumbTimerRef.current = null
-    }
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (rect) {
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        const result = handleMouseDownJS(1, x, y)
-        if (result && typeof result === 'object' && 'x' in result && 'y' in result) {
-          isPanningRef.current = true
-          lastPanRef.current = { x: (result as { x: number; y: number }).x, y: (result as { x: number; y: number }).y }
-        }
-      }
-      e.preventDefault()
-    }
-  }
-
-  useEffect(() => {
-    const handleMouseUp = () => {
-      isPanningRef.current = false
-      lastPanRef.current = null
-    }
-
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => window.removeEventListener('mouseup', handleMouseUp)
-  }, [])
+    if (hidden) {
+      pinnedRef.current = false
+      setPinned(false)
+      previewRequest.current++
+      setPreview(null)
+      setError(false)
+    } else { resizeCanvas(); requestRender() }
+  }, [hidden, isLoading, hideTooltip])
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas || hidden || isLoading) return
+    const wheel = (event: WheelEvent) => { hideTooltip(); handleWheelEvent(event, canvas) }
+    canvas.addEventListener('wheel', wheel, { passive: false })
+    return () => canvas.removeEventListener('wheel', wheel)
+  }, [hidden, isLoading, hideTooltip])
 
-    const handleWheelEventWrapper = (e: WheelEvent) => {
-      handleWheelEvent(e, canvas)
-    }
-
-    canvas.addEventListener('wheel', handleWheelEventWrapper, { passive: false })
-    return () => canvas.removeEventListener('wheel', handleWheelEventWrapper)
-  }, [])
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const touchState = touchStateRef.current
-
-    const getTouchPos = (touch: Touch) => {
-      const rect = canvas.getBoundingClientRect()
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top,
-      }
-    }
-
-    const getDistance = (t1: Touch, t2: Touch) => {
-      const dx = t1.clientX - t2.clientX
-      const dy = t1.clientY - t2.clientY
-      return Math.sqrt(dx * dx + dy * dy)
-    }
-
-    const getCenter = (t1: Touch, t2: Touch) => {
-      const rect = canvas.getBoundingClientRect()
-      return {
-        x: (t1.clientX + t2.clientX) / 2 - rect.left,
-        y: (t1.clientY + t2.clientY) / 2 - rect.top,
-      }
-    }
-
-    const clearLongPress = () => {
-      if (touchState.longPressTimer) {
-        clearTimeout(touchState.longPressTimer)
-        touchState.longPressTimer = null
-      }
-    }
-
-    // Drill into a node — the touch equivalent of a desktop left-click: make it
-    // the current node, update the breadcrumbs, and load its viewport data.
-    const drillIntoNode = (node: TaxonomyNode | null) => {
-      if (!node || isLoading) return
-      const current = state.current
-      if (current && node._id === current._id) return
-      updateCurrentNodeOnly(node)
+  const selectNode = async (node: TaxonomyNode | null) => {
+    if (!node || isLoading) return
+    const request = ++selectionRequest.current
+    setError(false)
+    hideTooltip()
+    try {
+      setPulse(null)
+      await goToNode(node, false)
       onUpdateBreadcrumbs(node)
-      void ensureBackendViewport({ force: true })
-    }
+      showPreview(node)
+      await ensureBackendViewport({ force: true })
+    } catch { if (request === selectionRequest.current) setError(true) }
+  }
 
-    // Go up one level — the touch equivalent of a desktop right-click.
-    const goToParent = () => {
-      const current = state.current
-      if (!current || !current.parent || isLoading) return
-      updateCurrentNodeOnly(current.parent)
-      onUpdateBreadcrumbs(current.parent)
-      void ensureBackendViewport({ force: true })
+  const point = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  }
+
+  const pointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isLoading || (event.button !== 0 && event.button !== 1)) return
+    event.preventDefault()
+    stopCameraAnimation()
+    gesture.current.start(event.pointerId, point(event), event.button === 0)
+    event.currentTarget.setPointerCapture(event.pointerId)
+    hideTooltip()
+  }
+
+  const pointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isLoading) return
+    const position = point(event)
+    if (gesture.current.points.size) {
+      const action = gesture.current.move(event.pointerId, position)
+      if (!action) return
+      event.currentTarget.style.cursor = 'grabbing'
       hideTooltip()
-      hidePreview()
-      prevHoverIdRef.current = null
-      // Brief dim so the "back" gesture feels responsive.
-      canvas.style.opacity = '0.8'
-      window.setTimeout(() => {
-        canvas.style.opacity = '1'
-      }, 150)
-    }
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        const pos = getTouchPos(e.touches[0])
-        touchState.lastTouch = pos
-        touchState.isPanning = false
-        touchState.longPressFired = false
-
-        clearLongPress()
-        touchState.longPressTimer = window.setTimeout(() => {
-          touchState.longPressTimer = null
-          touchState.longPressFired = true
-          goToParent()
-        }, 500)
-
-        // A single tap acts like desktop hover: select the node and preview it.
-        const node = pickNodeAt(pos.x, pos.y)
-        setHoverNode(node)
-        if (node) {
-          updateTooltipAndPreview(node, pos.x, pos.y)
-        } else {
-          hideTooltip()
-      hidePreview()
-          prevHoverIdRef.current = null
-        }
-      } else if (e.touches.length >= 2) {
-        touchState.multiTouch = true
-        touchState.isZooming = true
-        touchState.isPanning = false
-        touchState.initialDistance = getDistance(e.touches[0], e.touches[1])
-        touchState.initialZoom = state.camera.k
-        touchState.initialCenter = getCenter(e.touches[0], e.touches[1])
-        clearLongPress()
-        stopCameraAnimation()
-        hideTooltip()
-          hidePreview()
-      }
-      e.preventDefault()
-    }
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1 && touchState.lastTouch && !touchState.isZooming) {
-        const pos = getTouchPos(e.touches[0])
-
-        if (!touchState.isPanning) {
-          const dx = pos.x - touchState.lastTouch.x
-          const dy = pos.y - touchState.lastTouch.y
-          if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
-            touchState.isPanning = true
-            clearLongPress()
-            hideTooltip()
-        hidePreview()
-          }
-        }
-
-        if (touchState.isPanning) {
-          const dx = pos.x - touchState.lastTouch.x
-          const dy = pos.y - touchState.lastTouch.y
-          handleCameraPan(dx, dy)
-          touchState.lastTouch = pos
-        }
-      } else if (e.touches.length >= 2 && touchState.isZooming && touchState.initialDistance > 0) {
-        const distance = getDistance(e.touches[0], e.touches[1])
-        const scale = distance / touchState.initialDistance
-        const newZoom = touchState.initialZoom * scale
-        const center = getCenter(e.touches[0], e.touches[1])
-
-        // Keep the world point under the pinch midpoint fixed as the zoom
-        // changes (same anchoring as the wheel zoom in camera.ts). Use the
-        // canvas CSS size (W/H), NOT canvas.width/height — those are device
-        // pixels and would be off by devicePixelRatio on phones.
-        const [wx, wy] = screenToWorld(center.x, center.y)
-        const k = clampCameraZoom(newZoom)
-        state.camera.k = k
-        state.camera.x = wx - (center.x - W / 2) / k
-        state.camera.y = wy - (center.y - H / 2) / k
+      setHoverNode(null)
+      if (action.type === 'pan') handleCameraPan(action.dx, action.dy)
+      else {
+        const [wx, wy] = screenToWorld(action.from.x, action.from.y)
+        const k = clampCameraZoom(state.camera.k * action.scale)
+        state.camera = { x: wx - (action.to.x - W / 2) / k, y: wy - (action.to.y - H / 2) / k, k }
         requestRender()
       }
-      e.preventDefault()
+      return
     }
-
-    const resetTouchState = () => {
-      touchState.isPanning = false
-      touchState.isZooming = false
-      touchState.multiTouch = false
-      touchState.lastTouch = null
-      touchState.initialDistance = 0
-      touchState.initialCenter = null
+    if (event.pointerType === 'touch') return
+    const node = handleMouseMovePick(position.x, position.y)
+    event.currentTarget.style.cursor = node ? 'pointer' : 'grab'
+    if (!node || !tooltipRef.current) { hideTooltip(); return }
+    if (previewPrefetch.current?.node !== node) {
+      if (previewPrefetch.current) clearTimeout(previewPrefetch.current.timer)
+      previewPrefetch.current = { node, timer: setTimeout(() => prefetchPreview(node), 150) }
     }
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      clearLongPress()
-
-      // The long-press already navigated; don't also treat the finger lift as
-      // a tap.
-      if (touchState.longPressFired) {
-        touchState.longPressFired = false
-        if (e.touches.length === 0) {
-          resetTouchState()
-          touchState.lastTapTime = 0
-        }
-        e.preventDefault()
-        return
-      }
-
-      if (e.touches.length === 0) {
-        const wasTap = !touchState.isPanning && !touchState.multiTouch && !!touchState.lastTouch
-
-        if (wasTap) {
-          const now = Date.now()
-          const sinceLastTap = now - touchState.lastTapTime
-          if (sinceLastTap > 0 && sinceLastTap < 300) {
-            // Double tap drills into the tapped node (like a desktop left-click).
-            drillIntoNode(state.hoverNode as TaxonomyNode | null)
-            touchState.lastTapTime = 0
-          } else {
-            touchState.lastTapTime = now
-          }
-        }
-
-        resetTouchState()
-      } else if (e.touches.length === 1) {
-        // Lifted one finger of a pinch — resume single-finger panning, but keep
-        // multiTouch set so the final lift isn't mistaken for a tap.
-        touchState.isZooming = false
-        touchState.isPanning = false
-        touchState.lastTouch = getTouchPos(e.touches[0])
-      }
-
-      e.preventDefault()
-    }
-
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false })
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false })
-    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false })
-
-    return () => {
-      canvas.removeEventListener('touchstart', handleTouchStart)
-      canvas.removeEventListener('touchmove', handleTouchMove)
-      canvas.removeEventListener('touchend', handleTouchEnd)
-      canvas.removeEventListener('touchcancel', handleTouchEnd)
-      clearLongPress()
-    }
-  }, [hidePreview, isLoading, onUpdateBreadcrumbs, updateTooltipAndPreview])
-
-  const handleContextMenu = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (isLoading) return
-
-    const current = state.current
-    if (current && current.parent) {
-      await ensureBackendViewport({ force: true })
-      updateCurrentNodeOnly(current.parent)
-      onUpdateBreadcrumbs(current.parent)
-    }
+    // Hover gives a lightweight cue. Reading cards change only after selection.
+    if (tooltipNameRef.current) tooltipNameRef.current.textContent = getCommonName(node.name, language) || node.name
+    if (tooltipMetaRef.current) tooltipMetaRef.current.textContent = copy.clickExplore
+    const tooltip = tooltipRef.current
+    const placement = getTooltipPosition(position.x, position.y, tooltip.offsetWidth, tooltip.offsetHeight, W, H)
+    tooltip.style.left = `${placement.left}px`
+    tooltip.style.top = `${placement.top}px`
+    tooltip.style.opacity = '1'
   }
 
-  const handleClick = async (e: React.MouseEvent) => {
-    if (e.button !== 0 || isLoading) return
-
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return
-
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const node = pickNodeAt(x, y)
-    if (!node) return
-
-    updateCurrentNodeOnly(node)
-    onUpdateBreadcrumbs(node)
-    await ensureBackendViewport({ force: true })
+  const pointerEnd = (event: React.PointerEvent<HTMLCanvasElement>, cancelled = false) => {
+    const tap = gesture.current.end(event.pointerId, point(event), cancelled)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    event.currentTarget.style.cursor = 'grab'
+    if (tap) void selectNode(pickNodeAt(tap.x, tap.y))
   }
 
   return (
     <div className={`stage ${hidden ? 'hidden' : ''}`} ref={stageRef}>
-      <canvas
-        id="view"
-        ref={canvasRef}
-        className={isLoading ? 'loading' : ''}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onMouseDown={handleMouseDown}
-        onContextMenu={handleContextMenu}
-        onClick={handleClick}
+      <canvas id="view" ref={canvasRef} className={isLoading ? 'loading' : ''}
+        onPointerDown={pointerDown} onPointerMove={pointerMove}
+        onPointerUp={event => pointerEnd(event)} onPointerCancel={event => pointerEnd(event, true)}
+        onLostPointerCapture={event => { gesture.current.end(event.pointerId, point(event), true) }}
+        onPointerLeave={() => { handleMouseLeaveEvent(); hideTooltip() }}
+        onContextMenu={event => { event.preventDefault(); if (state.current?.parent) void selectNode(state.current.parent) }}
+        role="img" aria-label={copy.explanation}
       />
-
-      <div className="tooltip" ref={tooltipRef}>
-        <div className="tooltip-content">
-          <div className="tooltip-name" ref={tooltipNameRef}></div>
-          <div className="tooltip-meta" ref={tooltipMetaRef}></div>
-        </div>
-      </div>
-
-      <BigPreview
-        language={language}
-        preview={preview}
-        onWebSearch={() => openProviderSearch(state.hoverNode || state.current)}
+      <div className="tooltip" ref={tooltipRef}><div className="tooltip-content">
+        <div className="tooltip-name" ref={tooltipNameRef} />
+        <div className="tooltip-meta" ref={tooltipMetaRef} />
+      </div></div>
+      <BigPreview language={language} preview={preview} pinned={pinned}
+        onTogglePin={() => {
+          pinnedRef.current = !pinnedRef.current
+          setPinned(pinnedRef.current)
+          if (!pinnedRef.current && state.current) showPreview(state.current, true)
+        }}
+        onClose={() => { pinnedRef.current = false; setPinned(false); previewRequest.current++; setPreview(null) }}
+        onWebSearch={() => openProviderSearch(preview?.node || state.current)}
       />
-
-      <PulseOverlay
-        node={pulse?.node ?? null}
-        sequence={pulse?.sequence ?? 0}
-        onFinish={() => setPulse(null)}
-      />
-
-      <div className="stage-watermark">InfiniteSpecies.com</div>
+      {!hidden && !isLoading && <MapControls language={language} onRandom={onRandom} hasPreview={!!preview} />}
+      {error && !hidden && <div className="map-error" role="alert">{copy.error}<button type="button" onClick={() => setError(false)} aria-label={copy.dismiss}>×</button></div>}
+      <PulseOverlay node={pulse?.node ?? null} sequence={pulse?.sequence ?? 0} onFinish={() => setPulse(null)} />
     </div>
   )
 }

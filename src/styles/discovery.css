@@ -1,0 +1,241 @@
+/* Discovery surfaces: keep the map as the visual focus, with readable controls. */
+html:has(.reading-page), body:has(.reading-page), #root:has(.reading-page) { height: auto; min-height: 100%; @apply overflow-auto; }
+.reading-page { background: var(--bg-deep); color: var(--text-primary); font-family: system-ui, sans-serif; font-size: 16px; }
+.reading-page a { color: var(--accent-primary); text-underline-offset: .2em; }
+.reading-nav { max-width: 1200px; margin: auto; padding: 1.5rem; @apply flex flex-wrap; @apply justify-between items-center; gap: 1rem; border-bottom: 1px solid var(--border-dim); }
+.reading-nav nav { @apply flex flex-wrap; gap: 1.5rem; font-size: .85rem; }
+.reading-brand { font-size: 1.2rem; font-weight: 650; @apply no-underline; }
+.reading-hero { max-width: 1200px; margin: auto; padding: 4rem 1.5rem 3rem; }
+.reading-hero h1 { max-width: 900px; font-size: clamp(2.5rem, 6vw, 4.8rem); line-height: 1.1; font-weight: 550; letter-spacing: -.045em; margin-bottom: 1.5rem; }
+.reading-intro { max-width: 44rem; font-size: 1.12rem; color: #b4c6d1; line-height: 1.8; }
+.reading-page .hero-start { color: var(--text-on-accent); }
+.reading-layout { max-width: 1200px; margin: auto; @apply grid; grid-template-columns: minmax(0, 740px) minmax(0, 1fr); gap: 4rem; padding: 0 1.5rem 4rem; }
+.reading-layout article section { margin-bottom: 2.5rem; }
+.reading-layout h2 { font-size: 1.35rem; line-height: 1.4; margin-bottom: .8rem; }
+.reading-layout article p { font-size: 1rem; line-height: 1.85; color: #bfd0da; }
+.reading-layout aside { border-top: 1px solid #314750; padding-top: 1.5rem; align-self: start; }
+.reading-layout aside a { @apply block; padding: .8rem 0; border-bottom: 1px solid var(--border-dim); font-size: .9rem; @apply no-underline; }
+.reading-layout aside > p:last-child { color: #9dafbb; font-size: .8rem; line-height: 1.7; margin-top: 1.5rem; }
+.reading-sources { border-top: 1px solid #314750; padding-top: 1.5rem; }
+.reading-sources li { margin: .7rem 0 .7rem 1.2rem; line-height: 1.7; font-size: .85rem; }
+.reading-footer { @apply flex; gap: 1.5rem; @apply flex-wrap; padding: 2rem 1.5rem; max-width: 1200px; margin: auto; border-top: 1px solid var(--border-dim); font-size: .8rem; color: #9dafbb; }
+.reading-skip { @apply absolute; left: 1rem; top: -10rem; padding: .8rem; background: #182d30; z-index: 100; }
+.reading-skip:focus { top: 1rem; }
+.noscript-notice { @apply fixed; z-index: 201; bottom: 0; left: 0; right: 0; background: #173326; color: #e5f4eb; padding: .8rem 1.2rem; font: 14px/1.6 system-ui, sans-serif; }
+.noscript-notice a { color: #b5f1cc; }
+@media (max-width: 768px) { .reading-layout { grid-template-columns: 1fr; gap: 1rem; } .reading-hero { padding-top: 2.5rem; } }
+/* Sections must keep their content height inside the fixed, scrolling shell. */
+.landing-page.discovery-landing { @apply block; color: var(--text-primary); background: var(--bg-deep); }
+.discovery-landing::before { @apply hidden; }
+.landing-nav, .landing-bottom { @apply relative; z-index: 1; @apply flex justify-between; @apply items-center; gap: 1rem; padding: 1.5rem clamp(1.25rem, 5vw, 5rem); }
+.landing-brand { font-size: 1.2rem; font-weight: 650; letter-spacing: -.04em; }
+.landing-brand span { color: var(--accent-secondary); }
+.landing-nav nav { @apply flex; gap: .4rem; }
+.landing-nav button { color: #b7c4ce; border: 0; @apply bg-transparent; font: inherit; font-size: .85rem; padding: .65rem; min-height: 44px; @apply cursor-pointer; }
+.discovery-hero { @apply grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 1rem; @apply items-center; padding: 3rem clamp(1.25rem, 5vw, 5rem) 4rem; min-height: min(720px, 80dvh); }
+.hero-copy { @apply relative; z-index: 1; @apply min-w-0; max-width: 42rem; overflow-wrap: anywhere; }
+.eyebrow { font-size: .7rem; letter-spacing: .16em; @apply font-semibold; color: #a0d9bd; margin-bottom: 1.25rem; }
+.hero-copy h1 { font-size: clamp(2.5rem, 5.3vw, 5.25rem); line-height: 1.06; letter-spacing: -.055em; font-weight: 550; margin: 0 0 1.5rem; }
+.hero-intro { color: var(--text-secondary); font-size: clamp(1rem, 1.4vw, 1.2rem); max-width: 31rem; line-height: 1.65; }
+.hero-start { @apply inline-flex justify-between; gap: 3rem; @apply items-center; padding: 1rem 1.35rem; margin-top: 2rem; color: var(--text-on-accent); background: var(--accent-primary); border: 1px solid var(--accent-primary); border-radius: 9px; font: inherit; font-weight: 650; @apply cursor-pointer no-underline; min-height: 52px; }
+.hero-start:hover { background: var(--accent-hover); }
+.hero-reassurance { margin-top: .8rem; font-size: .75rem; color: #98aab8; }
+.discovery-starts { margin-top: 2.25rem; }
+.discovery-starts > p { color: #a9bac5; font-size: .8rem; margin-bottom: .65rem; }
+.discovery-starts > div { @apply flex flex-wrap; gap: .5rem; }
+.discovery-starts button, .discovery-starts a { padding: .7rem .9rem; min-height: 44px; border-radius: 7px; border: 1px solid var(--border-base); color: var(--text-primary); background: var(--surface-dim); font: inherit; font-size: .8rem; @apply cursor-pointer no-underline; }
+.discovery-starts button:hover, .discovery-starts a:hover { border-color: var(--accent-primary); background: #182d30; }
+.hero-art { margin: 0; @apply min-w-0; }
+.hero-art img { @apply block w-full; height: auto; @apply aspect-square object-contain; margin: 0; opacity: .85; filter: drop-shadow(0 0 50px #8fb8c218); }
+.hero-art figcaption { color: var(--text-muted); font-size: .76rem; line-height: 1.6; max-width: 28rem; margin: 1.25rem auto 0; }
+.landing-learn { @apply grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4rem; padding: 3rem clamp(1.25rem, 5vw, 5rem); border-top: 1px solid #29353e; background: var(--surface-dim); }
+.landing-learn h2 { font-size: 1.7rem; letter-spacing: -.03em; margin-bottom: 1rem; }
+.landing-learn p:not(.eyebrow) { font-size: .9rem; line-height: 1.65; color: #a7bac6; max-width: 34rem; margin-bottom: 1rem; }
+.landing-learn a, .landing-bottom a { color: #b4e9cd; @apply no-underline; }
+.landing-learn nav { @apply flex flex-col; @apply justify-center; }
+.landing-learn nav a { @apply flex items-center; gap: 1.2rem; padding: 1.25rem 0; border-bottom: 1px solid var(--border-dim); color: var(--text-primary); }
+.landing-learn nav a span:first-child { font-size: .75rem; color: #87a094; }
+.landing-learn nav a span:last-child { margin-inline-start: auto; color: var(--accent-primary); }
+.landing-bottom { font-size: .75rem; color: #95a9b6; padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.discovery-landing button:focus-visible, .discovery-landing a:focus-visible, .map-controls button:focus-visible, .group-browser button:focus-visible, .species-card button:focus-visible, .species-card a:focus-visible { outline: 3px solid var(--accent-primary); outline-offset: 3px; }
+button:disabled { @apply cursor-default; opacity: .55; }
+.map-controls { @apply absolute; z-index: 20; left: max(1rem, env(safe-area-inset-left)); bottom: max(1rem, env(safe-area-inset-bottom)); @apply flex flex-wrap; gap: .35rem; max-width: calc(100% - 2rem); padding: .4rem; background: var(--bg-glass); border: 1px solid var(--border-base); border-radius: 12px; box-shadow: 0 8px 24px #0006; }
+.map-controls button, .group-browser button, .map-tip button, .species-card button { font: inherit; color: var(--text-primary); background: var(--surface-base); border: 1px solid var(--border-base); border-radius: 7px; min-height: 44px; padding: .5rem .8rem; @apply cursor-pointer; font-size: .8rem; }
+.map-controls button:first-child, .map-controls button:nth-child(2) { font-size: 1.3rem; min-width: 44px; }
+.map-controls button:hover:not(:disabled), .group-browser button:hover:not(:disabled), .species-card button:hover { border-color: var(--border-bright); }
+.map-tip { @apply absolute; z-index: 18; left: 1rem; bottom: 5.8rem; @apply flex; gap: .6rem; @apply items-start; background: var(--bg-glass); border: 1px solid var(--border-base); color: #c9d8e4; border-radius: 10px; padding: .75rem; max-width: min(32rem, calc(100vw - 2rem)); }
+.map-tip p { line-height: 1.55; font-size: .8rem; margin: 0; }
+.map-tip button { @apply shrink-0; padding: 0; width: 44px; }
+.group-browser { @apply absolute; top: calc(var(--hud-height, 8rem) + .75rem); bottom: 5.8rem; left: 1rem; width: min(340px, calc(100vw - 2rem)); z-index: 22; @apply flex flex-col; border: 1px solid var(--border-base); border-radius: 12px; background: var(--bg-glass); box-shadow: 0 12px 40px #0006; }
+.group-browser header { @apply flex; padding: .8rem; gap: .6rem; @apply items-center; border-bottom: 1px solid var(--border-base); }
+.group-browser h2 { flex: 1; margin: 0; font-size: .95rem; line-height: 1.45; }
+.group-list { padding: .75rem; @apply overflow-auto; overscroll-behavior: contain; }
+.group-list > button { @apply w-full flex; @apply justify-between items-center; text-align: start; margin-bottom: .4rem; }
+.group-list small { @apply block; margin-top: .2rem; color: #9bb3c3; }
+.group-list p { padding: .5rem; font-size: .85rem; }
+.species-card.big-preview { @apply pointer-events-auto; top: calc(var(--hud-height, 8rem) + .75rem); width: 320px; max-width: calc(100vw - 2rem); max-height: calc(100dvh - var(--hud-height, 8rem) - 7rem); background: var(--bg-glass); border: 1px solid var(--border-base); border-radius: 12px; @apply flex flex-col; }
+.species-card-header { @apply flex items-start; @apply justify-between; padding: 1rem; gap: .5rem; }
+.species-card-header > div { @apply min-w-0; overflow-wrap: anywhere; }
+.species-card-header h2 { margin: 0; line-height: 1.3; font-size: 1.15rem; }
+.species-card-header p { color: #a5bccb; font-size: .8rem; margin-top: .4rem; font-style: italic; }
+.species-card-header button { @apply shrink-0; min-width: 44px; }
+.species-card-actions { @apply flex; gap: .5rem; padding: 0 1rem .8rem; }
+.species-card-actions button { font-size: .72rem; flex: 1; }
+.species-card button[aria-pressed="true"] { color: #b5f1cc; border-color: #6ca887; }
+.species-card-details { @apply overflow-y-auto; overscroll-behavior: contain; padding: 0 1rem 1rem; }
+.species-card-details[hidden] { @apply hidden; }
+.species-card img { @apply block; width: min(100%, 200px); height: auto; @apply aspect-square; max-height: none; @apply object-scale-down; margin-inline: auto; background: var(--bg-deep); border-radius: var(--radius-md); }
+.species-rank { font-size: .75rem; margin: .9rem 0; color: #a6d8b9; }
+.species-description { font-size: .85rem; line-height: 1.7; color: #d5e1e9; margin: .9rem 0; }
+.species-source, .species-path { font-size: .7rem; line-height: 1.5; color: #a6b9c7; margin: .8rem 0; }
+.species-source a { color: var(--accent-primary); }
+.species-source small { @apply block; margin-top: .35rem; }
+.species-path p { padding-top: .5rem; overflow-wrap: anywhere; }
+.species-path summary { @apply cursor-pointer; min-height: 32px; }
+.species-web { @apply w-full; }
+.search-result-scientific { font-size: .8rem; font-style: italic; color: #c0d0df; }
+.search-attribution { font-size: .7rem; color: #b6c8d7; padding: .6rem 1rem; }
+@media (max-width: 768px) {
+  .landing-nav { padding: .85rem 1.1rem; @apply flex-wrap; }
+  .landing-nav nav { gap: 0; }
+  .landing-nav button { font-size: .75rem; padding: .5rem; }
+  .discovery-hero { grid-template-columns: 1fr; padding-top: 2rem; @apply min-h-0; gap: 2rem; }
+  .hero-copy h1 { font-size: clamp(2.7rem, 9vw, 4rem); max-width: 34rem; }
+  .hero-art { max-width: 30rem; margin: 0 auto; }
+  .hero-art img { @apply w-full; margin: 0; }
+  .hero-art figcaption { margin-top: .5rem; }
+  .landing-learn { grid-template-columns: 1fr; gap: 1rem; padding-top: 2rem; padding-bottom: 2rem; }
+  .landing-bottom { @apply flex-wrap; line-height: 1.6; }
+  .map-controls { left: .5rem; right: .5rem; bottom: max(.5rem, env(safe-area-inset-bottom)); max-width: none; gap: .25rem; }
+  .map-controls button { flex: 1 1 auto; padding: .4rem .5rem; font-size: .7rem; }
+  .map-tip { bottom: 8.5rem; left: .5rem; max-width: calc(100vw - 1rem); }
+  .group-browser { left: .5rem; width: calc(100vw - 1rem); bottom: 8rem; top: calc(var(--hud-height, 9rem) + .5rem); }
+  .species-card.big-preview, [dir="rtl"] .species-card.big-preview { top: auto !important; bottom: 8rem; left: .5rem; right: .5rem; width: auto; max-width: none; max-height: min(47dvh, calc(100dvh - var(--hud-height, 9rem) - 9rem)); }
+  .species-card-header { padding: .65rem .8rem; }
+  .species-card-header h2 { font-size: 1rem; }
+  .species-card-actions { padding: 0 .8rem .5rem; }
+  .species-card img { width: min(100%, 150px); max-height: none; }
+  .stage-watermark { @apply hidden; }
+}
+@media (max-height: 550px) and (min-width: 600px) {
+  .map-tip { max-width: 24rem; }
+  .species-card.big-preview { max-height: calc(100dvh - var(--hud-height, 6rem) - 5.8rem); top: calc(var(--hud-height, 6rem) + .5rem) !important; bottom: auto; left: auto; right: .5rem; width: 280px; }
+  .group-browser { bottom: 5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discovery-landing *, .species-card, .map-controls * { transition: none !important; animation: none !important; }
+}
+
+/* A compact orientation trail; detail is available without dominating the map. */
+.breadcrumbs.simple-breadcrumbs { @apply block; padding: .65rem 1rem .75rem; max-height: none; overflow: visible; }
+.simple-trail { @apply flex items-center; gap: .5rem; @apply min-w-0; }
+.simple-trail > span[aria-hidden] { color: #8197aa; }
+.simple-trail .crumb { @apply bg-transparent; border-color: transparent; height: auto; min-height: 36px; padding: .3rem .45rem; font-size: .8rem; max-width: 200px; }
+.simple-trail .crumb:first-child { color: #b4e9cd; }
+.current-crumb { font-size: .85rem; font-weight: 650; @apply overflow-hidden text-ellipsis; @apply whitespace-nowrap; color: var(--text-primary); }
+.location-back { margin-inline-start: auto; @apply flex items-center; gap: .35rem; @apply shrink-0; padding: .45rem .7rem; min-height: 40px; font: inherit; font-size: .8rem; color: #c8efdc; border: 1px solid #466957; border-radius: 8px; background: #152b23; @apply cursor-pointer; }
+.location-back bdi { max-width: 170px; @apply whitespace-nowrap overflow-hidden; @apply text-ellipsis; }
+.location-context { font-size: .78rem; color: #afc2ce; line-height: 1.5; margin: .35rem .4rem 0; }
+.full-taxonomy-path { @apply flex flex-wrap; gap: .35rem; max-height: 10rem; @apply overflow-y-auto; border-block: 1px solid #32434e; padding: .6rem 0; margin: .4rem 0; }
+.full-taxonomy-path .crumb { min-height: 36px; height: auto; }
+.simple-breadcrumbs button:focus-visible { outline: 3px solid var(--accent-primary); outline-offset: 2px; }
+.map-controls .map-browse-button { border-color: var(--border-selected); color: #c5f1d9; background: var(--surface-selected); }
+.map-controls { max-width: calc(100% - 2rem); }
+.search-starts { padding: 1rem; }
+.search-starts p { color: #d7e4ec; margin-bottom: .7rem; font-size: .9rem; }
+.search-starts small { @apply block; color: #aabfcc; margin-top: .7rem; }
+.search-suggestions { @apply flex flex-wrap; gap: .4rem; }
+.search-suggestions button { border: 1px solid #49665a; background: #183028; color: #c5f1d9; border-radius: 8px; min-height: 44px; padding: .5rem .7rem; font: inherit; font-size: .8rem; @apply cursor-pointer; }
+.search-results-message:has(.search-suggestions) { @apply block; }
+.search-results-message:has(.search-suggestions) > p { margin-bottom: .6rem; }
+.simple-help { list-style: none; counter-reset: steps; }
+.simple-help li { @apply relative; padding-inline-start: 3rem; margin-bottom: 1.6rem; }
+.simple-help li::before { counter-increment: steps; content: counter(steps); @apply absolute; inset-inline-start: 0; top: 0; width: 2rem; height: 2rem; @apply grid place-items-center; @apply rounded-full; background: #214032; color: #bbf0d1; }
+.simple-help strong { font-size: 1rem; color: #e5f2ed; }
+.simple-help p { font-size: .9rem; color: #b5c8d4; line-height: 1.7; margin-top: .35rem; }
+.help-shortcuts { border-top: 1px solid #32434e; padding-top: .75rem; }
+.help-shortcuts summary { min-height: 44px; @apply cursor-pointer; color: #b4e9cd; }
+.map-error { @apply absolute; left: 1rem; top: calc(var(--hud-height, 8rem) + .6rem); z-index: 25; @apply flex; gap: 1rem; @apply items-center; background: #492b27; color: #ffe2da; padding: .75rem 1rem; border: 1px solid #90645e; border-radius: 8px; }
+.map-error button { color: inherit; @apply bg-transparent; border: 0; min-width: 44px; min-height: 44px; font-size: 1.3rem; @apply cursor-pointer; }
+#view { @apply cursor-grab; }
+@media (max-width: 768px) {
+  .breadcrumbs.simple-breadcrumbs { padding: .5rem .6rem; }
+  .simple-trail { @apply flex-wrap; gap: .15rem .35rem; }
+  .simple-trail .crumb { min-height: 36px; max-width: 100px; font-size: .72rem; }
+  .simple-trail .current-crumb { max-width: 135px; font-size: .75rem; }
+  .location-back { padding: .4rem .55rem; font-size: .72rem; min-height: 44px; }
+  .location-back bdi { max-width: 105px; }
+  .location-context { font-size: .72rem; }
+  .map-controls { @apply grid; grid-template-columns: 44px 44px minmax(0, 1fr) minmax(0, 1fr); max-width: none; }
+  .map-controls button { @apply min-w-0 whitespace-normal; overflow-wrap: anywhere; }
+  .map-controls button:first-child, .map-controls button:nth-child(2) { flex: 0 0 44px; }
+  .map-tip { bottom: 5.2rem; }
+  .group-browser { bottom: 5rem; }
+  .species-card.big-preview, [dir="rtl"] .species-card.big-preview { bottom: 5rem; max-height: min(48dvh, calc(100dvh - var(--hud-height, 10rem) - 6rem)); }
+}
+@media (max-width: 360px) {
+  .map-controls button { font-size: .65rem; padding-inline: .35rem; }
+}
+
+/* Keep navigation outside the drawing surface, including when focus scrolls a panel. */
+.app > .topbar {
+  @apply fixed;
+  inset: 0 0 auto;
+  background: var(--bg-primary);
+  z-index: 40;
+}
+.app > .breadcrumbs.simple-breadcrumbs {
+  @apply fixed;
+  inset: var(--topbar-height, 0px) 0 auto;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-base);
+  z-index: 30;
+  max-height: max(0px, min(40dvh, calc(100dvh - var(--topbar-height, 0px) - 9rem)));
+  @apply overflow-y-auto;
+  overscroll-behavior: contain;
+}
+.simple-trail .crumb { @apply shadow-none; backdrop-filter: none; }
+.simple-trail .crumb:hover { background: var(--surface-hover); }
+.stage {
+  top: var(--hud-height, 0px);
+  height: calc(100dvh - var(--hud-height, 0px));
+}
+/* These panels are positioned relative to the map, which now starts below the header. */
+.stage .group-browser, .stage .map-error { top: .75rem; }
+.stage .species-card.big-preview {
+  @apply absolute;
+  top: .75rem !important;
+  max-height: max(0px, calc(100% - var(--map-controls-clearance, 6rem) - .75rem));
+  @apply overflow-y-auto;
+}
+.group-browser { @apply min-h-0 overflow-hidden; }
+.group-browser header { @apply shrink-0; }
+.group-browser h2 { @apply min-w-0; overflow-wrap: anywhere; }
+.group-list { @apply min-h-0; }
+.stage .group-browser, .stage .map-tip { bottom: var(--map-controls-clearance, 6rem); }
+.map-tip { max-width: min(28rem, calc(100% - 2rem)); max-height: max(0px, calc(100% - var(--map-controls-clearance, 6rem) - .75rem)); @apply overflow-y-auto; }
+.stage:has(.group-browser) .species-card { @apply hidden; }
+.group-list > button > span:first-child { @apply min-w-0; overflow-wrap: anywhere; }
+.species-card-header, .species-card-actions { @apply shrink-0; }
+.stage .tooltip { transform: none; max-width: calc(100% - 16px); max-height: calc(100% - 16px); @apply overflow-hidden; }
+.tooltip-content { @apply min-w-0; }
+.tooltip-name, .tooltip-meta { @apply whitespace-normal; overflow-wrap: anywhere; }
+.full-taxonomy-path { max-height: min(10rem, 20dvh); }
+.topbar .search-results { max-height: max(0px, min(50dvh, calc(100dvh - var(--topbar-height, 4rem) - 1rem))); overscroll-behavior: contain; }
+.search-result-name, .search-result-scientific, .search-result-path { overflow-wrap: anywhere; }
+.reading-layout > *, .landing-learn > * { @apply min-w-0; overflow-wrap: anywhere; }
+.hero-start { max-width: 100%; gap: clamp(.75rem, 4vw, 3rem); }
+@media (max-width: 768px) {
+  .stage .species-card.big-preview {
+    top: auto !important;
+    bottom: var(--map-controls-clearance, 6rem);
+    max-height: max(0px, min(48dvh, calc(100% - var(--map-controls-clearance, 6rem) - .75rem)));
+  }
+}
+@media (max-height: 550px) and (min-width: 600px) {
+  .stage .species-card.big-preview {
+    top: .5rem !important;
+    bottom: auto;
+    max-height: max(0px, calc(100% - var(--map-controls-clearance, 6rem) - .5rem));
+  }
+}

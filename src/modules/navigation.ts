@@ -112,6 +112,8 @@ export async function updateNavigation(node: TaxonomyNode, animate = true) {
       state.camera.y = 0;
       state.camera.k = clampCameraZoom(Math.min(W, H) / state.layout.diameter);
     }
+    // Cancel any previous transition and synchronize its target with the new position.
+    stopCameraAnimation();
     // Request render immediately after setting camera position in non-animated navigation
     requestRender();
   }

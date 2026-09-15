@@ -1,6 +1,8 @@
+'use client'
+
 /**
  * App.tsx - Root React component for InfiniteSpecies.
- * Composes landing, topbar, breadcrumbs, canvas stage, loading overlay, first-run language modal,
+ * Composes landing, topbar, breadcrumbs, canvas stage, loading overlay,
  * settings/help dialogs and toast notifications.
  */
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
@@ -10,8 +12,6 @@ import Topbar from './components/Topbar'
 import Breadcrumbs from './components/Breadcrumbs'
 import Stage from './components/Stage'
 import LoadingOverlay from './components/LoadingOverlay'
-import LanguageModal from './components/LanguageModal'
-import OnboardingModal from './components/OnboardingModal'
 import HelpModal from './components/HelpModal'
 import SettingsModal from './components/SettingsModal'
 import ToastContainer from './components/Toast'
@@ -27,17 +27,21 @@ import { draw } from './modules/render'
 import { loadEager } from './modules/data'
 import { ensureBackendViewport, findBackendNodeByPath, loadBackend, randomBackendNode } from './modules/data-backend'
 import { decodePath, findNodeByPath, getNodePath, updateDeepLinkFromNode } from './modules/deeplink'
-import { updateNavigation, fitNodeInView, goToNode, zoomToNode } from './modules/navigation'
+import { updateNavigation, fitNodeInView, goToNode } from './modules/navigation'
 import { openProviderSearch } from './modules/providers'
 import {
   getCurrentLanguage,
-  setCurrentLanguage,
   translate,
   type AppLanguage,
 } from './modules/i18n'
 import { perf } from './modules/settings'
+import { initializeRuntime } from './modules/initialize-runtime'
 import { subscribeProgress } from './modules/loading'
 import type { TaxonomyNode } from './modules/types'
+import { performSearch, handleSearchResultClick } from './modules/search-handler'
+import { requestNodePulse } from './modules/visual-events'
+import { discoveryCopy } from './modules/discovery-copy'
+import { useCurrentNode } from './hooks/useTaxonomyState'
 
 export interface AppState {
   isLanding: boolean
@@ -53,13 +57,10 @@ export interface AppState {
   hoverNode: TaxonomyNode | null
 }
 
-const ONBOARDING_STORAGE_KEY = 'infinitespecies_onboardingSeen'
-
 export default function App() {
-  const [language, setLanguage] = useState<AppLanguage>(() => getCurrentLanguage())
+  const language: AppLanguage = 'en'
   const [colorPreset, setColorPreset] = useState(() => perf.colors.currentPreset)
-  const [languageModalOpen, setLanguageModalOpen] = useState(false)
-  const [onboardingOpen, setOnboardingOpen] = useState(() => localStorage.getItem(ONBOARDING_STORAGE_KEY) !== 'true')
+  const selectedNode = useCurrentNode()
   const [appState, setAppState] = useState<AppState>({
     isLanding: true,
     isLoading: false,
@@ -83,8 +84,12 @@ export default function App() {
   const loadingStartTime = useRef<number>(0)
   const timerInterval = useRef<number | null>(null)
   const startInFlight = useRef(false)
+  const dataReady = useRef(false)
+  const autoStartAttempted = useRef(false)
 
   useEffect(() => {
+    initializeRuntime()
+    setColorPreset(perf.colors.currentPreset)
     resizeCanvas()
     registerDrawCallback(draw)
   }, [])
@@ -93,13 +98,16 @@ export default function App() {
     const handleHashChange = async () => {
       const hash = decodePath(location.hash.slice(1))
       if (!hash || !state.DATA_ROOT) return
-      const node = state.loadMode === 'backend'
-        ? await findBackendNodeByPath(hash)
-        : await findNodeByPath(hash)
-      if (node) {
-        updateNavigation(node, true)
-        updateBreadcrumbs(node)
-      }
+      try {
+        const node = state.loadMode === 'backend'
+          ? await findBackendNodeByPath(hash)
+          : await findNodeByPath(hash)
+        if (node) {
+          await updateNavigation(node, true)
+          updateBreadcrumbs(node)
+          requestNodePulse(node)
+        } else toast.info(discoveryCopy(language).missing)
+      } catch { toast.error(discoveryCopy(language).error) }
     }
 
     window.addEventListener('hashchange', handleHashChange)
@@ -108,18 +116,12 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (languageModalOpen) return
+      if (startInFlight.current) return
 
       const target = e.target as HTMLElement
       const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
 
       if (e.key === 'Escape' || e.code === 'Escape') {
-        if (onboardingOpen) {
-          e.preventDefault()
-          dismissOnboarding()
-          return
-        }
-
         if (isTyping && target.tagName === 'TEXTAREA') {
           return
         }
@@ -131,7 +133,7 @@ export default function App() {
         return
       }
 
-      if (isTyping) return
+      if (isTyping || helpOpen || settingsOpen || settingsLabOpen || e.ctrlKey || e.metaKey || e.altKey) return
 
       if (e.code === 'Slash' || e.key === '?' || e.code === 'F1') {
         e.preventDefault()
@@ -153,7 +155,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [helpOpen, languageModalOpen, onboardingOpen])
+  }, [helpOpen, settingsOpen, settingsLabOpen])
 
   const updateBreadcrumbs = useCallback((node: TaxonomyNode | null) => {
     if (!node) {
@@ -183,6 +185,9 @@ export default function App() {
   useEffect(() => {
     const updateBreadcrumbsHeight = () => {
       const breadcrumbsEl = document.querySelector('.breadcrumbs') as HTMLElement | null
+      const topbarEl = document.querySelector('.topbar') as HTMLElement | null
+      document.documentElement.style.setProperty('--topbar-height', `${topbarEl?.offsetHeight || 0}px`)
+      document.documentElement.style.setProperty('--hud-height', `${(breadcrumbsEl?.offsetHeight || 0) + (topbarEl?.offsetHeight || 0)}px`)
       if (breadcrumbsEl) {
         document.documentElement.style.setProperty('--breadcrumbs-height', `${breadcrumbsEl.offsetHeight}px`)
       } else {
@@ -191,14 +196,17 @@ export default function App() {
     }
 
     updateBreadcrumbsHeight()
+    const observer = new ResizeObserver(updateBreadcrumbsHeight)
+    for (const element of document.querySelectorAll('.topbar, .breadcrumbs')) observer.observe(element)
     const timer = setTimeout(updateBreadcrumbsHeight, 100)
 
     window.addEventListener('resize', updateBreadcrumbsHeight)
     return () => {
       clearTimeout(timer)
+      observer.disconnect()
       window.removeEventListener('resize', updateBreadcrumbsHeight)
     }
-  }, [appState.breadcrumbs])
+  }, [appState.breadcrumbs, appState.showTopbar])
 
   useEffect(() => {
     if (!appState.isLoading) {
@@ -241,6 +249,10 @@ export default function App() {
     setAppState((prev: AppState) => ({ ...prev, isLoading: false }))
   }, [])
 
+  useEffect(() => {
+    if (!appState.isLanding && selectedNode) updateBreadcrumbs(selectedNode)
+  }, [selectedNode, appState.isLanding, updateBreadcrumbs])
+
   useEffect(() => () => {
     if (timerInterval.current !== null) {
       clearInterval(timerInterval.current)
@@ -249,116 +261,92 @@ export default function App() {
   }, [])
 
   const updateProgress = useCallback((progress: number, label?: string, currentStage = 1, totalStages = 1) => {
-    setAppState((prev: AppState) => ({
+    setAppState((prev: AppState) => prev.isLoading ? ({
       ...prev,
-      loadingProgress: progress,
-      loadingPct: `${Math.round(progress)}%`,
+      loadingProgress: Math.max(prev.loadingProgress, Math.min(95, Number.isFinite(progress) ? progress : 0)),
+      loadingPct: `${Math.round(Math.max(prev.loadingProgress, Math.min(95, Number.isFinite(progress) ? progress : 0)))}%`,
       loadingStage: translate('loading.stage', { current: currentStage, total: totalStages }, language),
       ...(label && { loadingTitle: label }),
-    }))
+    }) : prev)
   }, [language])
 
   useEffect(() => subscribeProgress(({ percentage, label, currentStage, totalStages }) => {
     updateProgress(percentage, label, currentStage, totalStages)
   }), [updateProgress])
 
-  const handleStartExploration = async () => {
+  const handleStartExploration = async (destination?: string) => {
     if (startInFlight.current) return
     startInFlight.current = true
-    showLoading(translate('loading.loadingTaxonomy', undefined, language))
-    setAppState((prev: AppState) => ({ ...prev, isLanding: false, showTopbar: true }))
-
     const initialHash = decodePath(location.hash.slice(1))
-
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => resolve())
-      })
-    })
-    resizeCanvas()
-
+    showLoading(translate('loading.loadingTaxonomy', undefined, language))
+    setAppState(prev => ({ ...prev, isLanding: false, showTopbar: true }))
     try {
-      try {
-        await loadBackend()
-        hideLoading()
-
-        state.layoutChanged = true
-
-        if (initialHash && state.DATA_ROOT) {
-          const targetNode = await findBackendNodeByPath(initialHash)
-          if (targetNode && targetNode !== state.DATA_ROOT) {
-            await goToNode(targetNode, true)
-            updateBreadcrumbs(targetNode)
-          } else {
-            fitNodeInView(state.DATA_ROOT)
-            updateBreadcrumbs(state.DATA_ROOT)
-          }
-        } else if (state.DATA_ROOT) {
-          fitNodeInView(state.DATA_ROOT)
-          updateBreadcrumbs(state.DATA_ROOT)
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+      resizeCanvas()
+      if (!dataReady.current) {
+        try { await loadBackend() }
+        catch (backendError) {
+          console.warn('Backend unavailable, loading static taxonomy:', backendError)
+          await loadEager('/data/manifest.json')
         }
-
-        await ensureBackendViewport({ force: true })
-        tick()
-        return
-      } catch (backendErr) {
-        console.warn('Backend data API unavailable, falling back to eager static data:', backendErr)
+        dataReady.current = true
       }
-
-      const candidates = ['/data/manifest.json', 'data/manifest.json']
-
-      for (const url of candidates) {
-        try {
-          console.log(`Attempting to load data from: ${url}`)
-          await loadEager(url)
-          hideLoading()
-
-          state.layoutChanged = true
-
-          if (initialHash && state.DATA_ROOT) {
-            const targetNode = await findNodeByPath(initialHash)
-            if (targetNode && targetNode !== state.DATA_ROOT) {
-              await goToNode(targetNode, true)
-              updateBreadcrumbs(targetNode)
-            } else {
-              fitNodeInView(state.DATA_ROOT)
-              updateBreadcrumbs(state.DATA_ROOT)
-            }
-          } else if (state.DATA_ROOT) {
-            fitNodeInView(state.DATA_ROOT)
-            updateBreadcrumbs(state.DATA_ROOT)
-          }
-
-          tick()
-          return
-        } catch (err) {
-          console.error(`Failed to load ${url}:`, err)
-        }
+      if (!state.DATA_ROOT) throw new Error('Taxonomy did not provide a root')
+      updateProgress(95, 'Preparing map…')
+      state.layoutChanged = true
+      if (destination) await openDestination(destination)
+      else if (initialHash) {
+        const target = state.loadMode === 'backend'
+          ? await findBackendNodeByPath(initialHash)
+          : await findNodeByPath(initialHash)
+        await goToNode(target || state.DATA_ROOT, false)
+        updateBreadcrumbs(target || state.DATA_ROOT)
+        if (target) requestNodePulse(target)
+        else toast.info(discoveryCopy(language).missing)
+      } else {
+        await goToNode(state.DATA_ROOT, false)
+        updateBreadcrumbs(state.DATA_ROOT)
       }
-
-      hideLoading()
-      console.error('Failed to load data from all candidates')
-      setAppState((prev: AppState) => ({
-        ...prev,
-        isLanding: true,
-        showTopbar: false,
-        breadcrumbs: [],
-      }))
-      toast.error(translate('app.dataLoadFailed', undefined, language), 5000)
-    } catch (err) {
-      hideLoading()
-      console.error('Error starting exploration:', err)
-      setAppState((prev: AppState) => ({
-        ...prev,
-        isLanding: true,
-        showTopbar: false,
-        breadcrumbs: [],
-      }))
+      await ensureBackendViewport({ force: true })
+      tick()
+    } catch (error) {
+      console.error('Exploration failed:', error)
+      setAppState(prev => ({ ...prev, isLanding: true, showTopbar: false, breadcrumbs: [] }))
       toast.error(translate('app.dataLoadFailed', undefined, language), 5000)
     } finally {
+      hideLoading()
       startInFlight.current = false
     }
   }
+  const openDestination = async (destination: string) => {
+    if (!state.DATA_ROOT) return
+    if (destination === 'random') {
+      await handleBreadcrumbRandom(state.DATA_ROOT)
+      return
+    }
+    if (destination === 'all') {
+      await goToNode(state.DATA_ROOT, false)
+      updateBreadcrumbs(state.DATA_ROOT)
+      return
+    }
+    const result = await performSearch(destination)
+    const node = result.matches.find(item => item.name.toLowerCase() === destination.toLowerCase())
+    if (node) {
+      await handleSearchResultClick(node)
+      updateBreadcrumbs(state.current)
+    } else {
+      await goToNode(state.DATA_ROOT, false)
+      updateBreadcrumbs(state.DATA_ROOT)
+      toast.info(discoveryCopy(language).missing)
+    }
+  }
+
+  useEffect(() => {
+    const destination = new URLSearchParams(location.search).get('explore')
+    if (autoStartAttempted.current || (!location.hash && !destination)) return
+    autoStartAttempted.current = true
+    void handleStartExploration(destination || undefined)
+  }, [])
 
   const handleBackToMenu = async () => {
     setAppState((prev: AppState) => ({
@@ -369,13 +357,12 @@ export default function App() {
     }))
     setSettingsLabOpen(false)
 
-    if (state.DATA_ROOT) {
-      await goToNode(state.DATA_ROOT, false)
-    }
-
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname + window.location.search)
-    }
+    // Returning home needs no data request and must not leave an auto-start URL.
+    const url = new URL(location.href)
+    url.pathname = '/'
+    url.hash = ''
+    url.searchParams.delete('explore')
+    history.replaceState(null, '', url)
   }
 
   const handleReset = async () => {
@@ -393,12 +380,16 @@ export default function App() {
   }
 
   const handleBreadcrumbClick = async (node: TaxonomyNode) => {
-    await ensureBackendViewport({ force: true })
     await goToNode(node, true)
     updateBreadcrumbs(node)
+    await ensureBackendViewport({ force: true })
   }
 
   const handleBreadcrumbRandom = async (rootNode: TaxonomyNode) => {
+    // A species has no descendants; surprise the user within its parent group.
+    if (!(rootNode._hasChildren ?? rootNode.children.length > 0)) {
+      rootNode = rootNode.parent || state.DATA_ROOT || rootNode
+    }
     // Backend mode: the subtree isn't fully loaded client-side, so we can't walk
     // it here. Let the server pick a random leaf (same way search asks the backend
     // when the tree isn't loaded yet), then load and zoom to it.
@@ -410,8 +401,10 @@ export default function App() {
 
       const node = await randomBackendNode(rootNode._id)
       if (node && node._id !== rootNode._id) {
-        zoomToNode(node)
-        ensureBackendViewport({ force: true })
+        await goToNode(node, true)
+        updateBreadcrumbs(node)
+        requestNodePulse(node)
+        await ensureBackendViewport({ force: true })
       }
       return
     }
@@ -441,12 +434,16 @@ export default function App() {
     }
 
     if (node && node !== rootNode) {
-      zoomToNode(node)
+      await goToNode(node, true)
+      updateBreadcrumbs(node)
+      requestNodePulse(node)
     }
   }
 
   const handleCopyLink = async () => {
     const url = new URL(location.href)
+    url.pathname = '/'
+    url.searchParams.delete('explore')
     const path = state.current ? getNodePath(state.current).join('/') : ''
     url.hash = path ? `#${encodeURIComponent(path)}` : ''
 
@@ -458,30 +455,8 @@ export default function App() {
     }
   }
 
-  const handleLanguageSelect = (nextLanguage: AppLanguage) => {
-    setCurrentLanguage(nextLanguage)
-    setLanguage(nextLanguage)
-    setLanguageModalOpen(false)
-  }
-
-  const dismissOnboarding = () => {
-    localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true')
-    setOnboardingOpen(false)
-  }
-
   return (
     <div className="app">
-      <OnboardingModal
-        isOpen={onboardingOpen}
-        language={language}
-        onClose={dismissOnboarding}
-      />
-
-      <LanguageModal
-        isOpen={languageModalOpen}
-        onSelect={handleLanguageSelect}
-        onClose={() => setLanguageModalOpen(false)}
-      />
 
       <AnimatePresence>
         {appState.isLanding && (
@@ -489,8 +464,8 @@ export default function App() {
             language={language}
             colorPreset={colorPreset}
             isStarting={appState.isLoading}
-            onStart={handleStartExploration}
-            onLanguage={() => setLanguageModalOpen(true)}
+            onStart={() => void handleStartExploration()}
+            onDiscover={(destination) => void handleStartExploration(destination)}
             onHelp={() => setHelpOpen(true)}
             onSettings={() => setSettingsOpen(true)}
           />
@@ -502,7 +477,6 @@ export default function App() {
           language={language}
           onBackToMenu={handleBackToMenu}
           onCopyLink={handleCopyLink}
-          onLanguage={() => setLanguageModalOpen(true)}
           onSettings={() => setSettingsOpen(true)}
           onSettingsLab={() => setSettingsLabOpen((prev) => !prev)}
           onHelp={() => setHelpOpen(true)}
@@ -513,8 +487,7 @@ export default function App() {
         <Breadcrumbs
           language={language}
           crumbs={appState.breadcrumbs}
-          onCrumbClick={handleBreadcrumbClick}
-          onRandomClick={handleBreadcrumbRandom}
+          onCrumbClick={(node) => void handleBreadcrumbClick(node).catch(() => toast.error(discoveryCopy(language).error))}
         />
       )}
 
@@ -523,6 +496,7 @@ export default function App() {
         isLoading={appState.isLoading}
         onUpdateBreadcrumbs={updateBreadcrumbs}
         hidden={appState.isLanding}
+        onRandom={async () => { if (state.DATA_ROOT) await handleBreadcrumbRandom(state.current || state.DATA_ROOT) }}
       />
 
       {appState.isLoading && (
@@ -544,13 +518,13 @@ export default function App() {
         language={language}
         colorPreset={colorPreset}
         onColorPresetChange={setColorPreset}
-        onLanguageChange={handleLanguageSelect}
         onClose={() => setSettingsOpen(false)}
       />
       {settingsLabOpen && (
         <Suspense fallback={null}>
           <SettingsLabModal
             isOpen={settingsLabOpen}
+            onClose={() => setSettingsLabOpen(false)}
             onPerfChange={() => {
               setColorPreset(perf.colors.currentPreset)
             }}

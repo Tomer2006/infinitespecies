@@ -55,7 +55,7 @@ export async function loadEager(url: string): Promise<TaxonomyNode> {
   const bakedManifestUrl = url;
   logInfo(`Loading baked layout from ${bakedManifestUrl}`);
 
-  const bakedManifestRes = await fetch(bakedManifestUrl, { cache: 'default' });
+  const bakedManifestRes = await fetch(bakedManifestUrl, { cache: 'default', signal: AbortSignal.timeout(perf.loading.fetchTimeoutMs) });
 
   if (!bakedManifestRes.ok) {
     throw new Error(`Failed to fetch baked manifest at ${bakedManifestUrl} (${bakedManifestRes.status}). Run "node tools/bake-layout.js" to generate baked data.`);
@@ -63,8 +63,11 @@ export async function loadEager(url: string): Promise<TaxonomyNode> {
 
   const bakedManifest = await bakedManifestRes.json() as BakedManifest;
 
-  if (!bakedManifest.version || !bakedManifest.files || !bakedManifest.layout_size) {
-    throw new Error('Invalid baked manifest: missing required fields (version, files, layout_size)');
+  if (!bakedManifest?.version || !Array.isArray(bakedManifest.files) || !bakedManifest.files.length ||
+      bakedManifest.files.some(file => !file || typeof file.filename !== 'string' || !file.filename.trim()) ||
+      !Number.isFinite(bakedManifest.layout_size) || bakedManifest.layout_size <= 0 ||
+      !Number.isFinite(bakedManifest.total_nodes) || bakedManifest.total_nodes <= 0) {
+    throw new Error('Invalid baked manifest: expected a version, nonempty file list, positive layout_size and total_nodes');
   }
 
   logInfo('Pre-baked layout manifest loaded, using optimized data path');
@@ -91,7 +94,7 @@ async function loadFromBakedFiles(baseUrl: string, manifest: BakedManifest): Pro
   logInfo(`Loading pre-baked layout from ${baseUrl} (${totalFiles} files, ${totalNodes.toLocaleString()} nodes)`);
 
   // Stage 1: Loading Files
-  setProgress(0, translate('data.loadingBakedFiles', { total: formatNumber(totalFiles) }), 1, 1);
+  setProgress(0, translate('data.loadingBakedFiles', { total: formatNumber(totalFiles) }), 1, 2);
 
   const concurrency = Math.max(computeFetchConcurrency(), 8);
   let completed = 0;
@@ -124,7 +127,7 @@ async function loadFromBakedFiles(baseUrl: string, manifest: BakedManifest): Pro
           completed / totalFiles,
           translate('data.loadedBakedFiles', { completed: formatNumber(completed), total: formatNumber(totalFiles) }),
           1,
-          1,
+          2,
         );
       }
 
@@ -183,7 +186,7 @@ async function loadFromBakedFiles(baseUrl: string, manifest: BakedManifest): Pro
   }
 
   // Stage 2: Rehydrating tree
-  setProgress(0, translate('data.rehydratingTree'), 1, 1);
+  setProgress(0, translate('data.rehydratingTree'), 2, 2);
 
   // Sort by index and merge all arrays
   validResults.sort((a, b) => a.index - b.index);
@@ -251,7 +254,7 @@ async function loadFromBakedFiles(baseUrl: string, manifest: BakedManifest): Pro
     }
   }
 
-  setProgress(1, translate('data.loadedNodesWithLayout', { count: formatNumber(flatNodes.length) }), 1, 1);
+  setProgress(1, translate('data.loadedNodesWithLayout', { count: formatNumber(flatNodes.length) }), 2, 2);
   logInfo(`Baked layout loaded: ${flatNodes.length} nodes in ${(performance.now() - startTime).toFixed(0)}ms`);
   return root
 }
@@ -327,8 +330,8 @@ function rehydrateTree(flatNodes: BakedRow[], format?: string): TaxonomyNode {
       setProgress(
         0.3 * (i / nodeCount),
         translate('data.creatingNodes', { current: formatNumber(i), total: formatNumber(nodeCount) }),
-        1,
-        1,
+        2,
+        2,
       );
     }
   }
@@ -358,8 +361,8 @@ function rehydrateTree(flatNodes: BakedRow[], format?: string): TaxonomyNode {
       setProgress(
         0.3 + 0.4 * (i / nodeCount),
         translate('data.linkingNodes', { current: formatNumber(i), total: formatNumber(nodeCount) }),
-        1,
-        1,
+        2,
+        2,
       );
     }
   }
@@ -371,7 +374,7 @@ function rehydrateTree(flatNodes: BakedRow[], format?: string): TaxonomyNode {
   // Third pass: compute _leaves counts (bottom-up)
   computeLeavesCounts(root);
 
-  setProgress(0.9, translate('data.finalizingTree'), 1, 1);
+  setProgress(0.9, translate('data.finalizingTree'), 2, 2);
 
   // Update globalId to continue from max
   state.globalId = maxId + 1;

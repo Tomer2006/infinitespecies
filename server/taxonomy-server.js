@@ -49,6 +49,21 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, buildViewportResponse(url));
     }
 
+    const childrenMatch = url.pathname.match(/^\/api\/tree\/children\/(\d+)$/);
+    if (childrenMatch) {
+      const id = Number(childrenMatch[1]);
+      if (!nodeExists(id)) return sendJson(res, { error: 'Node not found' }, 404);
+      const requestedOffset = Number(url.searchParams.get('offset') || 0);
+      const offset = Number.isSafeInteger(requestedOffset) ? Math.max(0, requestedOffset) : 0;
+      const children = childIds(id);
+      const page = children.slice(offset, offset + 50);
+      return sendJson(res, {
+        nodes: [...new Set([...ancestorIds(id), ...page])].map(serializeNode),
+        child_ids: page,
+        total: children.length,
+      });
+    }
+
     const nodeMatch = url.pathname.match(/^\/api\/tree\/node\/(\d+)$/);
     if (nodeMatch) {
       const id = Number(nodeMatch[1]);
@@ -470,7 +485,7 @@ function findNodeByPath(pathValue) {
         break;
       }
     }
-    if (!nextId) return currentId;
+    if (!nextId) return null;
     currentId = nextId;
   }
 
@@ -545,21 +560,22 @@ function serveStatic(pathname, res) {
   const cleanPath = pathname === '/' ? '/index.html' : pathname;
   const targetPath = path.resolve(baseDir, `.${decodeURIComponent(cleanPath)}`);
 
-  if (!targetPath.startsWith(baseDir)) {
+  if (targetPath !== baseDir && !targetPath.startsWith(baseDir + path.sep)) {
     res.writeHead(403);
     return res.end('Forbidden');
   }
 
-  const filePath = fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()
-    ? targetPath
-    : path.join(baseDir, 'index.html');
+  const candidate = fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory()
+    ? path.join(targetPath, 'index.html') : targetPath;
+  const found = fs.existsSync(candidate) && fs.statSync(candidate).isFile();
+  const filePath = found ? candidate : path.join(baseDir, '404.html');
 
   if (!fs.existsSync(filePath)) {
     res.writeHead(404);
     return res.end('Not found');
   }
 
-  res.writeHead(200, {
+  res.writeHead(found ? 200 : 404, {
     'Content-Type': contentType(filePath),
     'Cache-Control': filePath.endsWith('index.html') ? 'no-store' : 'public, max-age=3600',
   });
@@ -570,6 +586,8 @@ function contentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   switch (ext) {
     case '.html': return 'text/html; charset=utf-8';
+    case '.xml': return 'application/xml; charset=utf-8';
+    case '.txt': return 'text/plain; charset=utf-8';
     case '.js': return 'text/javascript; charset=utf-8';
     case '.css': return 'text/css; charset=utf-8';
     case '.json': return 'application/json; charset=utf-8';

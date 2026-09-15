@@ -153,10 +153,12 @@ function buildNestedTreeIterative(nodes, rootOttId) {
   
   // BFS to build tree
   const queue = [{ ottId: rootOttId, treeNode: root }];
+  let queueIndex = 0;
   let processed = 0;
   
-  while (queue.length > 0) {
-    const { ottId, treeNode } = queue.shift();
+  // Use a cursor instead of Array#shift(): shifting millions of entries is O(N²).
+  while (queueIndex < queue.length) {
+    const { ottId, treeNode } = queue[queueIndex++];
     const node = nodes.get(ottId);
     
     if (!node) continue;
@@ -188,7 +190,7 @@ function buildNestedTreeIterative(nodes, rootOttId) {
     
     processed++;
     if (processed % 500000 === 0) {
-      console.log(`  Processed ${processed.toLocaleString()} nodes, queue size: ${queue.length.toLocaleString()}`);
+      console.log(`  Processed ${processed.toLocaleString()} nodes, queue size: ${(queue.length - queueIndex).toLocaleString()}`);
     }
   }
   

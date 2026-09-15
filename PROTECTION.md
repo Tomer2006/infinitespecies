@@ -6,24 +6,20 @@
    - ✅ LICENSE file (Proprietary "All Rights Reserved")
    - ✅ package.json license field
    - ✅ README license notice
-   - ✅ Copyright banner in production builds
+   - ✅ Copyright and license notices in the repository
 
 2. **Build Protection**
    - ✅ Sourcemaps disabled in production
    - ✅ Minification enabled
-   - ✅ Copyright notice in bundled files
+   - ✅ Next.js production build
 
 ## 🔒 Additional Protection Measures
 
 ### 1. **Code Obfuscation (Optional - Advanced)**
 
-For stronger obfuscation, install `vite-plugin-obfuscator`:
-
-```bash
-npm install --save-dev vite-plugin-obfuscator
-```
-
-Then update `vite.config.ts` to use obfuscation (note: this can slow down builds and may cause issues).
+Next.js minifies production client bundles and disables browser source maps by
+default. Code shipped to browsers remains inspectable; keep secrets and private
+logic on the server. Vite plugins are not part of this project's build.
 
 ### 2. **Server-Side Validation**
 
@@ -37,7 +33,7 @@ Then update `vite.config.ts` to use obfuscation (note: this can slow down builds
 Add checks in your code to prevent running on unauthorized domains:
 
 ```javascript
-// In your main.tsx or App.tsx
+// In your App.tsx
 const allowedDomains = ['infinitespecies.com', 'localhost'];
 if (!allowedDomains.includes(window.location.hostname)) {
   console.error('Unauthorized domain');

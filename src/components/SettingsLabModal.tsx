@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { requestRender } from '../modules/canvas'
 import {
   applyPerfSettingsSnapshot,
   getPerfSettingsSnapshot,
@@ -12,6 +13,7 @@ import {
 interface SettingsLabModalProps {
   isOpen: boolean
   onPerfChange: () => void
+  onClose: () => void
 }
 
 interface SettingsLabFieldProps {
@@ -233,8 +235,15 @@ function SettingsLabField({ path, label, value, onChange }: SettingsLabFieldProp
 export default function SettingsLabModal({
   isOpen,
   onPerfChange,
+  onClose,
 }: SettingsLabModalProps) {
   const [snapshot, setSnapshot] = useState<EditablePerfRecord>(() => getPerfSettingsSnapshot())
+  useEffect(() => {
+    if (!isOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [isOpen, onClose])
 
   useEffect(() => {
     if (isOpen) {
@@ -247,6 +256,7 @@ export default function SettingsLabModal({
     applyPerfSettingsSnapshot(nextSnapshot)
     saveCurrentPerfOverrides()
     onPerfChange()
+    requestRender()
   }
 
   const flatEntries = flattenSettings(snapshot).sort((a, b) => a.path.join('.').localeCompare(b.path.join('.')))
@@ -277,10 +287,12 @@ export default function SettingsLabModal({
                   const resetSnapshot = getPerfSettingsSnapshot()
                   setSnapshot(resetSnapshot)
                   onPerfChange()
+                  requestRender()
                 }}
               >
                 Reset Defaults
               </button>
+              <button type="button" className="btn btn-ghost" onClick={onClose} aria-label="Close Settings Lab">Close</button>
             </div>
           </div>
 

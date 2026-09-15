@@ -26,9 +26,8 @@
   }
 
   .onboarding-actions {
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
+    @apply w-full justify-end;
+    @apply flex-wrap;
   }
 }
 
@@ -39,7 +38,7 @@
   touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  user-select: none;
+  @apply select-none;
 }
 
 @media (max-width: 768px) {
@@ -65,7 +64,7 @@
   }
 
   .landing-center {
-    align-items: flex-end;
+    @apply items-end;
     padding:
       1rem
       max(1rem, var(--safe-right))
@@ -75,7 +74,7 @@
 
   .landing-start-btn {
     width: min(100%, 26rem);
-    min-width: 0;
+    @apply min-w-0;
     min-height: 88px;
     padding: 1.25rem 1.5rem;
     font-size: 16px;
@@ -92,7 +91,7 @@
 
   .landing-footer-btn {
     flex: 1 1 140px;
-    min-width: 0;
+    @apply min-w-0;
     min-height: 44px;
     padding: 0.75rem 1rem;
     font-size: 15px;
@@ -129,15 +128,14 @@
       max(var(--space-sm), var(--safe-right))
       var(--space-sm)
       max(var(--space-sm), var(--safe-left));
-    flex-wrap: wrap;
-    align-items: flex-start;
+    @apply flex-wrap items-start;
     gap: var(--space-sm);
     max-height: none;
   }
 
   .topbar-left {
     flex: 1 1 auto;
-    min-width: 0;
+    @apply min-w-0;
   }
 
   .topbar-brand {
@@ -145,29 +143,27 @@
   }
 
   .topbar-brand > span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply overflow-hidden text-ellipsis;
+    @apply whitespace-nowrap;
     max-width: 120px;
   }
 
   .topbar-center {
     order: 3;
     flex: 1 1 100%;
-    width: 100%;
-    min-width: 0;
+    @apply w-full min-w-0;
   }
 
   .topbar-right {
     flex: 0 1 auto;
-    flex-wrap: wrap;
+    @apply flex-wrap;
     gap: var(--space-sm);
   }
 
   .searchbar {
-    min-width: 0;
+    @apply min-w-0;
     max-width: 100%;
-    width: 100%;
+    @apply w-full;
   }
 
   .searchbar-input {
@@ -194,7 +190,7 @@
 
   .topbar-right .topbar-web-search-btn {
     width: auto;
-    min-width: 0;
+    @apply min-w-0;
     padding: 0.75rem 0.875rem;
   }
 
@@ -206,7 +202,7 @@
       max(1rem, var(--safe-left));
     max-height: min(30vh, 8rem);
     max-height: min(30dvh, 8rem);
-    overflow-y: auto;
+    @apply overflow-y-auto;
     overscroll-behavior: contain;
   }
 
@@ -215,8 +211,7 @@
   }
 
   .breadcrumb-item {
-    display: flex;
-    align-items: center;
+    @apply flex items-center;
     min-height: 44px;
     padding: 0.5rem 0.75rem;
   }
@@ -249,8 +244,7 @@
   }
 
   .loading-meta {
-    justify-content: center;
-    flex-wrap: wrap;
+    @apply justify-center flex-wrap;
   }
 
   .modal-backdrop {
@@ -264,7 +258,7 @@
   }
 
   .modal {
-    width: 100%;
+    @apply w-full;
     max-width: none;
     max-height: 100%;
     border-radius: 20px;
@@ -290,7 +284,7 @@
   }
 
   .modal-footer {
-    flex-wrap: wrap;
+    @apply flex-wrap;
     padding-top: 0.875rem;
     padding-bottom: max(0.875rem, var(--safe-bottom));
   }
@@ -304,7 +298,7 @@
   }
 
   .big-preview {
-    position: fixed;
+    @apply fixed;
     /* Match desktop: anchor top-right (below the breadcrumbs, via the base /
        JS-computed `top`) so the card never overlaps the bottom-right watermark. */
     right: max(var(--space-md), var(--safe-right));
@@ -314,7 +308,7 @@
     max-width: min(40vw, calc(100vw - 2rem));
     max-height: min(55vh, 20rem);
     max-height: min(55dvh, 20rem);
-    pointer-events: auto;
+    @apply pointer-events-auto;
   }
 
   [dir="rtl"] .big-preview {
@@ -323,15 +317,15 @@
   }
 
   .big-preview img {
-    width: 100%;
+    @apply w-full;
     max-width: 100%;
     max-height: min(20dvh, 200px);
     height: auto;
-    object-fit: cover;
+    @apply object-cover;
   }
 
   .big-preview-empty {
-    width: 100%;
+    @apply w-full;
     min-height: 100px;
     max-height: 180px;
     aspect-ratio: 4 / 3;
@@ -347,9 +341,9 @@
     font-size: 0.75rem;
     line-height: 1.2;
     word-wrap: break-word;
-    overflow: hidden;
+    @apply overflow-hidden;
     overflow-wrap: break-word;
-    text-overflow: ellipsis;
+    @apply text-ellipsis;
     display: -webkit-box;
     line-clamp: 2;
     -webkit-line-clamp: 2;
@@ -360,12 +354,12 @@
   .big-preview-footer {
     min-height: auto;
     padding: 0.5rem;
-    flex-direction: column;
+    @apply flex-col;
     gap: var(--space-xs);
   }
 
   .big-preview-footer .btn {
-    width: 100%;
+    @apply w-full;
     min-height: 36px;
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
@@ -379,7 +373,7 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    overflow: hidden;
+    @apply overflow-hidden;
     max-height: 2.6em;
     padding-top: 0;
     padding-bottom: 0;
@@ -500,8 +494,7 @@
   }
 
   .landing-center {
-    align-items: center;
-    justify-content: flex-start;
+    @apply items-center justify-start;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
@@ -520,7 +513,7 @@
   }
 
   .landing-footer-buttons {
-    justify-content: flex-start;
+    @apply justify-start;
     gap: 0.5rem;
     padding-top: 0.75rem;
     padding-bottom: max(0.75rem, var(--safe-bottom));
@@ -532,8 +525,7 @@
   }
 
   .landing-art {
-    align-items: center;
-    justify-content: flex-end;
+    @apply items-center justify-end;
     padding-right: max(0.75rem, var(--safe-right));
   }
 
@@ -617,7 +609,7 @@
   }
 
   .modal-backdrop {
-    align-items: flex-start;
+    @apply items-start;
   }
 
   .modal {
@@ -646,7 +638,7 @@
   }
 
   .tooltip {
-    pointer-events: none;
+    @apply pointer-events-none;
   }
 
   /* NOTE: don't force .big-preview { display: block } here. Visibility is driven

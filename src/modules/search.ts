@@ -97,6 +97,8 @@ function matchesQueryFast(node: TaxonomyNode, queryLower: string) {
 }
 
 export function findAllByQuery(q: string, limit = perf.search.maxResults): TaxonomyNode[] {
+  limit = Math.max(0, Math.floor(limit));
+  if (!limit) return [];
   if (!q) return [];
   q = q.trim();
   if (!q || !state.layout?.root) return [];
@@ -106,14 +108,21 @@ export function findAllByQuery(q: string, limit = perf.search.maxResults): Taxon
   const stack: TaxonomyNode[] = [state.layout.root];
   const maxCandidates = Math.min(limit * 3, 500); // Collect more candidates than needed for path scoring
   
-  // Phase 1: Fast search - collect candidates without expensive path lookups
-  while (stack.length && scoredResults.length < maxCandidates) {
+  // Scan the whole tree, retaining only the strongest candidates. Stopping after
+  // the first batch of substring matches can miss an exact match later on.
+  const compare = (a: ScoredNode, b: ScoredNode) => b.score - a.score || a.node.name.localeCompare(b.node.name) || a.node._id - b.node._id;
+  while (stack.length) {
     const d = stack.pop();
     if (!d) continue;
 
     const score = matchesQueryFast(d, queryLower);
     if (score > 0) {
-      scoredResults.push({ node: d, score });
+      const candidate = { node: d, score };
+      if (scoredResults.length < maxCandidates || compare(candidate, scoredResults[scoredResults.length - 1]) < 0) {
+        scoredResults.push(candidate);
+        scoredResults.sort(compare);
+        if (scoredResults.length > maxCandidates) scoredResults.pop();
+      }
     }
     
     const ch = d.children || [];

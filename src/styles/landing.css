@@ -5,27 +5,25 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .landing-page {
-  position: fixed;
+  @apply fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   min-height: 100vh;
   min-height: 100dvh;
   background: #070a12;
   z-index: 200;
   overflow-x: hidden;
-  overflow-y: auto;
+  @apply overflow-y-auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .landing-art {
-  position: absolute;
+  @apply absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  @apply flex items-center;
+  @apply justify-end;
   padding-right: clamp(1rem, 4vw, 4rem);
-  pointer-events: none;
+  @apply pointer-events-none;
   z-index: 0;
 }
 
@@ -41,25 +39,25 @@
 
 .landing-page::before {
   content: '';
-  position: absolute;
+  @apply absolute;
   inset: 0;
   background: 
     radial-gradient(ellipse 800px 600px at 20% 10%, rgba(91, 141, 239, 0.08) 0%, transparent 60%),
     radial-gradient(ellipse 600px 500px at 80% 90%, rgba(110, 231, 183, 0.05) 0%, transparent 60%);
-  pointer-events: none;
+  @apply pointer-events-none;
   z-index: 1;
 }
 
 /* Top-left header */
 .landing-header {
-  position: relative;
+  @apply relative;
   z-index: 2;
   padding: 2.5rem 3rem;
 }
 
 .landing-title {
   font-size: 2.8rem;
-  font-weight: 700;
+  @apply font-bold;
   background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #3b8d7a 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -81,20 +79,16 @@
 /* Center content */
 .landing-center {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  @apply flex flex-col;
+  @apply items-center justify-center;
+  @apply relative;
   z-index: 2;
   padding: 0 clamp(1rem, 4vw, 3rem);
 }
 
 .landing-start-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  @apply flex flex-col;
+  @apply items-center justify-center;
   gap: 0.5rem;
   padding: 2rem 4rem;
   min-width: 340px;
@@ -104,7 +98,7 @@
   background: linear-gradient(135deg, #5bc4be 0%, #4db8a8 50%, #3fa896 100%);
   border: 3px solid #e69c50;
   border-radius: 16px;
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-base);
   box-shadow: 
     0 0 0 1px rgba(230, 156, 80, 0.3),
@@ -132,43 +126,41 @@
 
 .landing-start-text {
   font-size: 1.25rem;
-  font-weight: 600;
+  @apply font-semibold;
   color: #0a1628;
   letter-spacing: 0.02em;
 }
 
 .landing-start-hint {
   font-size: 0.75rem;
-  font-weight: 400;
+  @apply font-normal;
   color: rgba(10, 22, 40, 0.7);
 }
 
 /* Footer buttons */
 .landing-footer-buttons {
-  position: relative;
+  @apply relative;
   z-index: 2;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  @apply flex justify-center;
+  @apply flex-wrap;
   gap: 1.5rem;
   padding: 2.5rem;
 }
 
 .landing-footer-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex items-center;
+  @apply justify-center;
   padding: 0.875rem 3rem;
   min-width: 160px;
   max-width: 100%;
   font-family: var(--font-sans);
   font-size: 0.9rem;
-  font-weight: 500;
+  @apply font-medium;
   color: #8fa3bd;
   background: #0d1220;
   border: 1.5px solid #1e2a3d;
   border-radius: 8px;
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-fast);
 }
 
@@ -187,9 +179,9 @@
 
 /* Legacy classes for backward compatibility */
 .landing-content {
-  position: relative;
+  @apply relative;
   z-index: 1;
-  text-align: center;
+  @apply text-center;
   padding: 2.4rem;
   max-width: 480px;
 }
@@ -202,27 +194,24 @@
 }
 
 .landing-menu {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 0.8rem;
   margin-bottom: 2.4rem;
 }
 
 .landing-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  @apply flex flex-col;
+  @apply items-center justify-center;
   gap: 0.2rem;
   padding: 1.2rem 1.6rem;
   min-height: 64px;
   font-family: var(--font-sans);
-  font-weight: 600;
+  @apply font-semibold;
   border: none;
   border-radius: 19.2px;
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-base);
-  text-decoration: none;
+  @apply no-underline;
 }
 
 .landing-btn-primary {
@@ -262,7 +251,7 @@
 
 .landing-btn-hint {
   font-size: 0.6rem;
-  font-weight: 400;
+  @apply font-normal;
   opacity: 0.7;
 }
 
@@ -272,7 +261,7 @@
 }
 
 .landing-footer kbd {
-  display: inline-flex;
+  @apply inline-flex;
   padding: 0.1rem 0.3rem;
   margin: 0 0.1rem;
   font-family: var(--font-mono);

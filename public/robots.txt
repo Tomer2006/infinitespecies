@@ -3,10 +3,9 @@
 User-agent: *
 Allow: /
 
-# Don't crawl the raw taxonomy data shards or app assets — these are large
-# machine-readable files (hundreds of MB of JSON), not pages, and have no
-# search value. Blocking them preserves crawl budget for real content.
+# Keep scripts and styles crawlable so search engines can render the app.
+# Raw taxonomy shards and API responses are not search landing pages.
 Disallow: /data/
-Disallow: /assets/
+Disallow: /api/
 
 Sitemap: https://infinitespecies.com/sitemap.xml

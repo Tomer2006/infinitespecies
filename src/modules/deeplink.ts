@@ -35,8 +35,12 @@ export function decodePath(hash: string) {
 export function updateDeepLinkFromNode(node: TaxonomyNode) {
   const path = getNodePath(node).join('/');
   const newHash = path ? `#${encodePath(path)}` : '';
-  if (location.hash !== newHash) {
-    history.replaceState(null, '', newHash);
+  if (location.hash !== newHash || location.pathname !== '/' || new URL(location.href).searchParams.has('explore')) {
+    const url = new URL(location.href);
+    url.pathname = '/';
+    url.searchParams.delete('explore');
+    url.hash = newHash;
+    history.replaceState(null, '', url);
   }
 }
 
@@ -64,7 +68,7 @@ export async function findNodeByPath(pathStr: string): Promise<TaxonomyNode | nu
     const child = (node.children || []).find(c => String(c.name) === name);
     if (!child) {
       logDebug(`Path traversal stopped at "${name}" - child not found in "${node.name}"`);
-      break;
+      return null;
     }
     node = child;
   }

@@ -63,6 +63,13 @@ export function clampCameraZoom(k: number) {
 }
 
 export function animateToCam(nx: number, ny: number, nk: number, dur = perf.animation.cameraAnimationMs) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    stopCameraAnimation();
+    state.camera = { x: nx, y: ny, k: clampCameraZoom(nk) };
+    state.targetCam = { ...state.camera };
+    requestRender();
+    return;
+  }
   if (!Number.isFinite(dur) || dur <= 0) dur = perf.animation.cameraAnimationMs;
   const animationId = ++state.cameraAnimationId;
   state.targetCam.x = nx;

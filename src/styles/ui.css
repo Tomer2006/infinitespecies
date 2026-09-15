@@ -5,16 +5,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .topbar {
-  position: relative;
+  @apply relative;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  @apply flex items-center;
+  @apply justify-between;
   padding: var(--space-sm) var(--space-lg);
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-dim);
-  flex-shrink: 0;
+  @apply shrink-0;
   height: auto;
   max-height: 4rem;
 }
@@ -23,24 +22,22 @@
 .topbar-center,
 .topbar-right {
   flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
+  @apply flex items-center;
+  @apply min-w-0;
 }
 
 .topbar-left {
-  justify-content: flex-start;
+  @apply justify-start;
 }
 
 .topbar-right {
-  justify-content: flex-end;
+  @apply justify-end;
   gap: var(--space-md);
 }
 
 .topbar-center {
   flex: 2;
-  display: flex;
-  justify-content: center;
+  @apply flex justify-center;
 }
 
 .topbar-brand {
@@ -50,14 +47,12 @@
   background: none;
   color: inherit;
   font: inherit;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+  @apply cursor-pointer flex;
+  @apply items-center;
   gap: var(--space-sm);
-  font-weight: 700;
+  @apply font-bold;
   font-size: 1.1rem;
-  white-space: nowrap;
-  text-decoration: none;
+  @apply whitespace-nowrap no-underline;
 }
 
 /* topbar-brand-icon removed - no longer using emoji */
@@ -70,18 +65,16 @@
 }
 
 .topbar-controls {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
   gap: var(--space-sm);
   flex: 1;
-  flex-wrap: wrap;
-  min-width: 0;
+  @apply flex-wrap min-w-0;
 }
 
 .topbar .btn {
-  background: transparent;
+  @apply bg-transparent;
   border-color: transparent;
-  box-shadow: none;
+  @apply shadow-none;
 }
 
 .topbar .btn:hover {
@@ -101,7 +94,7 @@
 .topbar-web-search-btn svg {
   width: 16px;
   height: 16px;
-  flex-shrink: 0;
+  @apply shrink-0;
 }
 
 .topbar-menu-btn {
@@ -114,15 +107,14 @@
 }
 
 .topbar-menu {
-  position: relative;
+  @apply relative;
 }
 
 .topbar-menu-dropdown {
-  position: absolute;
+  @apply absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 0.25rem;
   min-width: 11rem;
   padding: 0.4rem;
@@ -137,18 +129,16 @@
 }
 
 .topbar-menu-item {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
   gap: 0.625rem;
-  width: 100%;
+  @apply w-full;
   min-height: 2.5rem;
   padding: 0.625rem 0.75rem;
   color: #f4f7fb;
-  background: transparent;
+  @apply bg-transparent;
   border: 1px solid transparent;
   border-radius: 12px;
-  cursor: pointer;
-  text-align: left;
+  @apply cursor-pointer text-left;
   transition: all var(--transition-fast);
 }
 
@@ -162,12 +152,12 @@
 .topbar-menu-item svg {
   width: 16px;
   height: 16px;
-  flex-shrink: 0;
+  @apply shrink-0;
   color: #5bc4be;
 }
 
 .topbar-menu-item span {
-  white-space: nowrap;
+  @apply whitespace-nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -175,21 +165,20 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  @apply inline-flex items-center;
+  @apply justify-center;
   gap: var(--space-xs);
   padding: 0.5rem 0.875rem;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  font-weight: 600;
+  @apply font-semibold;
   color: var(--text-primary);
   background: var(--surface-base);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-fast);
-  white-space: nowrap;
+  @apply whitespace-nowrap;
   outline: none;
 }
 
@@ -235,7 +224,7 @@
 }
 
 .btn-ghost {
-  background: transparent;
+  @apply bg-transparent;
   border-color: transparent;
 }
 
@@ -260,12 +249,12 @@
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  font-weight: 500;
+  @apply font-medium;
   color: var(--text-primary);
   background: var(--surface-dim) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-md);
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-fast);
   outline: none;
 }
@@ -285,9 +274,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .searchbar {
-  position: relative;
-  display: flex;
-  align-items: center;
+  @apply relative flex;
+  @apply items-center;
   gap: var(--space-sm);
   flex: 1;
   min-width: 220px;
@@ -308,7 +296,7 @@
 }
 
 .searchbar-icon {
-  flex-shrink: 0;
+  @apply shrink-0;
   width: 18px;
   height: 18px;
   color: var(--text-muted);
@@ -316,12 +304,12 @@
 
 .searchbar-input {
   flex: 1;
-  min-width: 0;
+  @apply min-w-0;
   padding: 0.25rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
   color: var(--text-primary);
-  background: transparent;
+  @apply bg-transparent;
   border: none;
   outline: none;
 }
@@ -331,13 +319,12 @@
 }
 
 .searchbar-input::-webkit-search-cancel-button {
-  display: none;
+  @apply hidden;
 }
 
 .searchbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex items-center;
+  @apply justify-center;
   width: 32px;
   height: 32px;
   padding: 0;
@@ -347,9 +334,9 @@
   box-shadow: var(--shadow-lg);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-fast);
-  flex-shrink: 0;
+  @apply shrink-0;
 }
 
 .searchbar-btn:hover {
@@ -368,13 +355,13 @@
 }
 
 .search-spinner {
-  display: inline-block;
+  @apply inline-block;
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
   border: 2px solid currentColor;
   border-right-color: transparent;
-  border-radius: 50%;
+  @apply rounded-full;
   animation: search-spin 0.65s linear infinite;
 }
 
@@ -386,12 +373,12 @@
 
 /* Search Results Dropdown */
 .search-results {
-  position: absolute;
+  @apply absolute;
   left: 0;
   right: 0;
   top: calc(100% + 8px);
   max-height: 50vh;
-  overflow-y: auto;
+  @apply overflow-y-auto;
   background: var(--bg-glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-base);
@@ -420,12 +407,11 @@
 }
 
 .search-result-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  @apply relative flex;
+  @apply flex-col;
   gap: 2px;
   padding: 0.625rem 0.875rem;
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: background var(--transition-fast);
 }
 
@@ -435,20 +421,19 @@
 }
 
 .search-result-spinner {
-  position: absolute;
+  @apply absolute;
   right: 0.875rem;
   top: calc(50% - 8px);
 }
 
 .search-results-message {
   min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex items-center;
+  @apply justify-center;
   gap: var(--space-sm);
   padding: 0.75rem 1rem;
   color: var(--text-secondary);
-  text-align: center;
+  @apply text-center;
 }
 
 .search-results-error {
@@ -465,7 +450,7 @@
 }
 
 .search-result-name {
-  font-weight: 600;
+  @apply font-semibold;
   color: var(--text-primary);
 }
 
@@ -476,11 +461,10 @@
 
 /* Search result classes */
 .search-results .item {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   gap: 2px;
   padding: 0.625rem 0.875rem;
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: background var(--transition-fast);
 }
 
@@ -489,7 +473,7 @@
 }
 
 .search-results .item .name {
-  font-weight: 600;
+  @apply font-semibold;
   color: var(--text-primary);
 }
 
@@ -506,7 +490,7 @@
 .search-results .item .path mark {
   background: rgba(113, 247, 197, 0.3);
   color: var(--text-primary);
-  font-weight: 700;
+  @apply font-bold;
   padding: 0 2px;
   border-radius: 2px;
 }
@@ -516,19 +500,17 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .breadcrumbs {
-  position: relative;
+  @apply relative;
   z-index: 5;
-  display: flex;
-  align-items: flex-start;
+  @apply flex items-start;
   align-content: flex-start;
-  flex-wrap: wrap;
+  @apply flex-wrap;
   gap: var(--space-xs) var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
-  background: transparent;
+  @apply bg-transparent;
   backdrop-filter: none;
   border: none;
-  box-shadow: none;
-  flex-shrink: 0;
+  @apply shadow-none shrink-0;
   overflow-y: visible;
 }
 
@@ -552,27 +534,24 @@
 }
 
 .crumb {
-  display: inline-flex;
-  align-items: center;
+  @apply inline-flex items-center;
   gap: var(--space-xs);
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  @apply font-medium;
   color: var(--text-secondary);
   background: var(--bg-glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-base);
   box-shadow: var(--shadow-lg);
   border-radius: var(--radius-md);
-  cursor: pointer;
+  @apply cursor-pointer;
   transition: all var(--transition-fast);
-  white-space: nowrap;
-  flex-shrink: 0;
+  @apply whitespace-nowrap shrink-0;
   height: 1.75rem; /* Fixed height for each crumb to ensure consistent row height */
   box-sizing: border-box;
   max-width: min(100%, 22rem);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @apply overflow-hidden text-ellipsis;
 }
 
 .crumb:hover {
@@ -584,7 +563,7 @@
 .crumb-random {
   width: 1.75rem;
   padding: 0;
-  justify-content: center;
+  @apply justify-center;
 }
 
 .crumb-random svg {
@@ -595,10 +574,8 @@
 .crumb-separator {
   color: var(--surface-dim);
   font-size: 0.625rem;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  @apply shrink-0 inline-flex;
+  @apply items-center justify-center;
   height: 1.75rem;
 }
 
@@ -607,11 +584,11 @@
 }
 
 [dir="rtl"] .topbar-left {
-  justify-content: flex-end;
+  @apply justify-end;
 }
 
 [dir="rtl"] .topbar-right {
-  justify-content: flex-start;
+  @apply justify-start;
 }
 
 [dir="rtl"] .topbar-menu-dropdown {
@@ -627,7 +604,7 @@
 [dir="rtl"] .search-result-item,
 [dir="rtl"] .search-result-name,
 [dir="rtl"] .search-result-path {
-  text-align: right;
+  @apply text-right;
 }
 
 [dir="rtl"] .search-result-spinner {

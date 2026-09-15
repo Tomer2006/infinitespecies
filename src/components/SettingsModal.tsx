@@ -3,41 +3,33 @@ import { useState, useEffect } from 'react'
 import { perf } from '../modules/settings'
 import {
   getColorPresetLabel,
-  getLanguageLabel,
   translate,
   type AppLanguage,
 } from '../modules/i18n'
 import { useModalFocus } from '../hooks/useModalFocus'
+import { requestRender } from '../modules/canvas'
 
 interface SettingsModalProps {
   isOpen: boolean
   language: AppLanguage
   colorPreset: string
   onColorPresetChange: (preset: string) => void
-  onLanguageChange: (language: AppLanguage) => void
   onClose: () => void
 }
 
-export default function SettingsModal({ isOpen, language, colorPreset, onColorPresetChange, onLanguageChange, onClose }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, language, colorPreset, onColorPresetChange, onClose }: SettingsModalProps) {
   const initialFocusRef = useModalFocus(isOpen)
 
-  const getSavedColorPreset = () => {
-    const saved = localStorage.getItem('infinitespecies_colorPreset')
-    if (saved && perf.colors.presets[saved as keyof typeof perf.colors.presets]) {
-      return saved
-    }
-    return perf.colors.currentPreset
-  }
-
-  const [currentColorPreset, setCurrentColorPreset] = useState(getSavedColorPreset)
+  const [currentColorPreset, setCurrentColorPreset] = useState(colorPreset)
 
   const colorPresets = Object.keys(perf.colors.presets)
 
   const handleColorChange = (preset: string) => {
     setCurrentColorPreset(preset)
     perf.colors.currentPreset = preset
-    localStorage.setItem('infinitespecies_colorPreset', preset)
+    try { localStorage.setItem('infinitespecies_colorPreset', preset) } catch { /* Settings still work when storage is blocked. */ }
     onColorPresetChange(preset)
+    requestRender()
   }
 
   useEffect(() => {
@@ -86,22 +78,6 @@ export default function SettingsModal({ isOpen, language, colorPreset, onColorPr
             </div>
 
             <div className="modal-body settings-body">
-              <div className="settings-section">
-                <h3 className="settings-section-title">{translate('settings.languageSection', undefined, language)}</h3>
-                <div className="settings-select-group">
-                  <label htmlFor="language-select">{translate('settings.languageLabel', undefined, language)}</label>
-                  <select
-                    id="language-select"
-                    className="settings-select"
-                    value={language}
-                    onChange={(e) => onLanguageChange(e.target.value as AppLanguage)}
-                  >
-                    <option value="en">{getLanguageLabel('en')}</option>
-                    <option value="he">{getLanguageLabel('he')}</option>
-                  </select>
-                </div>
-              </div>
-
               <div className="settings-section">
                 <h3 className="settings-section-title">{translate('settings.colorSection', undefined, language)}</h3>
                 <div className="settings-select-group">

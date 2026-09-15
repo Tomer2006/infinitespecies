@@ -6,26 +6,16 @@ import { isPerfLabSecretCode } from '../modules/runtimeSettings'
 import { perf } from '../modules/settings'
 import type { SearchResult } from '../modules/types'
 import { useTaxonomyState } from '../hooks/useTaxonomyState'
+import { discoveryCopy } from '../modules/discovery-copy'
+import { getCommonName } from '../modules/taxon-names.js'
 
 interface TopbarProps {
   language: AppLanguage
   onBackToMenu: () => void
   onCopyLink: () => void
-  onLanguage: () => void
   onSettings: () => void
   onSettingsLab: () => void
   onHelp: () => void
-}
-
-function LanguageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18" />
-      <path d="M12 3a15 15 0 0 1 0 18" />
-      <path d="M12 3a15 15 0 0 0 0 18" />
-    </svg>
-  )
 }
 
 function ShareIcon() {
@@ -73,94 +63,10 @@ function highlightMatchJSX(text: string, query: string): (string | ReactNode)[] 
   return [before, <mark key="match">{match}</mark>, after]
 }
 
-function TopbarMenu({
-  language,
-  onLanguage,
-  onSettings,
-}: {
-  language: AppLanguage
-  onLanguage: () => void
-  onSettings: () => void
-}) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!menuOpen) return
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.code === 'Escape') {
-        setMenuOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown)
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [menuOpen])
-
-  return (
-    <div className="topbar-menu" ref={menuRef}>
-      <button
-        className="btn btn-icon topbar-menu-btn"
-        type="button"
-        title={translate('topbar.settingsButton', undefined, language)}
-        aria-label={translate('topbar.settingsButton', undefined, language)}
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
-        onClick={() => setMenuOpen((current) => !current)}
-      >
-        <SettingsIcon />
-      </button>
-
-      {menuOpen && (
-        <div className="topbar-menu-dropdown" role="menu">
-          <button
-            className="topbar-menu-item"
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setMenuOpen(false)
-              onLanguage()
-            }}
-          >
-            <LanguageIcon />
-            <span>{translate('common.language', undefined, language)}</span>
-          </button>
-
-          <button
-            className="topbar-menu-item"
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setMenuOpen(false)
-              onSettings()
-            }}
-          >
-            <SettingsIcon />
-            <span>{translate('topbar.settingsButton', undefined, language)}</span>
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function Topbar({
   language,
   onBackToMenu,
   onCopyLink,
-  onLanguage,
   onSettings,
   onSettingsLab,
   onHelp,
@@ -172,12 +78,15 @@ export default function Topbar({
   const [resultsQuery, setResultsQuery] = useState('')
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'results' | 'no-results' | 'error' | 'too-short'>('idle')
   const [navigatingResultId, setNavigatingResultId] = useState<number | null>(null)
+  const [usedGbif, setUsedGbif] = useState(false)
+  const copy = discoveryCopy(language)
   const searchRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultItemRefs = useRef<Array<HTMLDivElement | null>>([])
   const searchControllerRef = useRef<AbortController | null>(null)
   const searchTimerRef = useRef<number | null>(null)
   const searchSequenceRef = useRef(0)
+  const navigationInFlight = useRef(false)
   const searchResultsId = useId()
   const { loadMode } = useTaxonomyState()
   const liveSearchEnabled = loadMode === 'backend'
@@ -206,6 +115,8 @@ export default function Topbar({
     const controller = new AbortController()
     searchControllerRef.current = controller
     setSearchStatus('loading')
+    setSearchResults([])
+    setActiveResultIndex(-1)
     setShowResults(true)
 
     try {
@@ -213,6 +124,7 @@ export default function Topbar({
       if (controller.signal.aborted || sequence !== searchSequenceRef.current) return
 
       const results: SearchResult[] = processSearchResults(result.matches, query)
+      setUsedGbif(!!result.usedGbif)
       setSearchResults(results)
       setResultsQuery(query)
       setSearchStatus(results.length > 0 ? 'results' : 'no-results')
@@ -235,6 +147,11 @@ export default function Topbar({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        searchSequenceRef.current++
+        searchControllerRef.current?.abort()
+        if (searchTimerRef.current !== null) window.clearTimeout(searchTimerRef.current)
+        searchTimerRef.current = null
+        setSearchStatus(status => status === 'loading' ? 'idle' : status)
         setShowResults(false)
       }
     }
@@ -262,7 +179,8 @@ export default function Topbar({
   }, [activeResultIndex, searchResults, showResults])
 
   const selectSearchResult = async (result: SearchResult) => {
-    if (navigatingResultId !== null) return
+    if (navigationInFlight.current) return
+    navigationInFlight.current = true
     setNavigatingResultId(result._id)
     try {
       await handleSearchResultClick(result.node)
@@ -270,13 +188,24 @@ export default function Topbar({
     } catch (error) {
       console.error('Search navigation failed:', error)
       setNavigatingResultId(null)
+      setSearchResults([])
+      setActiveResultIndex(-1)
       setSearchStatus('error')
       setShowResults(true)
+    } finally {
+      navigationInFlight.current = false
     }
   }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey && !e.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) && !target.isContentEditable && !document.querySelector('[role="dialog"]')) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        setShowResults(true)
+        return
+      }
       const isSearchFocused = document.activeElement === searchInputRef.current
       if ((e.key === 'Escape' || e.code === 'Escape') && (isSearchFocused || showResults)) {
         e.preventDefault()
@@ -308,8 +237,13 @@ export default function Topbar({
   }, [executeSearch, liveSearchEnabled, searchQuery])
 
   const handleSearch = () => {
+    if (navigationInFlight.current) return
     const query = searchQuery.trim()
-    if (!query) return
+    if (!query) {
+      searchInputRef.current?.focus()
+      setShowResults(true)
+      return
+    }
 
     if (searchTimerRef.current !== null) {
       window.clearTimeout(searchTimerRef.current)
@@ -335,6 +269,7 @@ export default function Topbar({
   }
 
   const handleSearchInputChange = (value: string) => {
+    if (navigationInFlight.current) return
     const nextValue = value.slice(0, 100)
     searchSequenceRef.current++
     searchControllerRef.current?.abort()
@@ -346,7 +281,7 @@ export default function Topbar({
     setNavigatingResultId(null)
     const shouldSearch = liveSearchEnabled && nextValue.trim().length >= 2 && !isPerfLabSecretCode(nextValue)
     setSearchStatus(shouldSearch ? 'loading' : 'idle')
-    setShowResults(shouldSearch)
+    setShowResults(shouldSearch || !nextValue.trim())
   }
 
   const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -385,7 +320,7 @@ export default function Topbar({
     }
 
     if (e.key === 'Enter') {
-      if (showResults && activeResultIndex >= 0 && activeResultIndex < searchResults.length) {
+      if (showResults && searchStatus === 'results' && activeResultIndex >= 0 && activeResultIndex < searchResults.length) {
         e.preventDefault()
         void selectSearchResult(searchResults[activeResultIndex])
         return
@@ -424,17 +359,23 @@ export default function Topbar({
             dir="auto"
             role="combobox"
             aria-autocomplete="list"
-            aria-expanded={showResults}
+            aria-expanded={showResults && (searchStatus !== 'idle' || !searchQuery.trim())}
             aria-controls={showResults && searchStatus === 'results' ? searchResultsId : undefined}
             aria-activedescendant={
-              showResults && activeResultIndex >= 0
+              showResults && searchStatus === 'results' && activeResultIndex >= 0
                 ? `${searchResultsId}-option-${searchResults[activeResultIndex]?._id}`
                 : undefined
             }
-            placeholder={translate('topbar.searchPlaceholder', undefined, language)}
+            placeholder={copy.search}
+            aria-label={copy.search}
             value={searchQuery}
+            readOnly={navigatingResultId !== null}
             maxLength={100}
             onChange={(e) => handleSearchInputChange(e.target.value)}
+            onFocus={() => {
+              setShowResults(true)
+              if (searchStatus === 'idle' && searchQuery.trim().length >= 2) void executeSearch(searchQuery)
+            }}
             onKeyDown={handleSearchInputKeyDown}
           />
           <button
@@ -463,7 +404,16 @@ export default function Topbar({
 
           {showResults && searchStatus === 'no-results' && (
             <div className="search-results search-results-message" role="status" aria-live="polite">
-              {translate('topbar.noResults', undefined, language)}
+              <p>{translate('topbar.noResults', undefined, language)}. {copy.noResultsHelp}</p>
+              <div className="search-suggestions">{['human', 'birds', 'oak'].map(name => <button type="button" key={name} onClick={() => { handleSearchInputChange(name); if (!liveSearchEnabled) void executeSearch(name) }}>{name === 'human' ? getCommonName('Homo sapiens', language) : name === 'birds' ? getCommonName('Aves', language) : getCommonName('Quercus', language)}</button>)}</div>
+            </div>
+          )}
+
+          {showResults && searchStatus === 'idle' && !searchQuery.trim() && (
+            <div className="search-results search-starts">
+              <p>{copy.startHere}</p>
+              <div className="search-suggestions">{[['Homo sapiens', copy.humans], ['Aves', copy.birds], ['Quercus', getCommonName('Quercus', language)]].map(([name, label]) => <button type="button" key={name} onClick={() => { handleSearchInputChange(name!); if (!liveSearchEnabled) void executeSearch(name!) }}>{label}</button>)}</div>
+              <small>{copy.searchHint}</small>
             </div>
           )}
 
@@ -498,22 +448,24 @@ export default function Topbar({
                   }}
                   onClick={() => handleResultClick(result)}
                 >
-                  <div className="search-result-name">{highlightMatchJSX(result.name, resultsQuery)}</div>
+                  <div className="search-result-name">{highlightMatchJSX(getCommonName(result.name, language) || result.name, resultsQuery)}</div>
+                  {getCommonName(result.name, language) && <div className="search-result-scientific">{highlightMatchJSX(result.name, resultsQuery)}</div>}
                   {result.path && <div className="search-result-path">{highlightMatchJSX(result.path, resultsQuery)}</div>}
                   {navigatingResultId === result._id && <span className="search-spinner search-result-spinner" aria-hidden="true" />}
                 </div>
               ))}
+              {usedGbif && <div className="search-attribution">{copy.nameSource}</div>}
             </div>
           )}
         </div>
       </div>
 
       <div className="topbar-right">
-        <TopbarMenu
-          language={language}
-          onLanguage={onLanguage}
-          onSettings={onSettings}
-        />
+        <button className="btn btn-icon topbar-settings-btn" type="button"
+          onClick={onSettings} title={translate('topbar.settingsButton', undefined, language)}
+          aria-label={translate('topbar.settingsButton', undefined, language)}>
+          <SettingsIcon />
+        </button>
         <button
           className="btn btn-icon"
           type="button"
