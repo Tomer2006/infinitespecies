@@ -116,7 +116,7 @@ export default function Stage({ language, isLoading, onUpdateBreadcrumbs, hidden
     hideTooltip()
     try {
       setPulse(null)
-      await goToNode(node, false)
+      await goToNode(node, false, { preservePosition: true })
       onUpdateBreadcrumbs(node)
       showPreview(node)
       await ensureBackendViewport({ force: true })

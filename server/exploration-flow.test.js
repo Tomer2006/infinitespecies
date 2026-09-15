@@ -113,6 +113,26 @@ test('instant navigation cancels a previous camera transition', async () => {
   } finally { globalThis.requestAnimationFrame = previousFrame }
 })
 
+test('circle selection changes zoom while preserving camera X and Y', async () => {
+  const { human } = fixture()
+  human._vx = 42
+  human._vy = 17
+  store.state.nodeLayoutMap.set(human._id, human)
+  store.state.camera = { x: -12, y: 35, k: 3 }
+  const navigation = await server.load('/src/modules/navigation.ts')
+  const previousFrame = globalThis.requestAnimationFrame
+  globalThis.requestAnimationFrame = () => 1
+  try {
+    await navigation.goToNode(human, false, { preservePosition: true })
+    assert.equal(store.state.current, human)
+    assert.equal(store.state.camera.x, -12)
+    assert.equal(store.state.camera.y, 35)
+    assert.notEqual(store.state.camera.k, 3)
+    assert.deepEqual(store.state.targetCam, store.state.camera)
+    assert.equal(store.state.animating, false)
+  } finally { globalThis.requestAnimationFrame = previousFrame }
+})
+
 test('cards retain descriptions and source URLs; missing enrichment keeps the organism usable', async () => {
   const { human, lion } = fixture()
   globalThis.fetch = async () => new Response(JSON.stringify({ query: { pages: { '1': { title: 'Human', fullurl: 'https://en.wikipedia.org/wiki/Human', extract: 'A test description.', thumbnail: { source: 'https://upload.wikimedia.org/example.jpg' } } } } }))

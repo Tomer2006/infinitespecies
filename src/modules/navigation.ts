@@ -33,7 +33,7 @@ export function fitNodeInView(node: TaxonomyNode) {
 }
 
 // Centralized navigation update function - handles all navigation changes and canvas updates
-export async function updateNavigation(node: TaxonomyNode, animate = true) {
+export async function updateNavigation(node: TaxonomyNode, animate = true, options: { preservePosition?: boolean } = {}) {
   const startTime = performance.now();
 
   logInfo(`Starting navigation to "${node.name}" (animate=${animate})`);
@@ -68,7 +68,14 @@ export async function updateNavigation(node: TaxonomyNode, animate = true) {
     return;
   }
 
-  if (animate) {
+  if (options.preservePosition) {
+    const d = state.nodeLayoutMap.get(node._id);
+    const targetRadiusPx = Math.min(W, H) * perf.navigation.fitTargetRadiusMultiplier;
+    state.camera.k = clampCameraZoom(d && d._vr > 0
+      ? targetRadiusPx / d._vr
+      : Math.min(W, H) / state.layout.diameter);
+    stopCameraAnimation();
+  } else if (animate) {
     if (state.rootLayout) {
       // Global layout: zoom to node position
       const d = state.nodeLayoutMap.get(node._id);
@@ -126,8 +133,8 @@ export async function updateNavigation(node: TaxonomyNode, animate = true) {
 }
 
 // Legacy function for backward compatibility
-export async function goToNode(node: TaxonomyNode, animate = true) {
-  return updateNavigation(node, animate);
+export async function goToNode(node: TaxonomyNode, animate = true, options: { preservePosition?: boolean } = {}) {
+  return updateNavigation(node, animate, options);
 }
 
 // Update the current node without navigating the camera to a new position.
