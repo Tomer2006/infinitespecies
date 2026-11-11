@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
-/* InfiniteSpecies - stylesheet entrypoint: imports variables, base, layout, ui, overlays, landing, animations, utilities, responsive. */
+/* InfiniteSpecies stylesheet entrypoint. Tokens and base rules first, then one
+   stylesheet per surface; each keeps its own responsive rules. */
 
 @import "./variables.css" layer(base);
 @import "./base.css" layer(base);
+@import "./animations.css" layer(components);
 @import "./layout.css" layer(components);
 @import "./ui.css" layer(components);
 @import "./overlays.css" layer(components);
 @import "./landing.css" layer(components);
-@import "./animations.css" layer(components);
-@import "./utilities.css" layer(components);
-@import "./responsive.css" layer(components);
 @import "./discovery.css" layer(components);
+@import "./utilities.css" layer(components);
 @import "./consistency.css" layer(components);
 
 @theme inline {

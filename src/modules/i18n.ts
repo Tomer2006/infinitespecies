@@ -78,7 +78,7 @@ const translations: Record<AppLanguage, Record<string, TranslationValue>> = {
     },
     loading: {
       defaultTitle: 'Loading…',
-      loadingTaxonomy: 'Loading taxonomy data…',
+      loadingTaxonomy: 'Loading the tree of life…',
       stage: (params) => `Stage ${params?.current ?? 1} of ${params?.total ?? 1}`,
       loadingLabel: 'Loading...',
       hint: 'Tip: Press',

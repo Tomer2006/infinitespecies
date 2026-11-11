@@ -116,7 +116,11 @@ export function resizeCanvas() {
   }
 
   logDebug(`Canvas resized: ${oldW}x${oldH} → ${W}x${H} (DPR: ${DPR}, circleDPR: ${circleDPR})`);
-  console.log(`[Canvas] Resized: ${W}x${H} (DPR: ${DPR})`);
+
+  // Setting a canvas size clears it, so the next frame must draw even though
+  // neither the camera nor the layout changed.
+  forceNextDraw = true;
+  requestRender();
 }
 
 export function requestRender() {

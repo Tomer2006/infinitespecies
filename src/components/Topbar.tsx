@@ -8,6 +8,7 @@ import type { SearchResult } from '../modules/types'
 import { useTaxonomyState } from '../hooks/useTaxonomyState'
 import { discoveryCopy } from '../modules/discovery-copy'
 import { getCommonName } from '../modules/taxon-names.js'
+import BrandMark from './BrandMark'
 
 interface TopbarProps {
   language: AppLanguage
@@ -47,6 +48,12 @@ function SettingsIcon() {
       <circle cx="12" cy="12" r="3" />
     </svg>
   )
+}
+
+// A lineage is identical near the root for most results; its end tells them apart.
+function shortPath(path: string) {
+  const parts = path.split(' / ')
+  return parts.length > 3 ? `… / ${parts.slice(-3).join(' / ')}` : path
 }
 
 function highlightMatchJSX(text: string, query: string): (string | ReactNode)[] {
@@ -346,6 +353,7 @@ export default function Topbar({
           onClick={onBackToMenu}
           title={translate('topbar.returnToMenu', undefined, language)}
         >
+          <BrandMark />
           <span>InfiniteSpecies</span>
         </button>
       </div>
@@ -378,6 +386,12 @@ export default function Topbar({
             }}
             onKeyDown={handleSearchInputKeyDown}
           />
+          {searchQuery
+            ? <button className="searchbar-clear" type="button" aria-label={copy.clearSearch} title={copy.clearSearch}
+                onClick={() => { handleClear(); searchInputRef.current?.focus() }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            : <kbd className="searchbar-kbd" aria-hidden="true">S</kbd>}
           <button
             className={`searchbar-btn${searchStatus === 'loading' || navigatingResultId !== null ? ' is-loading' : ''}`}
             type="button"
@@ -388,9 +402,9 @@ export default function Topbar({
             {searchStatus === 'loading' || navigatingResultId !== null ? (
               <span className="search-spinner" aria-hidden="true" />
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
               </svg>
             )}
           </button>
@@ -450,7 +464,7 @@ export default function Topbar({
                 >
                   <div className="search-result-name">{highlightMatchJSX(getCommonName(result.name, language) || result.name, resultsQuery)}</div>
                   {getCommonName(result.name, language) && <div className="search-result-scientific">{highlightMatchJSX(result.name, resultsQuery)}</div>}
-                  {result.path && <div className="search-result-path">{highlightMatchJSX(result.path, resultsQuery)}</div>}
+                  {result.path && <div className="search-result-path" title={result.path}>{highlightMatchJSX(shortPath(result.path), resultsQuery)}</div>}
                   {navigatingResultId === result._id && <span className="search-spinner search-result-spinner" aria-hidden="true" />}
                 </div>
               ))}

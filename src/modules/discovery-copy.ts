@@ -29,6 +29,10 @@ const en = {
   stepExplore: 'Open a circle', stepExploreBody: 'Click or tap a circle to zoom into it. Smaller circles are groups inside it.',
   stepReturn: 'Find your way back', stepReturnBody: 'Use Back to return to the larger group, or All life to see the whole map.',
   noResultsHelp: 'Try a different name, or start with one of these:',
+  back: 'Back', clearSearch: 'Clear search', go: 'Go', orTry: 'Or try',
+  heroSearch: 'Try lion, oak or Homo sapiens',
+  factCount: 'Over 4 million organisms', factSource: 'Open Tree of Life taxonomy', factFree: 'Free, no account needed',
+  inside: 'organisms inside',
 }
 const he: typeof en = {
   headline: 'גלו איך החיים על פני כדור הארץ קשורים זה לזה.',
@@ -59,5 +63,9 @@ const he: typeof en = {
   stepExplore: 'פתחו עיגול', stepExploreBody: 'לחצו או הקישו על עיגול כדי להתקרב. העיגולים הקטנים הם הקבוצות שבתוכו.',
   stepReturn: 'חזרו בקלות', stepReturnBody: 'השתמשו בחזרה כדי להגיע לקבוצה הרחבה, או בכל החיים כדי לראות את המפה כולה.',
   noResultsHelp: 'נסו שם אחר, או התחילו מאחת האפשרויות האלה:',
+  back: 'חזרה', clearSearch: 'ניקוי החיפוש', go: 'קדימה', orTry: 'או נסו',
+  heroSearch: 'נסו אריה, אלון או Homo sapiens',
+  factCount: 'יותר מ־4 מיליון אורגניזמים', factSource: 'הטקסונומיה של Open Tree of Life', factFree: 'חינם, ללא חשבון',
+  inside: 'אורגניזמים בפנים',
 }
 export function discoveryCopy(language: AppLanguage) { return language === 'he' ? he : en }

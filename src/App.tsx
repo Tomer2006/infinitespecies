@@ -65,7 +65,7 @@ export default function App() {
     isLanding: true,
     isLoading: false,
     loadingTitle: translate('loading.defaultTitle', undefined, getCurrentLanguage()),
-    loadingStage: translate('loading.stage', { current: 1, total: 1 }, getCurrentLanguage()),
+    loadingStage: '',
     loadingProgress: 0,
     loadingPct: '0%',
     loadingTimer: '00:00',
@@ -187,7 +187,9 @@ export default function App() {
       const breadcrumbsEl = document.querySelector('.breadcrumbs') as HTMLElement | null
       const topbarEl = document.querySelector('.topbar') as HTMLElement | null
       document.documentElement.style.setProperty('--topbar-height', `${topbarEl?.offsetHeight || 0}px`)
-      document.documentElement.style.setProperty('--hud-height', `${(breadcrumbsEl?.offsetHeight || 0) + (topbarEl?.offsetHeight || 0)}px`)
+      // Only the header takes space from the map; the breadcrumb trail floats over it,
+      // so navigating never resizes the canvas.
+      document.documentElement.style.setProperty('--hud-height', `${topbarEl?.offsetHeight || 0}px`)
       if (breadcrumbsEl) {
         document.documentElement.style.setProperty('--breadcrumbs-height', `${breadcrumbsEl.offsetHeight}px`)
       } else {
@@ -213,7 +215,7 @@ export default function App() {
       setAppState((prev: AppState) => ({
         ...prev,
         loadingTitle: translate('loading.defaultTitle', undefined, language),
-        loadingStage: translate('loading.stage', { current: 1, total: 1 }, language),
+        loadingStage: '',
       }))
     }
   }, [appState.isLoading, language])
@@ -227,7 +229,7 @@ export default function App() {
       ...prev,
       isLoading: true,
       loadingTitle: title ?? translate('loading.defaultTitle', undefined, language),
-      loadingStage: translate('loading.stage', { current: 1, total: 1 }, language),
+      loadingStage: '',
       loadingProgress: 0,
       loadingPct: '0%',
       loadingTimer: '00:00',
@@ -265,7 +267,7 @@ export default function App() {
       ...prev,
       loadingProgress: Math.max(prev.loadingProgress, Math.min(95, Number.isFinite(progress) ? progress : 0)),
       loadingPct: `${Math.round(Math.max(prev.loadingProgress, Math.min(95, Number.isFinite(progress) ? progress : 0)))}%`,
-      loadingStage: translate('loading.stage', { current: currentStage, total: totalStages }, language),
+      loadingStage: totalStages > 1 ? translate('loading.stage', { current: currentStage, total: totalStages }, language) : '',
       ...(label && { loadingTitle: label }),
     }) : prev)
   }, [language])
@@ -330,7 +332,8 @@ export default function App() {
       return
     }
     const result = await performSearch(destination)
-    const node = result.matches.find(item => item.name.toLowerCase() === destination.toLowerCase())
+    // Guide links name a taxon exactly; a search typed on the landing page takes the best match.
+    const node = result.matches.find(item => item.name.toLowerCase() === destination.toLowerCase()) ?? result.matches[0]
     if (node) {
       await handleSearchResultClick(node)
       updateBreadcrumbs(state.current)

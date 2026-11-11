@@ -46,7 +46,7 @@ let inFlightViewportKey = '';
 export async function loadBackend(apiBase = API_BASE): Promise<TaxonomyNode> {
   state.loadMode = 'backend';
   state.backendApiBase = apiBase.replace(/\/$/, '');
-  setProgress(0.15, 'Loading taxonomy root from backend...', 1, 1);
+  setProgress(0.15, 'Loading the tree of life…', 1, 1);
 
   const response = await fetchJson<BackendResponse>(`${state.backendApiBase}/tree/root?depth=0`);
   stitchResponse(response);

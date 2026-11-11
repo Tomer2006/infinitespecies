@@ -2,9 +2,18 @@
 
 The homepage, explorer, reading pages, and dialogs share one visual system.
 
-- Define colors, fonts, radii, and spacing in `src/styles/variables.css`.
+- Define colors, the type scale, radii, and spacing in `src/styles/variables.css`.
 - Use `src/styles/consistency.css` for shared control presentation and states.
-- Keep positioning and responsive layout in the relevant component stylesheet.
+- Keep positioning and responsive layout in the stylesheet of the surface it
+  belongs to: `ui.css` (header, search, breadcrumbs), `overlays.css` (species
+  card, map controls, group browser, loading screen, dialogs, toasts),
+  `landing.css`, and `discovery.css` (reading pages). Each file ends with its
+  own media queries; there is no global responsive stylesheet.
+- The map keeps its size while exploring. Only the header reserves space;
+  the breadcrumb trail, species card, and controls float over the map on
+  translucent panels (`--bg-glass` with `--glass-blur`).
+- Where the species card would cover the selected circle (phones and narrow
+  windows) it opens as a compact peek and expands on request.
 - Use slate surfaces, light text, and mint accents. Reserve warning and error
   colors for those states. The taxonomy map's selectable color palettes remain
   independent of the interface palette.

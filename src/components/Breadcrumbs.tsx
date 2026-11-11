@@ -7,6 +7,8 @@ import type { TaxonomyNode } from '../modules/types'
 interface Crumb { id: number; name: string; node: TaxonomyNode }
 interface BreadcrumbsProps { language: AppLanguage; crumbs: Crumb[]; onCrumbClick: (node: TaxonomyNode) => void }
 
+const Separator = () => <span className="crumb-separator" aria-hidden="true">›</span>
+
 export default function Breadcrumbs({ language, crumbs, onCrumbClick }: BreadcrumbsProps) {
   const [expanded, setExpanded] = useState(false)
   const copy = discoveryCopy(language)
@@ -22,14 +24,17 @@ export default function Breadcrumbs({ language, crumbs, onCrumbClick }: Breadcru
   return (
     <nav className="breadcrumbs simple-breadcrumbs" aria-label={translate('breadcrumbs.ariaLabel', undefined, language)}>
       <div className="simple-trail">
+        {parent && <button className="location-back" type="button" title={`${copy.backTo} ${name(parent)}`} aria-label={`${copy.backTo} ${name(parent)}`} onClick={() => onCrumbClick(parent.node)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          <span>{copy.back}</span>
+        </button>}
         <button className="crumb" type="button" onClick={() => onCrumbClick(crumbs[0].node)} aria-current={crumbs.length === 1 ? 'page' : undefined}>{copy.allLife}</button>
         {crumbs.length > 3 && <>
-          <span aria-hidden="true">/</span>
+          <Separator />
           <button className="crumb path-toggle" type="button" aria-label={expanded ? copy.hidePath : copy.fullPath} aria-expanded={expanded} aria-controls="full-taxonomy-path" onClick={() => setExpanded(value => !value)}>…</button>
         </>}
-        {crumbs.length > 2 && <><span aria-hidden="true">/</span><button className="crumb" type="button" title={parent.name} onClick={() => onCrumbClick(parent.node)}>{name(parent)}</button></>}
-        {crumbs.length > 1 && <><span aria-hidden="true">/</span><span className="current-crumb" aria-current="page" title={current.name}>{name(current)}</span></>}
-        {parent && <button className="location-back" type="button" title={`${copy.backTo} ${name(parent)}`} onClick={() => onCrumbClick(parent.node)}>← {copy.backTo} <bdi>{name(parent)}</bdi></button>}
+        {crumbs.length > 2 && <><Separator /><button className="crumb crumb-parent" type="button" title={parent.name} onClick={() => onCrumbClick(parent.node)}>{name(parent)}</button></>}
+        {crumbs.length > 1 && <><Separator /><span className="current-crumb" aria-current="page" title={current.name}>{name(current)}</span></>}
       </div>
       {expanded && <div id="full-taxonomy-path" className="full-taxonomy-path">{crumbs.map(crumb => <button type="button" className="crumb" key={crumb.id} onClick={() => onCrumbClick(crumb.node)}>{name(crumb)}</button>)}</div>}
       {context && <p className="location-context" dir={language === 'he' ? 'rtl' : 'ltr'}>{context}</p>}

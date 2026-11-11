@@ -76,8 +76,12 @@ export default function MapControls({ language, onRandom, hasPreview }: { langua
   return (
     <>
       <div className="map-controls" ref={controls} aria-label={copy.browse}>
-        <button type="button" aria-label={copy.zoomIn} title={copy.zoomIn} onClick={() => animateToCam(state.camera.x, state.camera.y, clampCameraZoom(state.camera.k * 1.6), 180)}>+</button>
-        <button type="button" aria-label={copy.zoomOut} title={copy.zoomOut} onClick={() => animateToCam(state.camera.x, state.camera.y, clampCameraZoom(state.camera.k / 1.6), 180)}>−</button>
+        <button className="map-zoom" type="button" aria-label={copy.zoomIn} title={copy.zoomIn} onClick={() => animateToCam(state.camera.x, state.camera.y, clampCameraZoom(state.camera.k * 1.6), 180)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
+        <button className="map-zoom" type="button" aria-label={copy.zoomOut} title={copy.zoomOut} onClick={() => animateToCam(state.camera.x, state.camera.y, clampCameraZoom(state.camera.k / 1.6), 180)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+        </button>
         <button className="map-browse-button" ref={browseButton} type="button" aria-expanded={browse} aria-controls="group-browser" onClick={() => browse ? closeBrowse() : setBrowse(true)}>{copy.browse}</button>
         <button type="button" disabled={busy} onClick={() => { setBusy(true); setError(false); void onRandom().catch(() => setError(true)).finally(() => setBusy(false)) }}>{copy.random} ✧</button>
       </div>
