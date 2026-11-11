@@ -60,12 +60,13 @@ export async function loadBackend(apiBase = API_BASE): Promise<TaxonomyNode> {
   const rawHash = location.hash ? location.hash.slice(1) : '';
   const decoded = decodePath(rawHash);
   if (decoded) {
-    const node = await findBackendNodeByPath(decoded);
-    if (node) {
-      await updateNavigation(node, false);
-    } else {
-      await updateNavigation(root, false);
-    }
+    // A failed link lookup must not fail the whole load: the caller would fall
+    // back to downloading the complete static taxonomy.
+    const node = await findBackendNodeByPath(decoded).catch(error => {
+      console.warn('Deep link lookup failed:', error);
+      return null;
+    });
+    await updateNavigation(node || root, false);
   } else {
     await updateNavigation(root, false);
   }

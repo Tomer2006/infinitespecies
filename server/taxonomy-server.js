@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { TaxonomySearchIndex, normalizeSearchQuery } from './search-index.js';
+import { resolveNamePath } from '../src/modules/taxon-path.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -346,15 +347,21 @@ function buildNodeResponse(id, depth) {
 }
 
 function buildViewportResponse(url) {
-  const cameraX = Number(url.searchParams.get('x') || 0);
-  const cameraY = Number(url.searchParams.get('y') || 0);
-  const cameraK = Number(url.searchParams.get('k') || 1);
-  const width = Number(url.searchParams.get('w') || 1200);
-  const height = Number(url.searchParams.get('h') || 800);
-  const minPxRadius = Number(url.searchParams.get('minPxRadius') || 7);
-  const padPx = Number(url.searchParams.get('padPx') || 100);
-  const limit = Math.max(100, Math.min(Number(url.searchParams.get('limit') || defaultViewportLimit), 50000));
-  const currentId = Number(url.searchParams.get('currentId') || index.rootId);
+  // Non-numeric values fall back to the defaults instead of turning the whole
+  // viewport into NaN (which silently matches nothing).
+  const readNumber = (name, fallback) => {
+    const value = Number(url.searchParams.get(name) || fallback);
+    return Number.isFinite(value) ? value : fallback;
+  };
+  const cameraX = readNumber('x', 0);
+  const cameraY = readNumber('y', 0);
+  const cameraK = readNumber('k', 1);
+  const width = readNumber('w', 1200);
+  const height = readNumber('h', 800);
+  const minPxRadius = readNumber('minPxRadius', 7);
+  const padPx = readNumber('padPx', 100);
+  const limit = Math.max(100, Math.min(readNumber('limit', defaultViewportLimit), 50000));
+  const currentId = readNumber('currentId', index.rootId);
 
   const safeK = Number.isFinite(cameraK) && cameraK > 0 ? cameraK : 1;
   const halfW = width / (2 * safeK);
@@ -470,26 +477,9 @@ function ancestorIds(id) {
 }
 
 function findNodeByPath(pathValue) {
-  const parts = decodeURIComponent(pathValue || '').split('/').filter(Boolean);
-  if (!parts.length) return index.rootId;
-
-  let currentId = index.rootId;
-  let partIndex = parts[0] === index.namesById[currentId] ? 1 : 0;
-
-  for (; partIndex < parts.length; partIndex++) {
-    const part = parts[partIndex];
-    let nextId = 0;
-    for (const childId of childIds(currentId)) {
-      if (index.namesById[childId] === part) {
-        nextId = childId;
-        break;
-      }
-    }
-    if (!nextId) return null;
-    currentId = nextId;
-  }
-
-  return currentId;
+  // `pathValue` is already decoded by URLSearchParams; decoding it again would
+  // corrupt (or throw on) names that contain "%".
+  return resolveNamePath(pathValue, index.rootId, id => index.namesById[id], childIds);
 }
 
 function pickRandomLeaf(fromId) {
@@ -557,8 +547,14 @@ function sendJson(res, body, status = 200, extraHeaders = {}) {
 
 function serveStatic(pathname, res) {
   const baseDir = fs.existsSync(distDir) ? distDir : publicDir;
-  const cleanPath = pathname === '/' ? '/index.html' : pathname;
-  const targetPath = path.resolve(baseDir, `.${decodeURIComponent(cleanPath)}`);
+  let cleanPath;
+  try {
+    cleanPath = decodeURIComponent(pathname === '/' ? '/index.html' : pathname);
+  } catch {
+    res.writeHead(400);
+    return res.end('Bad request');
+  }
+  const targetPath = path.resolve(baseDir, `.${cleanPath}`);
 
   if (targetPath !== baseDir && !targetPath.startsWith(baseDir + path.sep)) {
     res.writeHead(403);

@@ -72,6 +72,33 @@ test('strict links reject a missing branch instead of silently returning its anc
   assert.equal(await links.findNodeByPath('Life/missing'), null)
 })
 
+test('links resolve branches whose names contain "/" or "%"', async () => {
+  const { root } = fixture()
+  const make = (id, name, parent) => ({ _id: id, name, parent, children: [], level: 1, _vx: 0, _vy: 0, _vr: 1, _leaves: 1 })
+  const cyano = make(4, 'Cyanobacteria', root)
+  const group = make(5, 'Cyanobacteria/Melainabacteria Group', root)
+  const pond = make(6, "Bacterium 'A1-Umh 8% Pond'", group)
+  group.children = [pond]
+  root.children.push(cyano, group)
+
+  for (const node of [cyano, group, pond]) {
+    const shared = encodeURIComponent(links.getNodePath(node).join('/'))
+    assert.equal(await links.findNodeByPath(links.decodePath(shared)), node)
+  }
+  assert.equal(await links.findNodeByPath('Cyanobacteria/Melainabacteria Group'), group)
+  assert.equal(await links.findNodeByPath('Life/Cyanobacteria/missing'), null)
+
+  // The taxonomy server resolves the same paths over node ids.
+  const { resolveNamePath } = await server.load('/src/modules/taxon-path.js')
+  const names = { 1: 'Life', 2: 'A/B', 3: '100%41' }
+  const children = { 1: [2], 2: [3] }
+  const resolve = path => resolveNamePath(path, 1, id => names[id], id => children[id] || [])
+  assert.equal(resolve('Life/A/B/100%41'), 3)
+  assert.equal(resolve(''), 1)
+  assert.equal(resolve('Life/A'), null)
+  assert.equal(resolveNamePath('Life', null, id => names[id], () => []), null)
+})
+
 test('selecting a result updates the current node, share destination and preview event', async () => {
   const { human } = fixture()
   globalThis.window = { matchMedia: () => ({ matches: true }) }

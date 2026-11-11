@@ -59,8 +59,12 @@ export async function performSearch(query: string, options: SearchOptions = {}):
     ? searchBackendNodes(name, perf.search.maxResults, options.signal)
     : Promise.resolve(findAllByQuery(name, perf.search.maxResults));
   const aliases = findCommonTaxa(trimmedQuery);
+  // Typing a scientific name that is also an alias target ("Homo sapiens")
+  // must not send the same lookup twice.
+  const nativeLookup = lookup(trimmedQuery);
   const [native, ...resolved] = await Promise.all([
-    lookup(trimmedQuery), ...aliases.map(taxon => lookup(taxon.scientific)),
+    nativeLookup,
+    ...aliases.map(taxon => normalizeName(taxon.scientific) === normalizeName(trimmedQuery) ? nativeLookup : lookup(taxon.scientific)),
   ]);
   // Alias resolution must match the scientific name exactly: a search for lion
   // must not quietly select another species that merely contains "leo".
